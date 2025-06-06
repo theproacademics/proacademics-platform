@@ -1,12 +1,26 @@
 [build]
   command = "npm run build || true"
+  node_version = "18"
 
 [build.environment]
-  NODE_VERSION = "18"
   NEXT_TELEMETRY_DISABLED = "1"
+  NPM_FLAGS = "--version"
+  
+[context.production]
+  [context.production.environment]
+    NODE_ENV = "production"
+
+[context.deploy-preview]
+  [context.deploy-preview.environment]
+    NODE_ENV = "development"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [functions]
-  external_node_modules = ["sharp"] 
+  external_node_modules = ["sharp"]
+  node_version = "18"
+
+# Explicitly disable legacy build image
+[build.processing]
+  skip_processing = true 
