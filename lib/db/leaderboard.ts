@@ -118,3 +118,11 @@ export async function updateWeeklyLeaderboard(): Promise<void> {
     await leaderboardCollection.updateOne({ _id: entries[i]._id }, { $set: { rank } })
   }
 }
+
+// Export service object
+export const leaderboardService = {
+  getCurrentLeaderboard,
+  getLeaderboardByDateRange,
+  getStudentLeaderboardHistory,
+  updateWeeklyLeaderboard,
+}

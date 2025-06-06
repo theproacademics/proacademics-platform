@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/admin/admin-navigation"
+import { AdminNavigation } from "@/components/admin/admin-navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { StatsGrid } from "@/components/ui/stats-grid"
 import { AnimatedCard } from "@/components/ui/animated-card"
@@ -111,7 +111,7 @@ export default function AdminReportsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      <Navigation />
+      <AdminNavigation />
 
       <main className="lg:ml-72 min-h-screen">
         <ResponsiveContainer padding="lg" animated>

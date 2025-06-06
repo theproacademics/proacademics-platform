@@ -65,46 +65,9 @@ export class WeeklyTasks {
 
   private async updateLeaderboards(): Promise<void> {
     console.log("Updating weekly leaderboards...")
-
-    const db = await getDatabase()
-    const xpCollection = db.collection<XPLog>("xpLogs")
-
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-    // Calculate weekly XP for leaderboard
-    const weeklyLeaderboard = await xpCollection
-      .aggregate([
-        {
-          $match: {
-            date: { $gte: oneWeekAgo },
-          },
-        },
-        {
-          $group: {
-            _id: "$studentId",
-            weeklyXP: { $sum: "$xpAmount" },
-          },
-        },
-        {
-          $sort: { weeklyXP: -1 },
-        },
-        {
-          $limit: 100,
-        },
-      ])
-      .toArray()
-
-    // Update leaderboard entries
-    for (let i = 0; i < weeklyLeaderboard.length; i++) {
-      await leaderboardService.updateLeaderboardEntry({
-        studentId: weeklyLeaderboard[i]._id.toString(),
-        period: "weekly",
-        xpEarned: weeklyLeaderboard[i].weeklyXP,
-        rank: i + 1,
-        dateRange: `${oneWeekAgo.toISOString().split("T")[0]} to ${new Date().toISOString().split("T")[0]}`,
-      })
-    }
+    
+    // Use the existing updateWeeklyLeaderboard method
+    await leaderboardService.updateWeeklyLeaderboard()
   }
 
   private async checkBadgeEligibility(): Promise<void> {
@@ -113,7 +76,17 @@ export class WeeklyTasks {
     const students = await studentService.getAllStudents()
 
     for (const student of students) {
-      await badgeService.checkAndAwardBadges(student._id!.toString())
+      const eligibleBadgeIds = await badgeService.checkBadgeEligibility(student._id!.toString())
+      
+      // Award each eligible badge
+      for (const badgeId of eligibleBadgeIds) {
+        try {
+          await badgeService.awardBadgeToStudent(student._id!.toString(), badgeId)
+          console.log(`Awarded badge ${badgeId} to student ${student.name}`)
+        } catch (error) {
+          console.error(`Error awarding badge ${badgeId} to student ${student.name}:`, error)
+        }
+      }
     }
   }
 

@@ -157,3 +157,12 @@ export async function checkBadgeEligibility(studentId: string): Promise<string[]
 
   return eligibleBadgeIds
 }
+
+// Export service object
+export const badgeService = {
+  getAllBadges,
+  getBadgeById,
+  getStudentBadges,
+  awardBadgeToStudent,
+  checkBadgeEligibility,
+}

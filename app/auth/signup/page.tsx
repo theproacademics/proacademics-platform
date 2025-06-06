@@ -163,7 +163,7 @@ export default function SignUpPage() {
 
   if (success) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 overflow-hidden relative fixed inset-0 flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 overflow-hidden fixed inset-0 flex items-center justify-center">
         <Particles
           className="absolute inset-0 pointer-events-none"
           quantity={60}
@@ -190,7 +190,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 overflow-hidden relative fixed inset-0">
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 overflow-hidden fixed inset-0">
       {/* Particles Background */}
       <Particles
         className="absolute inset-0 pointer-events-none"
