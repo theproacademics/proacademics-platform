@@ -51,6 +51,8 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {

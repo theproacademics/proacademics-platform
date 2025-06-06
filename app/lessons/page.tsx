@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from "react"
 import { Navigation } from "@/components/layout/navigation"
 import { PageHeader } from "@/components/layout/page-header"

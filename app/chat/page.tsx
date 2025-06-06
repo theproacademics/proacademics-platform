@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+
+export const dynamic = 'force-dynamic'
 import { Navigation } from "@/components/layout/navigation"
 import { ResponsiveContainer } from "@/components/ui/responsive-container"
 import { AnimatedCard } from "@/components/ui/animated-card"
