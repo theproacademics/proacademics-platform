@@ -768,7 +768,7 @@ export default function SignInPage() {
           </div>
 
             {/* Right Panel - Auth Forms */}
-            <div className="flex flex-col justify-center space-y-4 w-full max-w-sm mx-auto lg:ml-8 lg:mr-0 py-4">
+            <div className="flex flex-col justify-center space-y-6 w-full max-w-sm mx-auto lg:ml-8 lg:mr-0 py-4">
             
             {/* Mobile Logo */}
               <div className="lg:hidden text-center space-y-2">
@@ -999,9 +999,8 @@ export default function SignInPage() {
               </div>
 
               {/* Demo Accounts */}
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                <Card className="relative bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 shadow-lg shadow-gray-900/20 hover:bg-gray-900/50 transition-all duration-300 hover:scale-[1.01]">
+              <div className="relative">
+                <Card className="relative bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 shadow-lg shadow-gray-900/20 hover:bg-gray-900/60 transition-all duration-300 hover:scale-[1.02]">
                   <CardHeader className="pb-2">
                     <div className="flex items-center space-x-2">
                       <Star className="w-3 h-3 text-yellow-400 animate-pulse" />
@@ -1014,7 +1013,7 @@ export default function SignInPage() {
                       <button
                         key={i}
                         onClick={() => handleDemoLogin(account)}
-                        className="w-full p-2 bg-gray-800/30 hover:bg-gray-700/40 rounded-lg transition-all duration-300 group/demo flex items-center space-x-2.5 border border-gray-700/30 hover:border-gray-600/50 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10 relative overflow-hidden"
+                        className="w-full p-2 bg-gray-800/30 hover:bg-gray-900/60 rounded-lg transition-all duration-300 group/demo flex items-center space-x-2.5 border border-gray-700/30 hover:border-gray-700/50 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 relative overflow-hidden"
                         disabled={isLoading}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/demo:translate-x-full transition-transform duration-700"></div>
