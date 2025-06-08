@@ -23,6 +23,30 @@ export async function getStudentBadges(studentId: string): Promise<StudentBadge[
   return collection.find({ studentId }).toArray() as Promise<StudentBadge[]>
 }
 
+// Get student's earned badges with full badge details
+export async function getStudentBadgesWithDetails(studentId: string): Promise<(Badge & { earnedDate: Date })[]> {
+  const client = await clientPromise
+  const studentBadgesCollection = client.db("proacademics").collection("studentBadges")
+  const badgesCollection = client.db("proacademics").collection("badges")
+
+  // Get student badges
+  const studentBadges = await studentBadgesCollection.find({ studentId }).toArray()
+  
+  const badgesWithDetails = []
+  
+  for (const studentBadge of studentBadges) {
+    const badge = await badgesCollection.findOne({ _id: new ObjectId(studentBadge.badgeId) })
+    if (badge) {
+      badgesWithDetails.push({
+        ...badge,
+        earnedDate: studentBadge.earnedDate || studentBadge.createdAt
+      } as Badge & { earnedDate: Date })
+    }
+  }
+
+  return badgesWithDetails
+}
+
 // Award badge to student
 export async function awardBadgeToStudent(studentId: string, badgeId: string): Promise<StudentBadge> {
   const client = await clientPromise
@@ -163,6 +187,7 @@ export const badgeService = {
   getAllBadges,
   getBadgeById,
   getStudentBadges,
+  getStudentBadgesWithDetails,
   awardBadgeToStudent,
   checkBadgeEligibility,
 }

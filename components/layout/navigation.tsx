@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +23,7 @@ import {
   LogOut,
   Settings,
   User,
+  Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -36,23 +38,13 @@ const navigation = [
   { name: "Timetable", href: "/timetable", icon: Calendar },
 ]
 
-// Mock user data
-const mockUser = {
-  id: "1",
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  role: "student",
-  xp: 2450,
-  level: 12,
-  predictedGrade: "A*",
-  currentWorkingAverage: 87.5,
-  avatar: "/placeholder.svg?height=40&width=40",
-}
-
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     setMounted(true)
@@ -62,11 +54,68 @@ export function Navigation() {
     setIsOpen(false)
   }, [pathname])
 
-  const handleSignOut = () => {
-    window.location.reload()
+  // Get user data from session or use defaults
+  const user = session?.user ? {
+    id: (session.user as any).id || "unknown",
+    name: session.user.name || "User",
+    email: session.user.email || "user@example.com",
+    role: (session.user as any).role || "student",
+    userData: (session.user as any).userData || {},
+  } : null
+
+  // Calculate XP and level from user data
+  const userStats = user?.userData ? {
+    xp: user.userData.xp || user.userData.xpTotal || 2450,
+    level: user.userData.level || user.userData.currentLevel || 12,
+    predictedGrade: user.userData.predictedGrade || "A*",
+    currentWorkingAverage: user.userData.currentWorkingAverage || 87.5,
+  } : {
+    xp: 2450,
+    level: 12,
+    predictedGrade: "A*",
+    currentWorkingAverage: 87.5,
+  }
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true)
+      await signOut({ 
+        callbackUrl: "/auth/signin",
+        redirect: true 
+      })
+    } catch (error) {
+      console.error("Sign out error:", error)
+      // Fallback: force redirect to signin page
+      window.location.href = "/auth/signin"
+    } finally {
+      setIsSigningOut(false)
+    }
+  }
+
+  const handleProfileClick = () => {
+    router.push("/profile")
+    setIsOpen(false)
+  }
+
+  const handleSettingsClick = () => {
+    router.push("/settings")
+    setIsOpen(false)
   }
 
   if (!mounted) return null
+
+  // Show loading state while session is loading
+  if (status === "loading") {
+    return (
+      <div className="fixed inset-y-0 left-0 z-40 w-72 lg:block hidden">
+        <div className="flex h-full flex-col glass-card m-4 rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -76,7 +125,7 @@ export function Navigation() {
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="glass-card border-white/20 hover:bg-white/10"
+          className="glass-card border-white/20 hover:bg-white/10 transition-all duration-300"
         >
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
@@ -89,96 +138,129 @@ export function Navigation() {
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-full flex-col glass-card m-4 rounded-2xl overflow-hidden">
+        <div className="flex h-full flex-col glass-card m-4 rounded-2xl overflow-hidden relative">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
+          </div>
+
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="flex items-center justify-center h-16 px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 relative z-10">
+            <Link href="/" className="flex items-center space-x-3 transition-transform hover:scale-105 duration-300">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text">ProAcademics</span>
-            </div>
+            </Link>
           </div>
 
           {/* User info */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-white/10 relative z-10">
             <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12 ring-2 ring-blue-500/30">
-                <AvatarImage src={mockUser.avatar || "/placeholder.svg"} alt={mockUser.name} />
-                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                  {mockUser.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+              <Avatar className="h-12 w-12 ring-2 ring-blue-500/30 hover:ring-blue-500/50 transition-all duration-300">
+                <AvatarImage src={user?.userData?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
+                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
+                  {user?.name
+                    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
+                    : "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{mockUser.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{mockUser.email}</p>
+                <p className="text-sm font-medium text-white truncate">{user?.name || "Loading..."}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
                 <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400">
-                    Level {mockUser.level}
+                  <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    Level {userStats.level}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">{mockUser.xp} XP</span>
+                  <span className="text-xs text-muted-foreground">{userStats.xp.toLocaleString()} XP</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto relative z-10">
+            {navigation.map((item, index) => {
+              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
+                    "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 group relative overflow-hidden",
                     isActive
-                      ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white neon-glow border border-blue-500/30"
+                      ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white neon-glow border border-blue-500/30 shadow-lg"
                       : "text-muted-foreground hover:text-white hover:bg-white/5 hover:border-white/10 border border-transparent",
                   )}
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                  }}
+                  onClick={() => setIsOpen(false)}
                 >
-                  <item.icon className={cn("mr-3 h-5 w-5 transition-colors", isActive && "text-blue-400")} />
-                  {item.name}
-                  {isActive && <div className="ml-auto w-2 h-2 bg-blue-400 rounded-full animate-pulse" />}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <item.icon className={cn("mr-3 h-5 w-5 transition-colors relative z-10", isActive && "text-blue-400")} />
+                  <span className="relative z-10">{item.name}</span>
+                  {isActive && (
+                    <div className="ml-auto w-2 h-2 bg-blue-400 rounded-full animate-pulse relative z-10" />
+                  )}
                 </Link>
               )
             })}
           </nav>
 
           {/* XP Progress */}
-          <div className="p-6 border-t border-white/10">
+          <div className="p-6 border-t border-white/10 relative z-10">
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Progress to Level {mockUser.level + 1}</span>
-                <span className="text-white font-medium">{mockUser.xp % 1000}/1000 XP</span>
+                <span className="text-muted-foreground">Progress to Level {userStats.level + 1}</span>
+                <span className="text-white font-medium">{(userStats.xp % 1000).toLocaleString()}/1000 XP</span>
               </div>
-              <Progress value={(mockUser.xp % 1000) / 10} className="h-2" />
+              <div className="relative">
+                <Progress value={(userStats.xp % 1000) / 10} className="h-2" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full opacity-50"></div>
+              </div>
               <div className="text-xs text-muted-foreground text-center">
-                {1000 - (mockUser.xp % 1000)} XP to next level
+                {(1000 - (userStats.xp % 1000)).toLocaleString()} XP to next level
               </div>
             </div>
           </div>
 
           {/* User Actions */}
-          <div className="p-4 border-t border-white/10 space-y-2">
-            <Button variant="ghost" className="w-full justify-start hover:bg-white/5">
-              <User className="mr-3 h-4 w-4" />
-              Profile
+          <div className="p-4 border-t border-white/10 space-y-2 relative z-10">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group"
+              onClick={handleProfileClick}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <User className="mr-3 h-4 w-4 relative z-10" />
+              <span className="relative z-10">Profile</span>
             </Button>
-            <Button variant="ghost" className="w-full justify-start hover:bg-white/5">
-              <Settings className="mr-3 h-4 w-4" />
-              Settings
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group"
+              onClick={handleSettingsClick}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <Settings className="mr-3 h-4 w-4 relative z-10" />
+              <span className="relative z-10">Settings</span>
             </Button>
             <Button
               onClick={handleSignOut}
+              disabled={isSigningOut}
               variant="ghost"
-              className="w-full justify-start hover:bg-red-500/10 hover:text-red-400"
+              className="w-full justify-start hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group relative overflow-hidden"
             >
-              <LogOut className="mr-3 h-4 w-4" />
-              Sign Out
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              {isSigningOut ? (
+                <Loader2 className="mr-3 h-4 w-4 animate-spin relative z-10" />
+              ) : (
+                <LogOut className="mr-3 h-4 w-4 relative z-10" />
+              )}
+              <span className="relative z-10">
+                {isSigningOut ? "Signing out..." : "Sign Out"}
+              </span>
             </Button>
           </div>
         </div>
@@ -186,7 +268,10 @@ export function Navigation() {
 
       {/* Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setIsOpen(false)} />
+        <div 
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" 
+          onClick={() => setIsOpen(false)} 
+        />
       )}
     </>
   )
