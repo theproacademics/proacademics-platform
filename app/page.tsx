@@ -110,9 +110,7 @@ const AnimatedBackground = () => {
         />
       ))}
       
-      {/* Moving wave lines */}
-      <div className="absolute top-1/3 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-wave-move"></div>
-      <div className="absolute top-2/3 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent animate-wave-move-reverse" style={{ animationDelay: '3s' }}></div>
+
       
       {/* Floating geometric shapes */}
       {[...Array(15)].map((_, i) => (
@@ -613,7 +611,6 @@ export default function HomePage() {
               </div>
               
               {/* Decorative elements */}
-              <div className="absolute top-4 left-4 w-2 h-2 bg-cyan-400/60 rounded-full animate-pulse"></div>
               <div className="absolute top-6 right-8 w-1 h-1 bg-fuchsia-400/60 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
               <div className="absolute bottom-6 left-8 w-1.5 h-1.5 bg-violet-400/60 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
             </div>
