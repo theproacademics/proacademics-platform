@@ -510,7 +510,7 @@ export default function HomePage() {
                   )}
                 </p>
                 
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4">
                   <Link href="/lex/advanced">
                     <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20">
                       <Brain className="w-4 h-4 mr-2" />

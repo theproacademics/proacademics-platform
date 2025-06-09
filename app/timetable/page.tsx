@@ -301,7 +301,25 @@ export default function TimetablePage() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #581c87 100%)',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Extended Background Coverage to prevent white background on over-scroll */}
+      <div 
+        className="fixed pointer-events-none z-0"
+        style={{ 
+          top: '-100vh', 
+          left: '-50vw', 
+          right: '-50vw', 
+          bottom: '-100vh',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #581c87 100%)'
+        }}
+      />
+      
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>

@@ -114,7 +114,25 @@ export default function MyGrowthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900"
+      style={{
+        background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Extended Background Coverage to prevent white background on over-scroll */}
+      <div 
+        className="fixed pointer-events-none z-0"
+        style={{ 
+          top: '-100vh', 
+          left: '-50vw', 
+          right: '-50vw', 
+          bottom: '-100vh',
+          background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)'
+        }}
+      />
+      
       <Navigation />
 
       <main className="lg:ml-72 min-h-screen">

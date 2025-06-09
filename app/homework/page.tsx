@@ -220,7 +220,25 @@ export default function HomeworkPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative"
+      style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #312e81 100%)',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Extended Background Coverage to prevent white background on over-scroll */}
+      <div 
+        className="fixed pointer-events-none z-0"
+        style={{ 
+          top: '-100vh', 
+          left: '-50vw', 
+          right: '-50vw', 
+          bottom: '-100vh',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #312e81 100%)'
+        }}
+      />
+      
       <AnimatedBackground />
       <Navigation />
       

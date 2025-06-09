@@ -157,24 +157,16 @@ export function Navigation() {
 
           {/* User info */}
           <div className="p-6 border-b border-white/10 relative z-10">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12 ring-2 ring-blue-500/30 hover:ring-blue-500/50 transition-all duration-300">
-                <AvatarImage src={user?.userData?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
-                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
-                  {user?.name
-                    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
-                    : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col space-y-3">
+              <div>
                 <p className="text-sm font-medium text-white truncate">{user?.name || "Loading..."}</p>
                 <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                    Level {userStats.level}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{userStats.xp.toLocaleString()} XP</span>
-                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                  Level {userStats.level}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{userStats.xp.toLocaleString()} XP</span>
               </div>
             </div>
           </div>

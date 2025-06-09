@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
@@ -160,6 +160,32 @@ export default function LessonsPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
   const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
+  // Add styles to prevent white background on scroll
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `
+      /* Fix background coverage for all scroll scenarios */
+      html, body {
+        background: linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%) !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+      }
+      
+      /* Prevent elastic scroll on mobile */
+      body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
+    `
+    document.head.appendChild(style)
+    
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style)
+      }
+    }
+  }, [])
+
   const subjects = ["all", "Mathematics", "Physics", "Chemistry", "Biology"]
   const difficulties = ["all", "Beginner", "Intermediate", "Advanced"]
 
@@ -210,7 +236,25 @@ export default function LessonsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Extended Background Coverage to prevent white background on over-scroll */}
+      <div 
+        className="fixed pointer-events-none z-0"
+        style={{ 
+          top: '-100vh', 
+          left: '-50vw', 
+          right: '-50vw', 
+          bottom: '-100vh',
+          background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)'
+        }}
+      />
+      
       <ParticleBackground />
       <Navigation />
 
