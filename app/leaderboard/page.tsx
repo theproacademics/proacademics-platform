@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -208,6 +210,7 @@ export default function LeaderboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("all-time")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedTab, setSelectedTab] = useState("global")
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -229,6 +232,11 @@ export default function LeaderboardPage() {
       return <ChevronDown className="w-4 h-4 text-red-400" />
     }
     return null
+  }
+
+  // Show preloader
+  if (showPreloader) {
+    return <Preloader isVisible={showPreloader} colorScheme="green" loadingText="Loading leaderboard rankings" />
   }
 
   return (

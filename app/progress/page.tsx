@@ -2,6 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { StatsGrid } from "@/components/ui/stats-grid"
@@ -87,6 +89,12 @@ const achievements = [
 ]
 
 export default function ProgressPage() {
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+
+  if (showPreloader || !mounted) {
+    return <Preloader isVisible={showPreloader || !mounted} colorScheme="green" loadingText="Loading your progress and analytics" />
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
       <Navigation />

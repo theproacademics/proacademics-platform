@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -195,6 +197,7 @@ const getDifficultyColor = (difficulty: string) => {
 
 export default function HomeworkPage() {
   const [selectedTab, setSelectedTab] = useState("all")
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   const filterHomework = (status?: string) => {
     if (!status || status === "all") return mockHomework
@@ -209,6 +212,11 @@ export default function HomeworkPage() {
     avgScore:
       mockHomework.filter((hw) => hw.status === "completed").reduce((sum, hw) => sum + (hw.score || 0), 0) /
         mockHomework.filter((hw) => hw.status === "completed").length || 0,
+  }
+
+  // Show preloader
+  if (showPreloader) {
+    return <Preloader isVisible={showPreloader} colorScheme="blue" loadingText="Loading homework assignments" />
   }
 
   return (

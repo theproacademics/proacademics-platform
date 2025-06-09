@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -132,6 +134,7 @@ export default function LexAIPage() {
     xpEarned: 0,
     topicsStudied: new Set<string>(),
   })
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -194,6 +197,10 @@ export default function LexAIPage() {
   }
 
   const question = mockQuestions[currentQuestion]
+
+  if (showPreloader || !mounted) {
+    return <Preloader isVisible={showPreloader || !mounted} colorScheme="purple" loadingText="Initializing Lex AI learning system" />
+  }
 
   if (!sessionStarted) {
     return (

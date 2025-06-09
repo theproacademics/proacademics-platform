@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { AnimatedCard } from "@/components/ui/animated-card"
@@ -263,6 +265,7 @@ export default function TimetablePage() {
   const [viewMode, setViewMode] = useState<"week" | "calendar">("week")
   const [searchQuery, setSearchQuery] = useState("")
   const [mounted, setMounted] = useState(false)
+  const { showPreloader, mounted: preloaderMounted } = usePreloader({ delay: 2000 })
 
   useEffect(() => {
     setMounted(true)
@@ -290,6 +293,10 @@ export default function TimetablePage() {
       class_.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       class_.instructor.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  if (showPreloader || !preloaderMounted) {
+    return <Preloader isVisible={showPreloader || !preloaderMounted} colorScheme="blue" loadingText="Loading your class schedule and timetable" />
+  }
 
   if (!mounted) return null
 

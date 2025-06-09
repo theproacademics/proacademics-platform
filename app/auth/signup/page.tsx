@@ -11,114 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, CheckCircle, Brain, UserPlus, ArrowRight, Users, BookOpen, Star, Check, X, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-
-// Preloader Component
-const Preloader = ({ isVisible }: { isVisible: boolean }) => {
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    if (isVisible) {
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval)
-            return 100
-          }
-          return prev + 2
-        })
-      }, 50)
-      return () => clearInterval(interval)
-    }
-  }, [isVisible])
-
-  if (!isVisible) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
-        
-        {/* Floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-3/4 left-1/3 w-72 h-72 bg-teal-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        
-        {/* Animated particles */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-green-400/60 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 text-center">
-        {/* Logo Container */}
-        <div className="mb-12">
-          <div className="relative">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/30 to-emerald-500/30 rounded-3xl blur-2xl animate-pulse"></div>
-            
-            {/* Logo */}
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h1 className="text-6xl md:text-8xl font-black text-transparent bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text animate-gradient">
-                ProAcademics
-              </h1>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <Brain className="w-6 h-6 text-green-400 animate-pulse" />
-                <p className="text-xl text-slate-300 font-medium">Intelligent Learning Platform</p>
-                <Sparkles className="w-6 h-6 text-emerald-400 animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Animation */}
-        <div className="space-y-6">
-          {/* Progress Bar */}
-          <div className="w-80 mx-auto">
-            <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/10">
-              <div 
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-              </div>
-            </div>
-            <div className="flex justify-between text-sm text-slate-400 mt-2">
-              <span>Loading...</span>
-              <span>{progress}%</span>
-            </div>
-          </div>
-
-          {/* Loading Text */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 bg-green-400 rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
-            </div>
-            <p className="text-slate-300 text-lg font-medium">
-              Setting up your account creation
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -136,10 +30,9 @@ export default function SignUpPage() {
   const [failedAttempts, setFailedAttempts] = useState(0)
   const [isLocked, setIsLocked] = useState(false)
   const [deviceFingerprint, setDeviceFingerprint] = useState("")
-  const [mounted, setMounted] = useState(false)
-  const [showPreloader, setShowPreloader] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   // Enhanced Memoized particles with more variety
   const particles = useMemo(() => {
@@ -257,20 +150,7 @@ export default function SignUpPage() {
     }
   }
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
-  // Hide preloader after component mounts
-  useEffect(() => {
-    if (mounted) {
-      const timer = setTimeout(() => {
-        setShowPreloader(false)
-      }, 2000) // Show preloader for 2 seconds
-      
-      return () => clearTimeout(timer)
-    }
-  }, [mounted])
 
   useEffect(() => {
     // Set comprehensive background to prevent over-scroll issues
@@ -660,34 +540,7 @@ export default function SignUpPage() {
 
   // Show preloader
   if (showPreloader) {
-    return (
-      <div className="min-h-screen bg-slate-950 relative">
-        <Preloader isVisible={showPreloader} />
-        
-        {/* Render page in background (hidden) */}
-        <div className="opacity-0 pointer-events-none">
-          <div 
-            className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black relative"
-            style={{
-              background: 'linear-gradient(135deg, #030712 0%, #111827 40%, #000000 100%)',
-              minHeight: '100vh'
-            }}
-          >
-            <div className="relative z-10 min-h-screen flex items-center p-4">
-              <div className="w-full max-w-md mx-auto">
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-8 bg-white/10 rounded"></div>
-                    <div className="h-4 bg-white/10 rounded"></div>
-                    <div className="h-10 bg-white/10 rounded"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <Preloader isVisible={showPreloader} colorScheme="green" loadingText="Setting up your account creation" />
   }
 
   return (

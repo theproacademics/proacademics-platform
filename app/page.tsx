@@ -33,114 +33,8 @@ import {
   Rocket
 } from "lucide-react"
 import Link from "next/link"
-
-// Preloader Component
-const Preloader = ({ isVisible }: { isVisible: boolean }) => {
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    if (isVisible) {
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval)
-            return 100
-          }
-          return prev + 2
-        })
-      }, 50)
-      return () => clearInterval(interval)
-    }
-  }, [isVisible])
-
-  if (!isVisible) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
-        
-        {/* Floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-3/4 left-1/3 w-72 h-72 bg-cyan-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        
-        {/* Animated particles */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-400/60 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 text-center">
-        {/* Logo Container */}
-        <div className="mb-12">
-          <div className="relative">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-3xl blur-2xl animate-pulse"></div>
-            
-            {/* Logo */}
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h1 className="text-6xl md:text-8xl font-black text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text animate-gradient">
-                ProAcademics
-              </h1>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <Brain className="w-6 h-6 text-blue-400 animate-pulse" />
-                <p className="text-xl text-slate-300 font-medium">Intelligent Learning Platform</p>
-                <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Animation */}
-        <div className="space-y-6">
-          {/* Progress Bar */}
-          <div className="w-80 mx-auto">
-            <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/10">
-              <div 
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-              </div>
-            </div>
-            <div className="flex justify-between text-sm text-slate-400 mt-2">
-              <span>Loading...</span>
-              <span>{progress}%</span>
-            </div>
-          </div>
-
-          {/* Loading Text */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
-            </div>
-            <p className="text-slate-300 text-lg font-medium">
-              Initializing your learning dashboard
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 
 // Loading Skeleton
 const LoadingSkeleton = () => (
@@ -316,26 +210,13 @@ const QuickActionButton = ({ href, icon: Icon, title, description, color }: any)
 export default function HomePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-  const [showPreloader, setShowPreloader] = useState(true)
   const [userStats, setUserStats] = useState<any>(null)
   const [homework, setHomework] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Hide preloader after component mounts and data loads
-  useEffect(() => {
-    if (mounted && session) {
-      const timer = setTimeout(() => {
-        setShowPreloader(false)
-      }, 2500) // Show preloader for at least 2.5 seconds
-      
-      return () => clearTimeout(timer)
-    }
-  }, [mounted, session])
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 2500, 
+    dependencies: [session] 
+  })
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -385,20 +266,7 @@ export default function HomePage() {
 
   // Show preloader
   if (showPreloader) {
-    return (
-      <div className="min-h-screen bg-slate-950 relative">
-        <Preloader isVisible={showPreloader} />
-        
-        {/* Render page in background (hidden) */}
-        <div className="opacity-0 pointer-events-none">
-          <GlassBackground />
-          <Navigation />
-          <main className="lg:ml-72 min-h-screen relative z-10">
-            <LoadingSkeleton />
-          </main>
-        </div>
-      </div>
-    )
+    return <Preloader isVisible={showPreloader} colorScheme="default" loadingText="Initializing your learning dashboard" />
   }
 
   if (status === "loading") {

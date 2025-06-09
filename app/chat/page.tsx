@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 
 export const dynamic = 'force-dynamic'
 import { Navigation } from "@/components/layout/navigation"
@@ -125,6 +127,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -216,6 +219,11 @@ export default function ChatPage() {
       case 'study': return { color: 'from-yellow-500 to-orange-500', emoji: '📚', name: 'Study Tips' }
       default: return { color: 'from-indigo-500 to-purple-500', emoji: '💡', name: 'General' }
     }
+  }
+
+  // Show preloader
+  if (showPreloader) {
+    return <Preloader isVisible={showPreloader} colorScheme="purple" loadingText="Connecting to AI assistant" />
   }
 
   return (

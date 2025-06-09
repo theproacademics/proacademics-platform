@@ -3,6 +3,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from "react"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { StatsGrid } from "@/components/ui/stats-grid"
@@ -156,6 +158,7 @@ export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
+  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
 
   const subjects = ["all", "Mathematics", "Physics", "Chemistry", "Biology"]
   const difficulties = ["all", "Beginner", "Intermediate", "Advanced"]
@@ -200,6 +203,11 @@ export default function LessonsPage() {
       color: "orange" as const,
     },
   ]
+
+  // Show preloader
+  if (showPreloader) {
+    return <Preloader isVisible={showPreloader} colorScheme="purple" loadingText="Loading lessons and content" />
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
