@@ -10,13 +10,15 @@ export async function GET(req: Request) {
     const search = url.searchParams.get('search') || ''
     const subject = url.searchParams.get('subject') || 'all'
     const instructor = url.searchParams.get('instructor') || 'all'
+    const status = url.searchParams.get('status') || 'all'
 
     const result = await lessonService.getAllLessons({
       page,
       limit,
       search,
       subject,
-      instructor
+      instructor,
+      status
     })
 
     return NextResponse.json(result)
@@ -30,21 +32,24 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { title, subject, module, instructor, duration, description, videoUrl } = body
+    const { title, subject, subtopic, instructor, duration, videoUrl, week, scheduledDate, grade, status } = body
 
-    if (!title || !subject || !module) {
-      return NextResponse.json({ error: "Missing required fields: title, subject, module" }, { status: 400 })
+    if (!title || !subject) {
+      return NextResponse.json({ error: "Missing required fields: title, subject" }, { status: 400 })
     }
 
     const lesson = await lessonService.createLesson({
       id: `lesson-${Date.now()}`,
       title,
       subject,
-      module,
+      subtopic: subtopic || "",
       instructor: instructor || "",
       duration: duration || "",
-      description: description || "",
-      videoUrl: videoUrl || ""
+      videoUrl: videoUrl || "",
+      week: week || "",
+      scheduledDate: scheduledDate || "",
+      grade: grade || "",
+      status: status || "draft"
     })
 
     return NextResponse.json({ lesson }, { status: 201 })

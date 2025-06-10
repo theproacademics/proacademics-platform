@@ -16,11 +16,12 @@ export async function POST(req: Request) {
       id: `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: lesson.title || '',
       subject: lesson.subject || '',
-      module: lesson.module || lesson.subject || '',
+      subtopic: lesson.subtopic || '',
       instructor: lesson.instructor || '',
       duration: lesson.duration || '',
       description: lesson.description || '',
       videoUrl: lesson.videoUrl || '',
+      status: lesson.status || 'draft', // ✅ Add status field with fallback to 'draft'
       scheduledDate: lesson.scheduledDate || '',
       week: lesson.week || '',
       grade: lesson.grade || ''
@@ -28,9 +29,9 @@ export async function POST(req: Request) {
 
     // Validate each lesson has required fields
     for (const lesson of processedLessons) {
-      if (!lesson.title || !lesson.subject || !lesson.module) {
+      if (!lesson.title || !lesson.subject) {
         return NextResponse.json({ 
-          error: `Missing required fields: title, subject, module. Found: title="${lesson.title}", subject="${lesson.subject}", module="${lesson.module}"` 
+          error: `Missing required fields: title, subject. Found: title="${lesson.title}", subject="${lesson.subject}"` 
         }, { status: 400 })
       }
     }

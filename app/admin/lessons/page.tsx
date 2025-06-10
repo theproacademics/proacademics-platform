@@ -9,20 +9,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, Loader2, Copy, Download, MoreHorizontal, CheckSquare, Square, Youtube, AlertTriangle, Check, X, FileText, Settings } from "lucide-react"
+import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, Loader2, Download, MoreHorizontal, CheckSquare, Square, Youtube, AlertTriangle, Check, X, FileText, Settings } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 // Constants
 const ITEMS_PER_PAGE = 10
-const PREVIEW_ITEMS_PER_PAGE = 10
-const IMPORT_STEPS = {
-  PREPARING: { progress: 10, message: 'Preparing import...' },
-  VALIDATING: { progress: 20, message: 'Validating data...' },
-  PROCESSING: { progress: 40, message: 'Processing lessons...' },
-  SAVING: { progress: 70, message: 'Saving to database...' },
-  FINALIZING: { progress: 90, message: 'Finalizing...' },
-  COMPLETED: { progress: 100, message: 'Import completed!' }
-}
 
 // Types
 interface Lesson {
@@ -30,11 +22,11 @@ interface Lesson {
   id: string
   title: string
   subject: string
-  module: string
+  subtopic?: string
   instructor?: string
   duration?: string
-  description?: string
   videoUrl?: string
+  status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
   scheduledDate?: string
@@ -44,6 +36,8 @@ interface Lesson {
 
 interface LessonStats {
   totalLessons: number
+  activeLessons: number
+  draftLessons: number
   totalInstructors: number
   subjectBreakdown: { subject: string; count: number }[]
 }
@@ -59,22 +53,28 @@ interface PaginatedLessons {
 interface LessonFormData {
   title: string
   subject: string
-  module: string
+  subtopic: string
   instructor: string
   duration: string
-  description: string
   videoUrl: string
+  week: string
+  scheduledDate: string
+  grade: string
+  status: 'draft' | 'active'
 }
 
 // Utility functions
 const createEmptyFormData = (): LessonFormData => ({
   title: "",
   subject: "",
-  module: "",
+  subtopic: "",
   instructor: "",
   duration: "",
-  description: "",
-  videoUrl: ""
+  videoUrl: "",
+  week: "",
+  scheduledDate: "",
+  grade: "",
+  status: "draft"
 })
 
 const isValidVideoUrl = (url: string): boolean => {
@@ -91,15 +91,18 @@ const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toS
 
 const exportToCSV = (lessons: Lesson[], filename: string): void => {
   const csvContent = [
-    ['Title', 'Subject', 'Module', 'Instructor', 'Duration', 'Created', 'Description', 'Video URL'],
+    ['Topic', 'Subject', 'Subtopic', 'Instructor', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL'],
     ...lessons.map(lesson => [
       lesson.title,
       lesson.subject,
-      lesson.module,
+      lesson.subtopic || '',
       lesson.instructor || '',
+      lesson.status || 'draft',
+      lesson.week || '',
+      lesson.grade || '',
+      lesson.scheduledDate || '',
       lesson.duration || '',
       new Date(lesson.createdAt).toLocaleDateString(),
-      lesson.description || '',
       lesson.videoUrl || ''
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
@@ -115,27 +118,7 @@ const exportToCSV = (lessons: Lesson[], filename: string): void => {
   URL.revokeObjectURL(url)
 }
 
-// CSV parsing utility
-const parseCSVLine = (line: string): string[] => {
-  const result = []
-  let current = ''
-  let inQuotes = false
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    
-    if (char === '"') {
-      inQuotes = !inQuotes
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim())
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  result.push(current.trim())
-  return result
-}
+// CSV parsing utility moved to separate import page
 
 export default function LessonsPage() {
   // Core data states
@@ -149,13 +132,13 @@ export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedInstructor, setSelectedInstructor] = useState("all")
+  const [selectedStatus, setSelectedStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalLessons, setTotalLessons] = useState(0)
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
@@ -164,17 +147,7 @@ export default function LessonsPage() {
   const [selectedLessons, setSelectedLessons] = useState<string[]>([])
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   
-  // Import states  
-  const [isImporting, setIsImporting] = useState(false)
-  const [importPreview, setImportPreview] = useState<Lesson[]>([])
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [importProgress, setImportProgress] = useState(0)
-  const [importStatus, setImportStatus] = useState('')
-  const [selectedImportRows, setSelectedImportRows] = useState<string[]>([])
-  const [importPreviewFilter, setImportPreviewFilter] = useState("")
-  const [editingRow, setEditingRow] = useState<string | null>(null)
-  const [editRowData, setEditRowData] = useState<Partial<Lesson>>({})
-  const [previewCurrentPage, setPreviewCurrentPage] = useState(1)
+    // Import functionality moved to separate page /admin/lessons/import
   const [showValidationErrors, setShowValidationErrors] = useState(true)
   
   // Form state
@@ -189,7 +162,8 @@ export default function LessonsPage() {
         limit: ITEMS_PER_PAGE.toString(),
         search: searchTerm,
         subject: selectedSubject,
-        instructor: selectedInstructor
+        instructor: selectedInstructor,
+        status: selectedStatus
       })
 
       const response = await fetch(`/api/admin/lessons?${params}`)
@@ -245,7 +219,7 @@ export default function LessonsPage() {
   // Effect hooks
   useEffect(() => {
     fetchLessons()
-  }, [currentPage, searchTerm, selectedSubject, selectedInstructor])
+  }, [currentPage, searchTerm, selectedSubject, selectedInstructor, selectedStatus])
 
   useEffect(() => {
     fetchFilterOptions()
@@ -258,7 +232,13 @@ export default function LessonsPage() {
       const response = await fetch('/api/admin/lessons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          week: formData.week || '',
+          scheduledDate: formData.scheduledDate || '',
+          grade: formData.grade || '',
+          status: formData.status || 'draft'
+        })
       })
 
       if (!response.ok) throw new Error('Failed to create lesson')
@@ -266,8 +246,13 @@ export default function LessonsPage() {
       toast.success('Lesson created successfully!')
       setIsCreateDialogOpen(false)
       setFormData(createEmptyFormData())
-      fetchLessons()
-      fetchStats()
+      
+      // Refresh data and filters
+      await Promise.all([
+        fetchLessons(),
+        fetchStats(),
+        fetchFilterOptions()
+      ])
     } catch (error) {
       console.error('Error creating lesson:', error)
       toast.error('Failed to create lesson')
@@ -281,7 +266,13 @@ export default function LessonsPage() {
       const response = await fetch(`/api/admin/lessons/${selectedLesson.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          week: formData.week || '',
+          scheduledDate: formData.scheduledDate || '',
+          grade: formData.grade || '',
+          status: formData.status || 'draft'
+        })
       })
 
       if (!response.ok) throw new Error('Failed to update lesson')
@@ -290,7 +281,13 @@ export default function LessonsPage() {
       setIsEditDialogOpen(false)
       setSelectedLesson(null)
       setFormData(createEmptyFormData())
-      fetchLessons()
+      
+      // Refresh data and filters
+      await Promise.all([
+        fetchLessons(),
+        fetchStats(),
+        fetchFilterOptions()
+      ])
     } catch (error) {
       console.error('Error updating lesson:', error)
       toast.error('Failed to update lesson')
@@ -308,8 +305,13 @@ export default function LessonsPage() {
       if (!response.ok) throw new Error('Failed to delete lesson')
       
       toast.success('Lesson deleted successfully!')
-      fetchLessons()
-      fetchStats()
+      
+      // Refresh data and filters
+      await Promise.all([
+        fetchLessons(),
+        fetchStats(),
+        fetchFilterOptions()
+      ])
     } catch (error) {
       console.error('Error deleting lesson:', error)
       toast.error('Failed to delete lesson')
@@ -336,16 +338,24 @@ export default function LessonsPage() {
     setCurrentPage(1)
   }, [])
 
+  const handleStatusFilter = useCallback((value: string) => {
+    setSelectedStatus(value)
+    setCurrentPage(1)
+  }, [])
+
   const handleEditLesson = useCallback((lesson: Lesson) => {
     setSelectedLesson(lesson)
     setFormData({
       title: lesson.title,
       subject: lesson.subject,
-      module: lesson.module,
+      subtopic: lesson.subtopic || "",
       instructor: lesson.instructor || "",
       duration: lesson.duration || "",
-      description: lesson.description || "",
-      videoUrl: lesson.videoUrl || ""
+      videoUrl: lesson.videoUrl || "",
+      week: lesson.week || "",
+      scheduledDate: lesson.scheduledDate || "",
+      grade: lesson.grade || "",
+      status: lesson.status || "draft"
     })
     setIsEditDialogOpen(true)
   }, [])
@@ -355,32 +365,7 @@ export default function LessonsPage() {
     setIsViewDialogOpen(true)
   }, [])
 
-  const handleDuplicateLesson = useCallback(async (lesson: Lesson) => {
-    try {
-      const response = await fetch('/api/admin/lessons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: `${lesson.title} (Copy)`,
-          subject: lesson.subject,
-          module: lesson.module,
-          instructor: lesson.instructor || "",
-          duration: lesson.duration || "",
-          description: lesson.description || "",
-          videoUrl: lesson.videoUrl || ""
-        })
-      })
 
-      if (!response.ok) throw new Error('Failed to duplicate lesson')
-      
-      toast.success('Lesson duplicated successfully!')
-      fetchLessons()
-      fetchStats()
-    } catch (error) {
-      console.error('Error duplicating lesson:', error)
-      toast.error('Failed to duplicate lesson')
-    }
-  }, [])
 
   // Bulk operations with optimization
   const handleSelectLesson = useCallback((lessonId: string) => {
@@ -420,8 +405,13 @@ export default function LessonsPage() {
       }
       
       setSelectedLessons([])
-      fetchLessons()
-      fetchStats()
+      
+      // Refresh data and filters
+      await Promise.all([
+        fetchLessons(),
+        fetchStats(),
+        fetchFilterOptions()
+      ])
     } catch (error) {
       console.error('Error bulk deleting lessons:', error)
       toast.error('Failed to delete lessons')
@@ -430,48 +420,59 @@ export default function LessonsPage() {
     }
   }, [selectedLessons])
 
-  const handleBulkDuplicate = useCallback(async () => {
-    if (selectedLessons.length === 0) return
+  const handleDeleteAllLessons = useCallback(async () => {
+    if (totalLessons === 0) {
+      toast.info('No lessons to delete')
+      return
+    }
+    
+    const confirmation = confirm(
+      `⚠️ DANGER: This will permanently delete ALL ${totalLessons} lessons!\n\n` +
+      `This action cannot be undone. Are you absolutely sure you want to proceed?`
+    )
+    
+    if (!confirmation) return
+    
+    // Second confirmation for extra safety
+    const finalConfirmation = confirm(
+      `🚨 FINAL WARNING: You are about to delete ALL lessons!\n\n` +
+      `Type "DELETE ALL" to confirm this destructive action.`
+    )
+    
+    if (!finalConfirmation) return
     
     setBulkActionLoading(true)
     try {
-      const selectedLessonObjects = lessons.filter(lesson => selectedLessons.includes(lesson.id))
+      const response = await fetch('/api/admin/lessons/delete-all', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
       
-      const duplicatePromises = selectedLessonObjects.map(lesson =>
-        fetch('/api/admin/lessons', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: `${lesson.title} (Copy)`,
-            subject: lesson.subject,
-            module: lesson.module,
-            instructor: lesson.instructor || "",
-            duration: lesson.duration || "",
-            description: lesson.description || "",
-            videoUrl: lesson.videoUrl || ""
-          })
-        })
-      )
+      if (!response.ok) throw new Error('Failed to delete all lessons')
       
-      const results = await Promise.all(duplicatePromises)
-      const successCount = results.filter(r => r.ok).length
+      const data = await response.json()
+      toast.success(`Successfully deleted all ${data.deletedCount} lessons!`)
       
-      if (successCount === selectedLessons.length) {
-        toast.success(`Successfully duplicated ${successCount} lesson(s)`)
-      } else {
-        toast.warning(`Duplicated ${successCount} out of ${selectedLessons.length} lesson(s)`)
-      }
-      
+      // Reset all state
+      setLessons([])
       setSelectedLessons([])
-      fetchLessons()
-      fetchStats()
+      setCurrentPage(1)
+      setTotalLessons(0)
+      setTotalPages(1)
+      
+      // Refresh data and filters
+      await Promise.all([
+        fetchLessons(),
+        fetchStats(),
+        fetchFilterOptions()
+      ])
     } catch (error) {
-      console.error('Error bulk duplicating lessons:', error)
-      toast.error('Failed to duplicate lessons')
+      console.error('Error deleting all lessons:', error)
+      toast.error('Failed to delete all lessons')
     } finally {
       setBulkActionLoading(false)
     }
-  }, [selectedLessons, lessons])
+  }, [totalLessons])
 
   // Export handler with optimization
   const handleExportLessons = useCallback(() => {
@@ -483,258 +484,11 @@ export default function LessonsPage() {
     toast.success(`Exported ${lessonsToExport.length} lesson(s)`)
   }, [selectedLessons, lessons])
 
-  // Optimized import handlers with better error handling
-  const parseCSV = useCallback((csvText: string): Lesson[] => {
-    const lines = csvText.split('\n').filter(line => line.trim())
-    if (lines.length === 0) return []
-    
-    const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase())
-    console.log('CSV Headers found:', headers)
-    
-    const data = lines.slice(1).map((line, index) => {
-      const values = parseCSVLine(line)
-      const row: any = {}
-      
-      headers.forEach((header, i) => {
-        const cleanHeader = header.replace(/[^a-z0-9]/g, '')
-        row[cleanHeader] = (values[i] || '').replace(/^"|"$/g, '').trim()
-      })
-      
-      // Map CSV columns according to expected format: Week, Date, Topic, Sub-topic, Grade
-      const lesson: Lesson = {
-        id: generateUniqueId(),
-        title: row.subtopic || row.title || `Lesson ${index + 1}`,
-        subject: row.topic || row.subject || '',
-        module: row.subtopic || row.module || row.topic || '',
-        instructor: row.instructor || '',
-        duration: row.duration || '',
-        videoUrl: row.videourl || row.video || row.videolink || '',
-        description: row.description || '',
-        scheduledDate: row.date || '',
-        week: row.week || '',
-        grade: row.grade || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      
-      return lesson
-    })
-    
-    return data
-  }, [])
+  // CSV import functionality moved to /admin/lessons/import page
 
-  const handleImport = useCallback(async () => {
-    const lessonsToImport = selectedImportRows.length > 0 
-      ? importPreview.filter(lesson => selectedImportRows.includes(lesson.id))
-      : importPreview
-    
-    if (lessonsToImport.length === 0) return
-    
-    setIsImporting(true)
-    setImportProgress(IMPORT_STEPS.PREPARING.progress)
-    setImportStatus(IMPORT_STEPS.PREPARING.message)
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      setImportProgress(IMPORT_STEPS.VALIDATING.progress)
-      setImportStatus(IMPORT_STEPS.VALIDATING.message)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      setImportProgress(IMPORT_STEPS.PROCESSING.progress)
-      setImportStatus(IMPORT_STEPS.PROCESSING.message)
-      
-      const response = await fetch('/api/admin/lessons/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lessons: lessonsToImport })
-      })
+  // Import-related memoized values moved to separate import page
 
-      if (!response.ok) throw new Error('Failed to import lessons')
-      
-      setImportProgress(IMPORT_STEPS.SAVING.progress)
-      setImportStatus(IMPORT_STEPS.SAVING.message)
-      
-      const data = await response.json()
-      
-      setImportProgress(IMPORT_STEPS.FINALIZING.progress)
-      setImportStatus(IMPORT_STEPS.FINALIZING.message)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      setImportProgress(IMPORT_STEPS.COMPLETED.progress)
-      setImportStatus(IMPORT_STEPS.COMPLETED.message)
-      
-      toast.success(`Successfully imported ${data.count} lessons!`)
-      
-      setTimeout(() => {
-        setIsImportDialogOpen(false)
-        setImportPreview([])
-        setCsvFile(null)
-        setSelectedImportRows([])
-        setImportPreviewFilter("")
-        setPreviewCurrentPage(1)
-        setImportProgress(0)
-        setImportStatus('')
-      }, 1000)
-      
-      fetchLessons()
-      fetchStats()
-    } catch (error) {
-      console.error('Error importing lessons:', error)
-      setImportStatus('Import failed!')
-      toast.error('Failed to import lessons')
-      setTimeout(() => {
-        setImportProgress(0)
-        setImportStatus('')
-      }, 2000)
-    } finally {
-      setTimeout(() => {
-        setIsImporting(false)
-      }, 1000)
-    }
-  }, [selectedImportRows, importPreview])
-
-  // Memoized computed values for better performance
-  const filteredImportRows = useMemo(() => {
-    let filtered = importPreview
-    
-    if (importPreviewFilter) {
-      filtered = filtered.filter(row =>
-        row.title.toLowerCase().includes(importPreviewFilter.toLowerCase()) ||
-        row.subject.toLowerCase().includes(importPreviewFilter.toLowerCase()) ||
-        (row.instructor && row.instructor.toLowerCase().includes(importPreviewFilter.toLowerCase()))
-      )
-    }
-    
-    return filtered
-  }, [importPreview, importPreviewFilter])
-
-  const paginatedImportRows = useMemo(() => {
-    const startIndex = (previewCurrentPage - 1) * PREVIEW_ITEMS_PER_PAGE
-    const endIndex = startIndex + PREVIEW_ITEMS_PER_PAGE
-    return filteredImportRows.slice(startIndex, endIndex)
-  }, [filteredImportRows, previewCurrentPage])
-
-  const importStats = useMemo(() => {
-    const total = importPreview.length
-    const selected = selectedImportRows.length
-    const withErrors = importPreview.filter(row => {
-      const errors = []
-      if (!row.title || row.title.trim() === '') errors.push('Title required')
-      if (!row.subject || row.subject.trim() === '') errors.push('Subject required')
-      if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
-        errors.push('Invalid video URL')
-      }
-      return errors.length > 0
-    }).length
-    const valid = total - withErrors
-    
-    return { total, selected: selected || total, withErrors, valid }
-  }, [importPreview, selectedImportRows])
-
-  // Enhanced helper functions
-  const handleSelectImportRow = useCallback((rowId: string) => {
-    setSelectedImportRows(prev => 
-      prev.includes(rowId) 
-        ? prev.filter(id => id !== rowId)
-        : [...prev, rowId]
-    )
-  }, [])
-
-  const handleSelectAllImportRows = useCallback(() => {
-    if (selectedImportRows.length === filteredImportRows.length) {
-      setSelectedImportRows([])
-    } else {
-      setSelectedImportRows(filteredImportRows.map(row => row.id))
-    }
-  }, [selectedImportRows.length, filteredImportRows])
-
-  const validateImportRow = useCallback((row: Lesson) => {
-    const errors = []
-    if (!row.title || row.title.trim() === '') errors.push('Title (Sub-topic) is required')
-    if (!row.subject || row.subject.trim() === '') errors.push('Subject (Topic) is required')
-    
-    if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
-      errors.push('Invalid video URL format')
-    }
-    
-    return errors
-  }, [])
-
-  // File upload handler
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      toast.error('Please select a CSV file')
-      return
-    }
-    
-    setCsvFile(file)
-    const reader = new FileReader()
-    
-    reader.onload = (e) => {
-      const csvText = e.target?.result as string
-      console.log('CSV file content:', csvText)
-      
-      try {
-        const parsed = parseCSV(csvText)
-        console.log('Parsed CSV data:', parsed)
-        
-        if (parsed.length === 0) {
-          toast.error('No data found in CSV file')
-          return
-        }
-        
-        setImportPreview(parsed)
-        toast.success(`Loaded ${parsed.length} lessons for preview`)
-      } catch (error) {
-        console.error('Error parsing CSV:', error)
-        toast.error('Error parsing CSV file. Please check the format.')
-      }
-    }
-    
-    reader.onerror = () => {
-      console.error('Error reading file')
-      toast.error('Error reading file')
-    }
-    
-    reader.readAsText(file)
-  }, [parseCSV])
-
-  // Import row editing handlers
-  const handleEditImportRow = useCallback((row: Lesson) => {
-    setEditingRow(row.id)
-    setEditRowData({
-      title: row.title,
-      subject: row.subject,
-      module: row.module,
-      instructor: row.instructor,
-      duration: row.duration,
-      description: row.description,
-      videoUrl: row.videoUrl
-    })
-  }, [])
-
-  const handleSaveEditRow = useCallback(() => {
-    if (!editingRow) return
-    
-    setImportPreview(prev => prev.map(row => 
-      row.id === editingRow 
-        ? { ...row, ...editRowData }
-        : row
-    ))
-    setEditingRow(null)
-    setEditRowData({})
-    toast.success('Row updated successfully')
-  }, [editingRow, editRowData])
-
-  const handleDeleteImportRow = useCallback((rowId: string) => {
-    setImportPreview(prev => prev.filter(row => row.id !== rowId))
-    setSelectedImportRows(prev => prev.filter(id => id !== rowId))
-    toast.success('Row removed from import')
-  }, [])
+  // All import-related functions moved to /admin/lessons/import page
 
   return (
     <div className="p-4 lg:p-8 lg:pt-20">
@@ -745,13 +499,13 @@ export default function LessonsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="glass-card futuristic-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Lessons</p>
-                <p className="text-2xl font-bold">{stats?.totalLessons || totalLessons}</p>
+                <p className="text-2xl font-bold text-blue-400">{stats?.totalLessons || 0}</p>
               </div>
               <BookOpen className="w-8 h-8 text-blue-400" />
             </div>
@@ -763,7 +517,7 @@ export default function LessonsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Lessons</p>
-                <p className="text-2xl font-bold text-green-400">{lessons.length}</p>
+                <p className="text-2xl font-bold text-green-400">{stats?.activeLessons || 0}</p>
               </div>
               <Eye className="w-8 h-8 text-green-400" />
             </div>
@@ -774,8 +528,20 @@ export default function LessonsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm text-muted-foreground">Draft Lessons</p>
+                <p className="text-2xl font-bold text-yellow-400">{stats?.draftLessons || 0}</p>
+              </div>
+              <FileText className="w-8 h-8 text-yellow-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card futuristic-border">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm text-muted-foreground">Instructors</p>
-                <p className="text-2xl font-bold text-purple-400">{stats?.totalInstructors || instructors.length}</p>
+                <p className="text-2xl font-bold text-purple-400">{stats?.totalInstructors || 0}</p>
               </div>
               <Users className="w-8 h-8 text-purple-400" />
             </div>
@@ -803,7 +569,13 @@ export default function LessonsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {subjects.filter(subject => subject && subject.trim() !== '').map(subject => (
+              {subjects.filter(subject => 
+                subject && 
+                subject.trim() !== '' && 
+                subject.trim() !== '-' &&
+                subject.toLowerCase() !== 'undefined' &&
+                subject.toLowerCase() !== 'null'
+              ).map(subject => (
                 <SelectItem key={subject} value={subject}>{subject}</SelectItem>
               ))}
             </SelectContent>
@@ -815,9 +587,36 @@ export default function LessonsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Instructors</SelectItem>
-              {instructors.filter(instructor => instructor && instructor.trim() !== '').map(instructor => (
+              {instructors.filter(instructor => 
+                instructor && 
+                instructor.trim() !== '' && 
+                instructor.trim() !== '-' &&
+                instructor.toLowerCase() !== 'undefined' &&
+                instructor.toLowerCase() !== 'null'
+              ).map(instructor => (
                 <SelectItem key={instructor} value={instructor}>{instructor}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedStatus} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="w-40 glass-card border-white/20">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Active</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="draft">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Draft</span>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
           
@@ -830,14 +629,27 @@ export default function LessonsPage() {
             Export CSV
           </Button>
           
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="border-green-500/20 text-green-400 hover:bg-green-500/10">
-                <Upload className="w-4 h-4 mr-2" />
-                Import CSV
-              </Button>
-            </DialogTrigger>
-          </Dialog>
+          <Button 
+            variant="outline" 
+            onClick={handleDeleteAllLessons}
+            disabled={bulkActionLoading || totalLessons === 0}
+            className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+            title={totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
+          >
+            {bulkActionLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4 mr-2" />
+            )}
+            Delete All
+          </Button>
+          
+          <Link href="/admin/lessons/import">
+            <Button variant="outline" className="border-green-500/20 text-green-400 hover:bg-green-500/10">
+              <Upload className="w-4 h-4 mr-2" />
+              Import CSV
+            </Button>
+          </Link>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -861,20 +673,7 @@ export default function LessonsPage() {
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleBulkDuplicate}
-                  disabled={bulkActionLoading}
-                  className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
-                >
-                  {bulkActionLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Copy className="w-4 h-4 mr-2" />
-                  )}
-                  Duplicate
-                </Button>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -938,10 +737,14 @@ export default function LessonsPage() {
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>Lesson</TableHead>
+                                          <TableHead>Topic</TableHead>
                 <TableHead>Subject</TableHead>
+                <TableHead>Subtopic</TableHead>
                 <TableHead>Instructor</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Week</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Grade</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -949,18 +752,18 @@ export default function LessonsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={11} className="text-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                     <p className="text-muted-foreground">Loading lessons...</p>
                   </TableCell>
                 </TableRow>
               ) : lessons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={11} className="text-center py-8">
                     <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                     <p className="text-muted-foreground">No lessons found</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {searchTerm || selectedSubject !== 'all' || selectedInstructor !== 'all' 
+                      {searchTerm || selectedSubject !== 'all' || selectedInstructor !== 'all' || selectedStatus !== 'all'
                         ? "Try adjusting your filters" 
                         : "Create your first lesson to get started"}
                     </p>
@@ -984,24 +787,7 @@ export default function LessonsPage() {
                       </Button>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-white">{lesson.title}</p>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <span>{lesson.module}</span>
-                          {lesson.grade && (
-                            <>
-                              <span>•</span>
-                              <span>Grade {lesson.grade}</span>
-                            </>
-                          )}
-                          {lesson.scheduledDate && (
-                            <>
-                              <span>•</span>
-                              <span>{lesson.scheduledDate}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                      <p className="font-medium text-white">{lesson.title}</p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="border-blue-400 text-blue-400">
@@ -1009,18 +795,62 @@ export default function LessonsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-300">{lesson.instructor}</span>
+                      <Badge variant="outline" className={`${!lesson.subtopic || lesson.subtopic === '-' ? 'border-red-400 text-red-400' : 'border-purple-400 text-purple-400'} text-xs whitespace-nowrap`}>
+                        {lesson.subtopic || '-'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-3 h-3 text-purple-400" />
-                        <span className="text-sm text-gray-300">{lesson.duration}</span>
+                      <span className="text-sm text-gray-300">{lesson.instructor || '-'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center">
+                        <Badge 
+                          variant="outline" 
+                          className={`${
+                            lesson.status === 'active' 
+                              ? 'border-green-400/50 bg-green-400/10 text-green-400' 
+                              : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400'
+                          } text-xs font-medium px-3 py-1 flex items-center gap-2`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${
+                            lesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
+                          }`}></div>
+                          {lesson.status === 'active' ? 'Active' : 'Draft'}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(lesson.createdAt).toLocaleDateString()}
+                      <div className="text-center">
+                        <span className={`text-sm font-medium ${!lesson.week || lesson.week === '' ? 'text-gray-500' : 'text-blue-400'}`}>
+                          {lesson.week || '-'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`text-sm ${!lesson.scheduledDate || lesson.scheduledDate === '' ? 'text-gray-500' : ''}`}>
+                        {lesson.scheduledDate || '-'}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-center">
+                        <Badge variant="outline" className={`${!lesson.grade || lesson.grade === '' ? 'border-gray-500 text-gray-500' : 'border-green-400 text-green-400'} text-xs`}>
+                          {lesson.grade || '-'}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground">
+                        <div>{new Date(lesson.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: '2-digit', 
+                          year: 'numeric' 
+                        })}</div>
+                        <div className="text-xs text-gray-500">{new Date(lesson.createdAt).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit', 
+                          hour12: true 
+                        })}</div>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
@@ -1042,15 +872,7 @@ export default function LessonsPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 text-green-400 hover:text-green-300"
-                          onClick={() => handleDuplicateLesson(lesson)}
-                          title="Duplicate Lesson"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
+
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -1143,9 +965,9 @@ export default function LessonsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Title</label>
+                    <label className="text-sm font-medium mb-2 block">Topic</label>
                 <Input 
-                  placeholder="Lesson title" 
+                  placeholder="Topic" 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="glass-card border-white/20" 
@@ -1161,16 +983,18 @@ export default function LessonsPage() {
                 />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Module</label>
+                    <label className="text-sm font-medium mb-2 block">Subtopic</label>
                 <Input 
-                  placeholder="Module name" 
-                  value={formData.module}
-                  onChange={(e) => setFormData({...formData, module: e.target.value})}
+                  placeholder="Subtopic (optional)" 
+                  value={formData.subtopic}
+                  onChange={(e) => setFormData({...formData, subtopic: e.target.value})}
                   className="glass-card border-white/20" 
                 />
                   </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                 <label className="text-sm font-medium mb-2 block">Instructor</label>
                 <Input 
@@ -1180,16 +1004,119 @@ export default function LessonsPage() {
                   className="glass-card border-white/20" 
                 />
                   </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Week</label>
+                    <Input 
+                      type="number"
+                      placeholder="1" 
+                      min="1"
+                      max="52"
+                      value={formData.week}
+                      onChange={(e) => setFormData({...formData, week: e.target.value})}
+                      className="glass-card border-white/20" 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Grade</label>
+                    <Input 
+                      type="number"
+                      placeholder="10" 
+                      min="1"
+                      max="12"
+                      value={formData.grade}
+                      onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                      className="glass-card border-white/20" 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Status</label>
+                    <Select value={formData.status} onValueChange={(value: 'draft' | 'active') => setFormData({...formData, status: value})}>
+                      <SelectTrigger className="glass-card border-white/20">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                            <span>📝 Draft</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="active">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>✅ Active</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Scheduled Date</label>
+                    <Input 
+                      type="date"
+                      value={formData.scheduledDate ? (() => {
+                        try {
+                          // Try to parse existing date formats
+                          const dateStr = formData.scheduledDate
+                          if (dateStr.includes('/')) {
+                            // Handle "Monday 15/09/25" format
+                            const parts = dateStr.split(' ')
+                            if (parts.length > 1) {
+                              const datePart = parts[1] // "15/09/25"
+                              const [day, month, year] = datePart.split('/')
+                              const fullYear = year.length === 2 ? `20${year}` : year
+                              return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+                            }
+                          }
+                          // Try direct parsing
+                          return new Date(dateStr).toISOString().split('T')[0]
+                        } catch {
+                          return ''
+                        }
+                      })() : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const date = new Date(e.target.value)
+                          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
+                          const formattedDate = `${dayName} ${date.toLocaleDateString('en-GB')}`
+                          setFormData({...formData, scheduledDate: formattedDate})
+                        } else {
+                          setFormData({...formData, scheduledDate: ''})
+                        }
+                      }}
+                      className="glass-card border-white/20" 
+                    />
+                    {formData.scheduledDate && (
+                      <p className="text-xs text-green-400 mt-1">
+                        📅 {formData.scheduledDate}
+                      </p>
+                    )}
+                  </div>
                 </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                <label className="text-sm font-medium mb-2 block">Duration</label>
+                <label className="text-sm font-medium mb-2 block">Duration (minutes)</label>
                 <Input 
-                  placeholder="e.g. 45 min" 
-                  value={formData.duration}
-                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  type="number"
+                  placeholder="minutes" 
+                  min="1"
+                  max="300"
+                  value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
+                  onChange={(e) => {
+                    const minutes = e.target.value
+                    setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
+                  }}
                   className="glass-card border-white/20" 
                 />
+                {formData.duration && (
+                  <p className="text-xs text-blue-400 mt-1">
+                    ⏱️ {formData.duration}
+                  </p>
+                )}
                 </div>
                 <div>
                 <label className="text-sm font-medium mb-2 block">Video URL (Optional)</label>
@@ -1201,15 +1128,6 @@ export default function LessonsPage() {
                 />
                   </div>
                 </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
-              <Textarea 
-                placeholder="Lesson description" 
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="glass-card border-white/20" 
-              />
-            </div>
                 <div className="flex gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
@@ -1217,7 +1135,7 @@ export default function LessonsPage() {
               <Button 
                 className="bg-gradient-to-r from-blue-500 to-purple-600"
                 onClick={handleCreateLesson}
-                disabled={!formData.title || !formData.subject || !formData.module}
+                disabled={!formData.title || !formData.subject}
               >
                 Create Lesson
               </Button>
@@ -1235,9 +1153,9 @@ export default function LessonsPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Title</label>
+                <label className="text-sm font-medium mb-2 block">Topic</label>
                 <Input 
-                  placeholder="Lesson title" 
+                  placeholder="Topic" 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="glass-card border-white/20" 
@@ -1253,16 +1171,18 @@ export default function LessonsPage() {
                 />
       </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Module</label>
+                <label className="text-sm font-medium mb-2 block">Subtopic</label>
                 <Input 
-                  placeholder="Module name" 
-                  value={formData.module}
-                  onChange={(e) => setFormData({...formData, module: e.target.value})}
+                  placeholder="Subtopic (optional)" 
+                  value={formData.subtopic}
+                  onChange={(e) => setFormData({...formData, subtopic: e.target.value})}
                   className="glass-card border-white/20" 
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Instructor</label>
                 <Input 
@@ -1272,16 +1192,119 @@ export default function LessonsPage() {
                   className="glass-card border-white/20" 
                 />
               </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Week</label>
+                <Input 
+                  type="number"
+                  placeholder="1" 
+                  min="1"
+                  max="52"
+                  value={formData.week}
+                  onChange={(e) => setFormData({...formData, week: e.target.value})}
+                  className="glass-card border-white/20" 
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Grade</label>
+                <Input 
+                  type="number"
+                  placeholder="10" 
+                  min="1"
+                  max="12"
+                  value={formData.grade}
+                  onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                  className="glass-card border-white/20" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select value={formData.status} onValueChange={(value: 'draft' | 'active') => setFormData({...formData, status: value})}>
+                  <SelectTrigger className="glass-card border-white/20">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                        <span>📝 Draft</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="active">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>✅ Active</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Scheduled Date</label>
+                <Input 
+                  type="date"
+                  value={formData.scheduledDate ? (() => {
+                    try {
+                      // Try to parse existing date formats
+                      const dateStr = formData.scheduledDate
+                      if (dateStr.includes('/')) {
+                        // Handle "Monday 15/09/25" format
+                        const parts = dateStr.split(' ')
+                        if (parts.length > 1) {
+                          const datePart = parts[1] // "15/09/25"
+                          const [day, month, year] = datePart.split('/')
+                          const fullYear = year.length === 2 ? `20${year}` : year
+                          return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+                        }
+                      }
+                      // Try direct parsing
+                      return new Date(dateStr).toISOString().split('T')[0]
+                    } catch {
+                      return ''
+                    }
+                  })() : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const date = new Date(e.target.value)
+                      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
+                      const formattedDate = `${dayName} ${date.toLocaleDateString('en-GB')}`
+                      setFormData({...formData, scheduledDate: formattedDate})
+                    } else {
+                      setFormData({...formData, scheduledDate: ''})
+                    }
+                  }}
+                  className="glass-card border-white/20" 
+                />
+                {formData.scheduledDate && (
+                  <p className="text-xs text-green-400 mt-1">
+                    📅 {formData.scheduledDate}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Duration</label>
+                <label className="text-sm font-medium mb-2 block">Duration (minutes)</label>
                 <Input 
-                  placeholder="e.g. 45 min" 
-                  value={formData.duration}
-                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  type="number"
+                  placeholder="minutes" 
+                  min="1"
+                  max="300"
+                  value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
+                  onChange={(e) => {
+                    const minutes = e.target.value
+                    setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
+                  }}
                   className="glass-card border-white/20" 
                 />
+                {formData.duration && (
+                  <p className="text-xs text-blue-400 mt-1">
+                    ⏱️ {formData.duration}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Video URL (Optional)</label>
@@ -1293,15 +1316,6 @@ export default function LessonsPage() {
                 />
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
-              <Textarea 
-                placeholder="Lesson description" 
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="glass-card border-white/20" 
-              />
-            </div>
             <div className="flex gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
@@ -1309,7 +1323,7 @@ export default function LessonsPage() {
               <Button 
                 className="bg-gradient-to-r from-green-500 to-green-600"
                 onClick={handleUpdateLesson}
-                disabled={!formData.title || !formData.subject || !formData.module}
+                disabled={!formData.title || !formData.subject}
               >
                 Update Lesson
               </Button>
@@ -1329,7 +1343,7 @@ export default function LessonsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Title</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Topic</h3>
                     <p className="text-lg font-semibold">{selectedLesson.title}</p>
                   </div>
                   <div>
@@ -1338,10 +1352,13 @@ export default function LessonsPage() {
                       {selectedLesson.subject}
                     </Badge>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Module</h3>
-                    <p className="text-sm">{selectedLesson.module}</p>
-                  </div>
+
+                  {selectedLesson.subtopic && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Subtopic</h3>
+                      <p className="text-sm">{selectedLesson.subtopic}</p>
+                    </div>
+                  )}
                   {selectedLesson.grade && (
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-1">Grade</h3>
@@ -1373,17 +1390,26 @@ export default function LessonsPage() {
                       <p className="text-sm">Week {selectedLesson.week}</p>
                     </div>
                   )}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
+                    <Badge 
+                      variant="outline" 
+                      className={`${
+                        selectedLesson.status === 'active' 
+                          ? 'border-green-400/50 bg-green-400/10 text-green-400' 
+                          : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400'
+                      } text-xs font-medium px-3 py-1 flex items-center gap-2 w-fit`}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${
+                        selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
+                      }`}></div>
+                      {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               
-              {selectedLesson.description && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
-                  <p className="text-sm bg-white/5 p-3 rounded-lg border border-white/10">
-                    {selectedLesson.description}
-                  </p>
-                </div>
-              )}
+
               
               {selectedLesson.videoUrl && (
                 <div>
@@ -1426,11 +1452,27 @@ export default function LessonsPage() {
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Created</h3>
-                  <p className="text-sm">{new Date(selectedLesson.createdAt).toLocaleString()}</p>
+                  <p className="text-sm">{new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: '2-digit', 
+                    year: 'numeric' 
+                  })} at {new Date(selectedLesson.createdAt).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: true 
+                  })}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Last Updated</h3>
-                  <p className="text-sm">{new Date(selectedLesson.updatedAt).toLocaleString()}</p>
+                  <p className="text-sm">{new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: '2-digit', 
+                    year: 'numeric' 
+                  })} at {new Date(selectedLesson.updatedAt).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: true 
+                  })}</p>
                 </div>
               </div>
               
@@ -1449,418 +1491,14 @@ export default function LessonsPage() {
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Lesson
                 </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    handleDuplicateLesson(selectedLesson)
-                    setIsViewDialogOpen(false)
-                  }}
-                  className="border-green-500/20 text-green-400 hover:bg-green-500/10"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Duplicate
-                </Button>
+
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* CSV Import Dialog */}
-      <Dialog open={isImportDialogOpen} onOpenChange={isImporting ? undefined : setIsImportDialogOpen}>
-        <DialogContent className="max-w-7xl w-[95vw] max-h-[90vh] glass-card relative overflow-hidden">
-          {/* Loading Overlay */}
-          {isImporting && (
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
-              <div className="bg-gray-900/90 p-6 rounded-lg border border-white/20 shadow-2xl">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                  <div>
-                    <div className="font-medium text-white">Importing Lessons</div>
-                    <div className="text-sm text-gray-400">{importStatus}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogHeader className="pb-4">
-            <DialogTitle>Import Lessons from CSV</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            {/* File Upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">CSV File</label>
-              <div className="border-2 border-dashed border-white/20 rounded-lg p-6 bg-gradient-to-br from-white/5 to-white/10 hover:border-white/30 transition-colors">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="csv-upload-enhanced"
-                />
-                <label htmlFor="csv-upload-enhanced" className="cursor-pointer">
-                  <div className="text-center">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-green-400" />
-                    <p className="text-sm font-medium">Click to upload CSV file</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 text-xs text-muted-foreground">
-                      <div className="p-2 bg-green-500/10 rounded border border-green-500/20">
-                        <strong className="text-green-400">Required:</strong> Week, Date, Topic, Sub-topic, Grade
-                      </div>
-                      <div className="p-2 bg-blue-500/10 rounded border border-blue-500/20">
-                        <strong className="text-blue-400">Optional:</strong> Instructor, Duration, Video URL
-                      </div>
-                    </div>
-                    <p className="text-xs text-blue-400 mt-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
-                      Column mapping: Topic → Subject, Sub-topic → Title
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* Enhanced Import Preview */}
-            {importPreview.length > 0 && (
-              <div className="space-y-4">
-                {/* Preview Header with Stats */}
-                <div className="space-y-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold">Preview ({importStats.total} lessons)</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded border border-green-500/20">
-                          <Check className="w-4 h-4 text-green-400" />
-                          <div>
-                            <div className="text-sm font-medium text-green-400">{importStats.valid}</div>
-                            <div className="text-xs text-green-400/70">Valid</div>
-                          </div>
-                        </div>
-                        {importStats.withErrors > 0 && (
-                          <div className="flex items-center gap-2 p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
-                            <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                            <div>
-                              <div className="text-sm font-medium text-yellow-400">{importStats.withErrors}</div>
-                              <div className="text-xs text-yellow-400/70">Issues</div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 p-2 bg-blue-500/10 rounded border border-blue-500/20">
-                          <CheckSquare className="w-4 h-4 text-blue-400" />
-                          <div>
-                            <div className="text-sm font-medium text-blue-400">{importStats.selected}</div>
-                            <div className="text-xs text-blue-400/70">Selected</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                      <Badge variant="outline" className="text-green-400 border-green-400 text-xs">
-                        {csvFile?.name}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowValidationErrors(!showValidationErrors)}
-                        className="border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10"
-                      >
-                        <Settings className="w-4 h-4 mr-1" />
-                        {showValidationErrors ? 'Hide' : 'Show'} Issues
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Search and Filter */}
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Search preview..."
-                        value={importPreviewFilter}
-                        onChange={(e) => setImportPreviewFilter(e.target.value)}
-                        className="pl-10 glass-card border-white/20"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAllImportRows}
-                    className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
-                  >
-                    {selectedImportRows.length === filteredImportRows.length ? 'Deselect All' : 'Select All'}
-                  </Button>
-                </div>
-                
-                {/* Enhanced Preview Table */}
-                <div className="border border-white/20 rounded-lg overflow-hidden bg-white/5 shadow-lg">
-                  <div className="overflow-x-auto">
-                    <div className="max-h-80 overflow-y-auto min-w-[800px]">
-                      <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm">
-                          <TableRow className="border-white/20">
-                            <TableHead className="w-12 text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleSelectAllImportRows}
-                                className="h-6 w-6 p-0"
-                              >
-                                {selectedImportRows.length === filteredImportRows.length && filteredImportRows.length > 0 ? (
-                                  <CheckSquare className="w-4 h-4" />
-                                ) : (
-                                  <Square className="w-4 h-4" />
-                                )}
-                              </Button>
-                            </TableHead>
-                            <TableHead className="w-16 text-center">Status</TableHead>
-                            <TableHead className="min-w-[200px]">Title</TableHead>
-                            <TableHead className="min-w-[120px]">Subject</TableHead>
-                            <TableHead className="min-w-[120px]">Instructor</TableHead>
-                            <TableHead className="min-w-[100px]">Duration</TableHead>
-                            <TableHead className="w-20 text-center">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedImportRows.map((lesson: Lesson) => {
-                            const errors = validateImportRow(lesson)
-                            const hasErrors = errors.length > 0
-                            const isSelected = selectedImportRows.includes(lesson.id)
-                            const isEditing = editingRow === lesson.id
-                            
-                            return (
-                              <TableRow 
-                                key={lesson.id} 
-                                className={`${isSelected ? "bg-blue-500/10" : ""} ${hasErrors && showValidationErrors ? "bg-red-500/5" : ""} border-white/10`}
-                              >
-                                <TableCell className="text-center">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleSelectImportRow(lesson.id)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    {isSelected ? (
-                                      <CheckSquare className="w-4 h-4 text-blue-400" />
-                                    ) : (
-                                      <Square className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {hasErrors ? (
-                                    <div className="flex items-center justify-center gap-1" title={errors.join(', ')}>
-                                      <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                                      <span className="text-xs text-yellow-400">{errors.length}</span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex justify-center">
-                                      <Check className="w-4 h-4 text-green-400" />
-                                    </div>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {isEditing ? (
-                                    <Input 
-                                      value={editRowData.title || ''}
-                                      onChange={(e) => setEditRowData({...editRowData, title: e.target.value})}
-                                      className="h-8 text-xs"
-                                    />
-                                  ) : (
-                                    <div className="max-w-[200px] truncate">
-                                      <span className={`font-medium ${!lesson.title ? 'text-red-400' : ''}`}>
-                                        {lesson.title || 'Missing Title'}
-                                      </span>
-                                    </div>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {isEditing ? (
-                                    <Input 
-                                      value={editRowData.subject || ''}
-                                      onChange={(e) => setEditRowData({...editRowData, subject: e.target.value})}
-                                      className="h-8 text-xs"
-                                    />
-                                  ) : (
-                                    <Badge variant="outline" className={`${!lesson.subject ? 'border-red-400 text-red-400' : 'border-blue-400 text-blue-400'} text-xs whitespace-nowrap`}>
-                                      {lesson.subject || 'Missing'}
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {isEditing ? (
-                                    <Input 
-                                      value={editRowData.instructor || ''}
-                                      onChange={(e) => setEditRowData({...editRowData, instructor: e.target.value})}
-                                      className="h-8 text-xs"
-                                      placeholder="Instructor name"
-                                    />
-                                  ) : (
-                                    <div className="max-w-[120px] truncate">
-                                      <span className={`text-sm ${!lesson.instructor || lesson.instructor.trim() === '' ? 'text-gray-500 italic' : ''}`}>
-                                        {lesson.instructor && lesson.instructor.trim() !== '' ? lesson.instructor : 'Not specified'}
-                                      </span>
-                                    </div>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {isEditing ? (
-                                    <Input 
-                                      value={editRowData.duration || ''}
-                                      onChange={(e) => setEditRowData({...editRowData, duration: e.target.value})}
-                                      className="h-8 text-xs"
-                                    />
-                                  ) : (
-                                    <span className="text-sm whitespace-nowrap">{lesson.duration || 'N/A'}</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <div className="flex items-center justify-center gap-1">
-                                    {isEditing ? (
-                                      <>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={handleSaveEditRow}
-                                          className="h-7 w-7 p-0 text-green-400 hover:text-green-300"
-                                        >
-                                          <Check className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => setEditingRow(null)}
-                                          className="h-7 w-7 p-0 text-gray-400 hover:text-gray-300"
-                                        >
-                                          <X className="w-3 h-3" />
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleEditImportRow(lesson)}
-                                          className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
-                                          title="Edit Row"
-                                        >
-                                          <Edit className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleDeleteImportRow(lesson.id)}
-                                          className="h-7 w-7 p-0 text-red-400 hover:text-red-300"
-                                          title="Remove Row"
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </TableCell>
-                            </TableRow>
-                            )
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                  
-                  {/* Preview Pagination */}
-                  {filteredImportRows.length > PREVIEW_ITEMS_PER_PAGE && (
-                    <div className="flex items-center justify-between p-3 border-t border-white/20">
-                      <div className="text-sm text-muted-foreground">
-                        Showing {((previewCurrentPage - 1) * PREVIEW_ITEMS_PER_PAGE) + 1} to {Math.min(previewCurrentPage * PREVIEW_ITEMS_PER_PAGE, filteredImportRows.length)} of {filteredImportRows.length} rows
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPreviewCurrentPage(Math.max(1, previewCurrentPage - 1))}
-                          disabled={previewCurrentPage === 1}
-                          className="glass-card border-white/20"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                        <span className="text-sm">{previewCurrentPage} / {Math.ceil(filteredImportRows.length / PREVIEW_ITEMS_PER_PAGE)}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPreviewCurrentPage(Math.min(Math.ceil(filteredImportRows.length / PREVIEW_ITEMS_PER_PAGE), previewCurrentPage + 1))}
-                          disabled={previewCurrentPage >= Math.ceil(filteredImportRows.length / PREVIEW_ITEMS_PER_PAGE)}
-                          className="glass-card border-white/20"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Import Progress Indicator */}
-            {isImporting && (
-              <div className="space-y-3 p-4 bg-gradient-to-r from-blue-500/10 to-green-500/10 rounded-lg border border-blue-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-400">Import Progress</span>
-                  <span className="text-sm text-muted-foreground">{importProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${importProgress}%` }}
-                  ></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                  <span className="text-sm text-muted-foreground">{importStatus}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsImportDialogOpen(false)
-                  setImportPreview([])
-                  setCsvFile(null)
-                  setSelectedImportRows([])
-                  setImportPreviewFilter("")
-                  setPreviewCurrentPage(1)
-                  setImportProgress(0)
-                  setImportStatus('')
-                }}
-                disabled={isImporting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="bg-gradient-to-r from-green-500 to-green-600 min-w-[160px]"
-                onClick={handleImport}
-                disabled={importPreview.length === 0 || isImporting}
-              >
-                {isImporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    <span className="animate-pulse">Importing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Import {importStats.selected} Lessons
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      
     </div>
   )
 }

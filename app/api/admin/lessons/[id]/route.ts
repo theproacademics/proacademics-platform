@@ -21,16 +21,19 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const { title, subject, module, instructor, duration, description, videoUrl } = body
+    const { title, subject, subtopic, instructor, duration, videoUrl, week, scheduledDate, grade, status } = body
 
     const updatedLesson = await lessonService.updateLesson(params.id, {
       title,
       subject,
-      module,
+      subtopic: subtopic || '',
       instructor: instructor || '',
       duration: duration || '',
-      description: description || '',
-      videoUrl: videoUrl || ''
+      videoUrl: videoUrl || '',
+      week: week || '',
+      scheduledDate: scheduledDate || '',
+      grade: grade || '',
+      status: status || 'draft'
     })
 
     if (!updatedLesson) {

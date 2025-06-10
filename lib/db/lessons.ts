@@ -30,11 +30,12 @@ export interface Lesson {
   id: string
   title: string
   subject: string
-  module: string
+  subtopic?: string
   instructor?: string // Made optional
   duration?: string // Made optional
   description?: string
   videoUrl?: string
+  status: 'draft' | 'active' // Status field
   createdAt: Date
   updatedAt: Date
   // CSV import specific fields
@@ -49,6 +50,7 @@ export interface LessonQuery {
   search?: string
   subject?: string
   instructor?: string
+  status?: string
 }
 
 class LessonService {
@@ -97,7 +99,7 @@ class LessonService {
     totalPages: number
   }> {
     const collection = await this.getCollection()
-    const { page = 1, limit = 10, search, subject, instructor } = query
+    const { page = 1, limit = 10, search, subject, instructor, status } = query
 
     // Build filter
     const filter: any = {}
@@ -117,6 +119,10 @@ class LessonService {
     
     if (instructor && instructor !== 'all') {
       filter.instructor = instructor
+    }
+    
+    if (status && status !== 'all') {
+      filter.status = status
     }
 
     const total = await collection.countDocuments(filter)
@@ -175,27 +181,49 @@ class LessonService {
   async getUniqueSubjects(): Promise<string[]> {
     const collection = await this.getCollection()
     const subjects = await collection.distinct('subject')
-    return subjects.filter(subject => subject && subject.trim() !== '')
+    return subjects.filter(subject => 
+      subject && 
+      subject.trim() !== '' && 
+      subject.trim() !== '-' &&
+      subject.toLowerCase() !== 'undefined' &&
+      subject.toLowerCase() !== 'null'
+    )
   }
 
   // Get unique instructors for filtering
   async getUniqueInstructors(): Promise<string[]> {
     const collection = await this.getCollection()
     const instructors = await collection.distinct('instructor')
-    return instructors.filter(instructor => instructor && instructor.trim() !== '')
+    return instructors.filter(instructor => 
+      instructor && 
+      instructor.trim() !== '' && 
+      instructor.trim() !== '-' &&
+      instructor.toLowerCase() !== 'undefined' &&
+      instructor.toLowerCase() !== 'null'
+    )
   }
 
   // Get lesson statistics
   async getLessonStats(): Promise<{
     totalLessons: number
+    activeLessons: number
+    draftLessons: number
     totalInstructors: number
     subjectBreakdown: { subject: string; count: number }[]
   }> {
     const collection = await this.getCollection()
     
     const totalLessons = await collection.countDocuments()
+    const activeLessons = await collection.countDocuments({ status: 'active' })
+    const draftLessons = await collection.countDocuments({ status: 'draft' })
     const instructors = await collection.distinct('instructor')
-    const totalInstructors = instructors.length
+    const totalInstructors = instructors.filter(instructor => 
+      instructor && 
+      instructor.trim() !== '' && 
+      instructor.trim() !== '-' &&
+      instructor.toLowerCase() !== 'undefined' &&
+      instructor.toLowerCase() !== 'null'
+    ).length
 
     const subjectBreakdown = await collection.aggregate([
       {
@@ -218,6 +246,8 @@ class LessonService {
 
     return {
       totalLessons,
+      activeLessons,
+      draftLessons,
       totalInstructors,
       subjectBreakdown: subjectBreakdown as { subject: string; count: number }[]
     }
