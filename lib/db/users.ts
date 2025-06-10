@@ -30,7 +30,12 @@ export interface User {
   _id?: string
   id: string
   name: string
+  nickname?: string
   email: string
+  phone?: string
+  dateOfBirth?: string
+  schoolName?: string
+  uniqueToken?: string
   password: string
   role: "student" | "teacher" | "admin" | "parent"
   avatar?: string
@@ -47,6 +52,9 @@ export interface User {
   recentTopics?: string[]
   permissions?: string[]
   subjects?: string[]
+  deviceFingerprint?: string
+  userAgent?: string
+  timezone?: string
   createdAt: Date
   updatedAt: Date
   isEmailVerified?: boolean
@@ -64,10 +72,18 @@ class UserService {
   async createUser(userData: Omit<User, "_id" | "createdAt" | "updatedAt">): Promise<User> {
     const collection = await this.getCollection()
     
-    // Check if user already exists
+    // Check if user already exists by email
     const existingUser = await collection.findOne({ email: userData.email })
     if (existingUser) {
       throw new Error("User already exists with this email")
+    }
+
+    // Check if unique token already exists
+    if (userData.uniqueToken) {
+      const existingTokenUser = await collection.findOne({ uniqueToken: userData.uniqueToken })
+      if (existingTokenUser) {
+        throw new Error("This unique access token is already in use")
+      }
     }
 
     // Hash password
@@ -98,6 +114,16 @@ class UserService {
   async findUserById(id: string): Promise<User | null> {
     const collection = await this.getCollection()
     return await collection.findOne({ id })
+  }
+
+  async getAllStudents(): Promise<User[]> {
+    const collection = await this.getCollection()
+    return await collection.find({ role: "student" }).sort({ createdAt: -1 }).toArray()
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const collection = await this.getCollection()
+    return await collection.find({}).sort({ createdAt: -1 }).toArray()
   }
 
   async updateUser(id: string, updateData: Partial<User>): Promise<User | null> {

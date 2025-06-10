@@ -3,10 +3,24 @@ import { createUser, userExists } from "@/lib/auth"
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, role } = await req.json()
+    const { 
+      name, 
+      nickname, 
+      email, 
+      phone, 
+      dateOfBirth, 
+      schoolName, 
+      uniqueToken, 
+      password, 
+      role,
+      deviceFingerprint,
+      timestamp,
+      userAgent,
+      timezone
+    } = await req.json()
 
     // Validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !dateOfBirth || !schoolName || !uniqueToken) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -20,7 +34,20 @@ export async function POST(req: Request) {
     }
 
     // Create user
-    const user = await createUser({ name, email, password, role })
+    const user = await createUser({ 
+      name, 
+      nickname, 
+      email, 
+      phone, 
+      dateOfBirth, 
+      schoolName, 
+      uniqueToken, 
+      password, 
+      role,
+      deviceFingerprint,
+      userAgent,
+      timezone
+    })
 
     return NextResponse.json({ message: "User created successfully", user }, { status: 201 })
   } catch (error) {

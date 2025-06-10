@@ -84,16 +84,32 @@ export const authOptions: NextAuthOptions = {
 // Helper function to create a new user
 export async function createUser(userData: {
   name: string
+  nickname?: string
   email: string
+  phone?: string
+  dateOfBirth: string
+  schoolName: string
+  uniqueToken: string
   password: string
   role?: string
+  deviceFingerprint?: string
+  userAgent?: string
+  timezone?: string
 }) {
   const newUser = await userService.createUser({
     id: `user-${Date.now()}`,
     name: userData.name,
+    nickname: userData.nickname || "",
     email: userData.email,
+    phone: userData.phone || "",
+    dateOfBirth: userData.dateOfBirth,
+    schoolName: userData.schoolName,
+    uniqueToken: userData.uniqueToken,
     password: userData.password,
     role: (userData.role as any) || "student",
+    deviceFingerprint: userData.deviceFingerprint || "",
+    userAgent: userData.userAgent || "",
+    timezone: userData.timezone || "",
     createdAt: new Date(),
     updatedAt: new Date(),
   })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,7 +28,12 @@ import {
 interface Student {
   id: string
   name: string
+  nickname?: string
   email: string
+  phone?: string
+  dateOfBirth?: string
+  schoolName?: string
+  uniqueToken?: string
   avatar: string
   level: number
   xp: number
@@ -39,6 +44,10 @@ interface Student {
   subjects: string[]
   totalLessons: number
   completionRate: number
+  role?: string
+  timezone?: string
+  userAgent?: string
+  deviceFingerprint?: string
 }
 
 const mockStudents: Student[] = [
@@ -105,9 +114,43 @@ const mockStudents: Student[] = [
 ]
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState(mockStudents)
+  const [students, setStudents] = useState<Student[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+
+  // Fetch dynamic data from API
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/admin/students')
+        const data = await response.json()
+        
+        if (data.students) {
+          // Combine static mock data with dynamic data
+          const combinedStudents = [
+            ...mockStudents, // Keep existing static data
+            ...data.students.filter((dynamicStudent: Student) => 
+              !mockStudents.some(mockStudent => mockStudent.email === dynamicStudent.email)
+            ) // Add new dynamic students that don't exist in mock data
+          ]
+          setStudents(combinedStudents)
+        } else {
+          // Fallback to mock data if API fails
+          setStudents(mockStudents)
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error)
+        // Fallback to mock data on error
+        setStudents(mockStudents)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStudents()
+  }, [])
 
   const filteredStudents = students.filter(
     (student) =>
@@ -207,84 +250,94 @@ export default function StudentsPage() {
       {/* Students Table */}
       <Card className="glass-card futuristic-border">
         <CardHeader>
-          <CardTitle>Students ({filteredStudents.length})</CardTitle>
+          <CardTitle>
+            Students ({filteredStudents.length})
+            {loading && <span className="text-sm text-muted-foreground ml-2">(Loading...)</span>}
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-full">
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead>Level & XP</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Subjects</TableHead>
+                <TableHead>Level</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Active</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredStudents.map((student) => (
                 <TableRow key={student.id}>
-                  <TableCell>
+                  <TableCell className="min-w-0">
                     <div className="flex items-center space-x-3">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-10 w-10 ring-2 ring-white/10 flex-shrink-0">
                         <AvatarImage src={student.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
                           {student.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium">{student.name}</p>
-                        <p className="text-sm text-muted-foreground">{student.email}</p>
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-semibold text-white text-sm truncate">
+                            {student.name}
+                          </p>
+                          {student.nickname && (
+                            <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
+                              {student.nickname}
+                            </span>
+                          )}
+                          {!mockStudents.some(mock => mock.email === student.email) && (
+                            <Badge variant="outline" className="text-xs border-blue-400 text-blue-400 bg-blue-500/10 flex-shrink-0">
+                              New
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-gray-400 truncate">{student.email}</p>
+                          {student.schoolName && (
+                            <p className="text-xs text-blue-400 truncate">🏫 {student.schoolName}</p>
+                          )}
+                          {student.phone && (
+                            <p className="text-xs text-green-400">📞 {student.phone}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Level {student.level}</Badge>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Zap className="w-3 h-3 mr-1 text-purple-400" />
-                        {student.xp}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        student.grade.includes("A")
-                          ? "border-green-500 text-green-400"
-                          : student.grade.includes("B")
-                            ? "border-blue-500 text-blue-400"
-                            : "border-yellow-500 text-yellow-400"
-                      }
-                    >
-                      {student.grade}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {student.subjects.slice(0, 2).map((subject) => (
-                        <Badge key={subject} variant="secondary" className="text-xs">
-                          {subject}
-                        </Badge>
-                      ))}
-                      {student.subjects.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{student.subjects.length - 2}
-                        </Badge>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="border-purple-400 text-purple-400">
+                          Level {student.level}
+                        </Badge>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Zap className="w-3 h-3 mr-1 text-purple-400" />
+                          {student.xp}
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={
+                          student.grade.includes("A")
+                            ? "border-green-500 text-green-400"
+                            : student.grade.includes("B")
+                              ? "border-blue-500 text-blue-400"
+                              : "border-yellow-500 text-yellow-400"
+                        }
+                      >
+                        {student.grade}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>{student.completionRate}%</span>
-                        <span className="text-muted-foreground">{student.totalLessons} lessons</span>
+                        <span className="text-white font-medium">{student.completionRate}%</span>
+                        <span className="text-muted-foreground text-xs">{student.totalLessons} lessons</span>
                       </div>
                       <div className="w-full bg-white/10 rounded-full h-2">
                         <div
@@ -292,15 +345,27 @@ export default function StudentsPage() {
                           style={{ width: `${student.completionRate}%` }}
                         />
                       </div>
+                      <div className="flex flex-wrap gap-1">
+                        {student.subjects.slice(0, 2).map((subject) => (
+                          <Badge key={subject} variant="secondary" className="text-xs">
+                            {subject}
+                          </Badge>
+                        ))}
+                        {student.subjects.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{student.subjects.length - 2}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(student.status)}>{student.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(student.lastActive).toLocaleDateString()}
-                    </span>
+                    <div className="space-y-2">
+                      <Badge className={getStatusColor(student.status)}>{student.status}</Badge>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(student.lastActive).toLocaleDateString()}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -372,10 +437,18 @@ export default function StudentsPage() {
                       <Mail className="w-4 h-4 mr-2" />
                       {selectedStudent.email}
                     </div>
+                    {selectedStudent.phone && (
+                      <div className="flex items-center">
+                        📱 <span className="ml-2">{selectedStudent.phone}</span>
+                      </div>
+                    )}
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
                       Joined {new Date(selectedStudent.joinDate).toLocaleDateString()}
                     </div>
+                    {selectedStudent.dateOfBirth && (
+                      <div>DOB: {new Date(selectedStudent.dateOfBirth).toLocaleDateString()}</div>
+                    )}
                   </div>
                 </div>
 
@@ -385,9 +458,29 @@ export default function StudentsPage() {
                     <div>Current Grade: {selectedStudent.grade}</div>
                     <div>Total XP: {selectedStudent.xp}</div>
                     <div>Completion Rate: {selectedStudent.completionRate}%</div>
+                    {selectedStudent.schoolName && (
+                      <div>School: {selectedStudent.schoolName}</div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {selectedStudent.uniqueToken && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Access Information</p>
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="text-sm">
+                      <span className="font-medium text-green-400">Unique Token:</span>
+                      <span className="ml-2 font-mono text-green-300">{selectedStudent.uniqueToken}</span>
+                    </div>
+                    {selectedStudent.timezone && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Timezone: {selectedStudent.timezone}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="text-sm font-medium mb-2">Enrolled Subjects</p>

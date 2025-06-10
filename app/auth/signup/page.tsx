@@ -17,7 +17,12 @@ import { usePreloader } from "@/hooks/use-preloader"
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
     name: "",
+    nickname: "",
     email: "",
+    phone: "",
+    dateOfBirth: "",
+    schoolName: "",
+    uniqueToken: "",
     password: "",
     confirmPassword: "",
     role: "student",
@@ -329,6 +334,18 @@ export default function SignUpPage() {
       setError("Name is too long (max 50 characters)")
       return false
     }
+    if (!formData.dateOfBirth.trim()) {
+      setError("Date of birth is required")
+      return false
+    }
+    if (!formData.schoolName.trim()) {
+      setError("School name is required")
+      return false
+    }
+    if (!formData.uniqueToken.trim()) {
+      setError("Unique access token is required")
+      return false
+    }
     if (!formData.email.trim()) {
       setError("Email is required")
       return false
@@ -396,7 +413,12 @@ export default function SignUpPage() {
         },
         body: JSON.stringify({
           name: formData.name.trim(),
+          nickname: formData.nickname.trim(),
           email: formData.email.toLowerCase().trim(),
+          phone: formData.phone.trim(),
+          dateOfBirth: formData.dateOfBirth,
+          schoolName: formData.schoolName.trim(),
+          uniqueToken: formData.uniqueToken.trim(),
           password: formData.password,
           role: formData.role,
           deviceFingerprint,
@@ -916,6 +938,56 @@ export default function SignUpPage() {
                 <CardContent className="space-y-3">
                   <form onSubmit={handleSubmit} className="space-y-3" noValidate>
                     
+                    {/* Unique Access Token Field */}
+                    <div className="space-y-1 group">
+                      <Label htmlFor="uniqueToken" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                        Unique Access Token
+                      </Label>
+                      <div className="relative">
+                      <Input
+                        id="uniqueToken"
+                        type="text"
+                        value={formData.uniqueToken}
+                        onChange={(e) => handleChange("uniqueToken", e.target.value)}
+                        placeholder="Enter your unique access token"
+                          className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                          style={{
+                            outline: 'none',
+                            boxShadow: 'none',
+                            border: '1px solid rgba(75, 85, 99, 0.5)',
+                            webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                            webkitTextFillColor: 'white'
+                          } as React.CSSProperties}
+                          onFocus={(e) => {
+                            e.target.style.outline = 'none'
+                            e.target.style.boxShadow = 'none'
+                            e.target.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                            e.target.style.animation = 'input-focus 0.3s ease-out forwards';
+                            (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                            (e.target.style as any).webkitTextFillColor = 'white'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
+                            e.target.style.animation = 'none'
+                            e.target.style.transform = 'scale(1)'
+                          }}
+                          onInput={(e) => {
+                            if (e.currentTarget.value.length > 0) {
+                              e.currentTarget.style.animation = 'typing-glow 1s ease-in-out infinite'
+                            } else {
+                              e.currentTarget.style.animation = 'none'
+                            }
+                          }}
+                        disabled={isLoading}
+                      />
+                        {formData.uniqueToken && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Name Field */}
                     <div className="space-y-1 group">
                       <Label htmlFor="name" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
@@ -966,6 +1038,56 @@ export default function SignUpPage() {
                       </div>
                     </div>
 
+                    {/* Nickname Field */}
+                    <div className="space-y-1 group">
+                      <Label htmlFor="nickname" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                        Nickname <span className="text-gray-500 text-xs">(optional, for friendly prompts from Lex)</span>
+                      </Label>
+                      <div className="relative">
+                      <Input
+                        id="nickname"
+                        type="text"
+                        value={formData.nickname}
+                        onChange={(e) => handleChange("nickname", e.target.value)}
+                        placeholder="Enter your nickname"
+                          className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                          style={{
+                            outline: 'none',
+                            boxShadow: 'none',
+                            border: '1px solid rgba(75, 85, 99, 0.5)',
+                            webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                            webkitTextFillColor: 'white'
+                          } as React.CSSProperties}
+                          onFocus={(e) => {
+                            e.target.style.outline = 'none'
+                            e.target.style.boxShadow = 'none'
+                            e.target.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                            e.target.style.animation = 'input-focus 0.3s ease-out forwards';
+                            (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                            (e.target.style as any).webkitTextFillColor = 'white'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
+                            e.target.style.animation = 'none'
+                            e.target.style.transform = 'scale(1)'
+                          }}
+                          onInput={(e) => {
+                            if (e.currentTarget.value.length > 0) {
+                              e.currentTarget.style.animation = 'typing-glow 1s ease-in-out infinite'
+                            } else {
+                              e.currentTarget.style.animation = 'none'
+                            }
+                          }}
+                        disabled={isLoading}
+                      />
+                        {formData.nickname && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Email Field */}
                     <div className="space-y-1 group">
                       <Label htmlFor="email" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
@@ -1009,6 +1131,149 @@ export default function SignUpPage() {
                         disabled={isLoading}
                       />
                         {formData.email && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Phone Number Field */}
+                    <div className="space-y-1 group">
+                      <Label htmlFor="phone" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                        Phone Number <span className="text-gray-500 text-xs">(optional) (for SMS nudges or parent contacts if needed)</span>
+                      </Label>
+                      <div className="relative">
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
+                        placeholder="Enter your phone number"
+                          className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                          style={{
+                            outline: 'none',
+                            boxShadow: 'none',
+                            border: '1px solid rgba(75, 85, 99, 0.5)',
+                            webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                            webkitTextFillColor: 'white'
+                          } as React.CSSProperties}
+                          onFocus={(e) => {
+                            e.target.style.outline = 'none'
+                            e.target.style.boxShadow = 'none'
+                            e.target.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                            e.target.style.animation = 'input-focus 0.3s ease-out forwards';
+                            (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                            (e.target.style as any).webkitTextFillColor = 'white'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
+                            e.target.style.animation = 'none'
+                            e.target.style.transform = 'scale(1)'
+                          }}
+                          onInput={(e) => {
+                            if (e.currentTarget.value.length > 0) {
+                              e.currentTarget.style.animation = 'typing-glow 1s ease-in-out infinite'
+                            } else {
+                              e.currentTarget.style.animation = 'none'
+                            }
+                          }}
+                        disabled={isLoading}
+                      />
+                        {formData.phone && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Date of Birth Field */}
+                    <div className="space-y-1 group">
+                      <Label htmlFor="dateOfBirth" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                        Date of Birth
+                      </Label>
+                      <div className="relative">
+                      <Input
+                        id="dateOfBirth"
+                        type="date"
+                        value={formData.dateOfBirth}
+                        onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                          className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                          style={{
+                            outline: 'none',
+                            boxShadow: 'none',
+                            border: '1px solid rgba(75, 85, 99, 0.5)',
+                            webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                            webkitTextFillColor: 'white',
+                            colorScheme: 'dark'
+                          } as React.CSSProperties}
+                          onFocus={(e) => {
+                            e.target.style.outline = 'none'
+                            e.target.style.boxShadow = 'none'
+                            e.target.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                            e.target.style.animation = 'input-focus 0.3s ease-out forwards';
+                            (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                            (e.target.style as any).webkitTextFillColor = 'white'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
+                            e.target.style.animation = 'none'
+                            e.target.style.transform = 'scale(1)'
+                          }}
+                        disabled={isLoading}
+                      />
+                        {formData.dateOfBirth && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* School Name Field */}
+                    <div className="space-y-1 group">
+                      <Label htmlFor="schoolName" className="text-gray-300 text-xs font-medium transition-all duration-300 group-focus-within:text-green-400 group-focus-within:drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                        School Name
+                      </Label>
+                      <div className="relative">
+                      <Input
+                        id="schoolName"
+                        type="text"
+                        value={formData.schoolName}
+                        onChange={(e) => handleChange("schoolName", e.target.value)}
+                        placeholder="Enter your school name"
+                          className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                          style={{
+                            outline: 'none',
+                            boxShadow: 'none',
+                            border: '1px solid rgba(75, 85, 99, 0.5)',
+                            webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                            webkitTextFillColor: 'white'
+                          } as React.CSSProperties}
+                          onFocus={(e) => {
+                            e.target.style.outline = 'none'
+                            e.target.style.boxShadow = 'none'
+                            e.target.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                            e.target.style.animation = 'input-focus 0.3s ease-out forwards';
+                            (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                            (e.target.style as any).webkitTextFillColor = 'white'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
+                            e.target.style.animation = 'none'
+                            e.target.style.transform = 'scale(1)'
+                          }}
+                          onInput={(e) => {
+                            if (e.currentTarget.value.length > 0) {
+                              e.currentTarget.style.animation = 'typing-glow 1s ease-in-out infinite'
+                            } else {
+                              e.currentTarget.style.animation = 'none'
+                            }
+                          }}
+                        disabled={isLoading}
+                      />
+                        {formData.schoolName && (
                           <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
                           </div>
