@@ -95,66 +95,43 @@ const ParticleBackground = () => {
   )
 }
 
-// Mock data
-const mockLessons = [
-  {
-    id: "1",
-    title: "Introduction to Quadratic Equations",
-    subject: "Mathematics",
-    module: "Algebra",
-    topic: "Quadratic Equations",
-    duration: "45 min",
-    difficulty: "Intermediate" as const,
-    xp: 50,
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    instructor: "Dr. Sarah Chen",
-    rating: 4.8,
-    students: 1247,
-    isLive: false,
-    description: "Master the fundamentals of quadratic equations with step-by-step examples and practice problems.",
-  },
-  {
-    id: "2",
-    title: "Calculus: Limits and Continuity",
-    subject: "Mathematics",
-    module: "Calculus",
-    topic: "Limits",
-    duration: "60 min",
-    difficulty: "Advanced" as const,
-    xp: 75,
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    instructor: "Prof. Michael Rodriguez",
-    rating: 4.9,
-    students: 892,
-    isLive: true,
-    liveDate: "Today 3:00 PM",
-    description: "Explore the concept of limits and continuity in calculus with real-world applications.",
-  },
-  {
-    id: "3",
-    title: "Physics: Wave Motion Fundamentals",
-    subject: "Physics",
-    module: "Waves",
-    topic: "Wave Properties",
-    duration: "50 min",
-    difficulty: "Intermediate" as const,
-    xp: 60,
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    instructor: "Dr. Emily Watson",
-    rating: 4.7,
-    students: 634,
-    isLive: false,
-    description: "Understanding wave properties, frequency, amplitude, and wave equations.",
-  },
-]
-
 const difficultyColors = {
   Beginner: "border-green-500 text-green-400",
   Intermediate: "border-yellow-500 text-yellow-400",
   Advanced: "border-red-500 text-red-400",
 }
 
+// Background color utilities for difficulty badges
+const difficultyBg: Record<string, string> = {
+  Beginner: "bg-green-500/40",
+  Intermediate: "bg-yellow-500/40",
+  Advanced: "bg-red-500/40",
+}
+
+const difficultyBgSolid: Record<string, string> = {
+  Beginner: "bg-green-500/90",
+  Intermediate: "bg-yellow-500/90",
+  Advanced: "bg-red-500/90",
+}
+
+// Define the lesson type for the frontend component
+interface Lesson {
+  id: string;
+  title: string;
+  subject: string;
+  topic: string;
+  duration: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  xp: number;
+  instructor: string;
+  isLive: boolean;
+  liveDate?: string;
+  description: string;
+}
+
 export default function LessonsPage() {
+  const [lessons, setLessons] = useState<Lesson[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
@@ -186,10 +163,46 @@ export default function LessonsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    const fetchLessons = async () => {
+      setIsLoading(true)
+      try {
+        // Fetch all lessons by setting a high limit and filtering to show only active ones
+        const response = await fetch('/api/admin/lessons?limit=1000&status=active')
+        const apiResult = await response.json()
+        
+        const apiLessons = apiResult.lessons || []
+
+        const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({
+          id: lesson.id,
+          title: lesson.title,
+          subject: lesson.subject,
+          topic: lesson.subtopic || 'General Topic',
+          duration: lesson.duration || 'N/A',
+          difficulty: lesson.difficulty || 'Intermediate',
+          xp: lesson.xp || 50,
+          instructor: lesson.instructor || 'ProAcademics Team',
+          isLive: lesson.status === 'active',
+          liveDate: lesson.scheduledDate,
+          description: lesson.description || 'Join us for this exciting lesson!',
+        }));
+        
+        setLessons(transformedLessons)
+      } catch (error) {
+        console.error("Failed to fetch lessons:", error)
+        setLessons([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchLessons()
+  }, [])
+
   const subjects = ["all", "Mathematics", "Physics", "Chemistry", "Biology"]
   const difficulties = ["all", "Beginner", "Intermediate", "Advanced"]
 
-  const filteredLessons = mockLessons.filter((lesson) => {
+  const filteredLessons = lessons.filter((lesson) => {
     const matchesSearch =
       lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lesson.topic.toLowerCase().includes(searchTerm.toLowerCase())
@@ -203,36 +216,36 @@ export default function LessonsPage() {
     {
       id: "total",
       title: "Total Lessons",
-      value: mockLessons.length,
+      value: lessons.length,
       icon: <BookOpen className="w-6 h-6" />,
       color: "blue" as const,
     },
     {
       id: "live",
-      title: "Live Today",
-      value: mockLessons.filter((l) => l.isLive).length,
+      title: "Published",
+      value: lessons.filter((l) => l.isLive).length,
       icon: <Calendar className="w-6 h-6" />,
       color: "green" as const,
     },
     {
       id: "xp",
       title: "Avg XP",
-      value: Math.round(mockLessons.reduce((acc, l) => acc + l.xp, 0) / mockLessons.length),
+      value: lessons.length > 0 ? Math.round(lessons.reduce((acc, l) => acc + l.xp, 0) / lessons.length) : 0,
       icon: <Zap className="w-6 h-6" />,
       color: "purple" as const,
     },
     {
-      id: "students",
-      title: "Students",
-      value: mockLessons.reduce((acc, l) => acc + l.students, 0).toLocaleString(),
-      icon: <Users className="w-6 h-6" />,
+      id: "subjects",
+      title: "Subjects",
+      value: [...new Set(lessons.map(l => l.subject))].length,
+      icon: <Sparkles className="w-6 h-6" />,
       color: "orange" as const,
     },
   ]
 
   // Show preloader
-  if (showPreloader) {
-    return <Preloader isVisible={showPreloader} colorScheme="purple" loadingText="Loading lessons and content" />
+  if (showPreloader || isLoading) {
+    return <Preloader isVisible={showPreloader || isLoading} colorScheme="purple" loadingText="Loading lessons and content" />
   }
 
   return (
@@ -542,151 +555,130 @@ export default function LessonsPage() {
                       {/* Glass edge highlights */}
                       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                       <div className="absolute left-0 top-0 w-px h-full bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-                                        {/* Image Section with Advanced Overlay */}
-                        <div className="relative overflow-hidden">
-                          {/* Background gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
-                          
-                          {/* Placeholder for now - can be replaced with actual image */}
-                          <div className="w-full h-64 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 flex items-center justify-center">
-                            <div className="text-center space-y-3">
-                              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-                                <Play className="w-8 h-8 text-white" />
-                              </div>
-                              <p className="text-slate-400 font-medium">Preview Available</p>
+                      
+                      {/* Image Section with Advanced Overlay */}
+                      <div className="relative overflow-hidden">
+                        {/* Background gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
+                        
+                        {/* Placeholder for now - can be replaced with actual image */}
+                        <div className="w-full h-64 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 flex items-center justify-center">
+                          <div className="text-center space-y-3">
+                            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/20">
+                              <Play className="w-8 h-8 text-white" />
                             </div>
+                            <p className="text-slate-400 font-medium">Preview Available</p>
                           </div>
-                          
-                          {/* Status badges */}
-                          <div className="absolute top-6 left-6 flex flex-col gap-3">
-                            {lesson.isLive && (
-                              <div className="relative">
-                                <div className="absolute inset-0 bg-red-500/40 rounded-2xl blur-xl animate-pulse"></div>
-                                <div className="relative bg-red-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></div>
-                                    <span className="text-white font-bold text-sm uppercase tracking-wider">LIVE</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                        </div>
+                        
+                        {/* Status badges */}
+                        <div className="absolute top-6 left-6 flex flex-col gap-3">
+                          {lesson.isLive && (
                             <div className="relative">
-                              <div className="absolute inset-0 bg-yellow-500/40 rounded-2xl blur-lg"></div>
-                              <div className="relative bg-yellow-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
+                              <div className="absolute inset-0 bg-red-500/40 rounded-2xl blur-xl animate-pulse"></div>
+                              <div className="relative bg-red-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
                                 <div className="flex items-center gap-2">
-                                  <Zap className="w-4 h-4 text-white" />
-                                  <span className="text-white font-bold text-sm">{lesson.xp} XP</span>
+                                  <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></div>
+                                  <span className="text-white font-bold text-sm uppercase tracking-wider">LIVE</span>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          
-                          {/* Difficulty badge */}
-                          <div className="absolute top-6 right-6">
-                            <div className="relative">
-                              <div className={`absolute inset-0 ${
-                                lesson.difficulty === 'Beginner' ? 'bg-green-500/40' :
-                                lesson.difficulty === 'Intermediate' ? 'bg-yellow-500/40' :
-                                'bg-red-500/40'
-                              } rounded-2xl blur-lg`}></div>
-                              <div className={`relative ${
-                                lesson.difficulty === 'Beginner' ? 'bg-green-500/90' :
-                                lesson.difficulty === 'Intermediate' ? 'bg-yellow-500/90' :
-                                'bg-red-500/90'
-                              } backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl`}>
-                                <span className="text-white font-bold text-sm">{lesson.difficulty}</span>
+                          )}
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-yellow-500/40 rounded-2xl blur-lg"></div>
+                            <div className="relative bg-yellow-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
+                              <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-white" />
+                                <span className="text-white font-bold text-sm">{lesson.xp} XP</span>
                               </div>
                             </div>
                           </div>
-                          
-                          {/* Interactive overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-sm">
-                            <div className="text-center space-y-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500">
-                              <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl"></div>
-                                <Button size="lg" className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-110 transition-all duration-300">
-                                  <Play className="w-6 h-6 mr-3" />
-                                  {lesson.isLive ? "Join Live Session" : "Start Lesson"}
-                                </Button>
-                              </div>
-                              <p className="text-white/80 font-medium">Click to begin learning</p>
+                        </div>
+                        
+                        {/* Difficulty badge */}
+                        <div className="absolute top-6 right-6">
+                          <div className="relative">
+                            <div className={`absolute inset-0 ${difficultyBg[lesson.difficulty] || 'bg-gray-500/40'} rounded-2xl blur-lg`}></div>
+                            <div className={`relative ${difficultyBgSolid[lesson.difficulty] || 'bg-gray-500/90'} backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl`}>
+                              <span className="text-white font-bold text-sm">{lesson.difficulty}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Interactive overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-sm">
+                          <div className="text-center space-y-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500">
+                            <div className="relative">
+                              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl"></div>
+                              <Button size="lg" className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-110 transition-all duration-300">
+                                <Play className="w-6 h-6 mr-3" />
+                                {lesson.isLive ? "Join Live Session" : "Start Lesson"}
+                              </Button>
+                            </div>
+                            <p className="text-white/80 font-medium">Click to begin learning</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="relative p-8 space-y-6">
+                        {/* Subject */}
+                        <div className="flex items-center">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-blue-500/30 rounded-xl blur-lg"></div>
+                            <div className="relative bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
+                              <span className="text-blue-300 font-semibold text-sm">{lesson.subject}</span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Content Section */}
-                        <div className="relative p-8 space-y-6">
-                          {/* Subject and ratings */}
-                          <div className="flex items-center justify-between">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-blue-500/30 rounded-xl blur-lg"></div>
-                              <div className="relative bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
-                                <span className="text-blue-300 font-semibold text-sm">{lesson.subject}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                              <span className="text-yellow-400 font-bold text-lg">{lesson.rating}</span>
-                            </div>
-                          </div>
+                        {/* Title and description */}
+                        <div className="space-y-4">
+                          <h3 className="text-2xl font-black text-white group-hover:text-blue-300 transition-colors duration-300 leading-tight">
+                            {lesson.title}
+                          </h3>
+                          <p className="text-slate-400 text-base leading-relaxed line-clamp-3">
+                            {lesson.description}
+                          </p>
+                        </div>
 
-                          {/* Title and description */}
-                          <div className="space-y-4">
-                            <h3 className="text-2xl font-black text-white group-hover:text-blue-300 transition-colors duration-300 leading-tight">
-                              {lesson.title}
-                            </h3>
-                            <p className="text-slate-400 text-base leading-relaxed line-clamp-3">
-                              {lesson.description}
-                            </p>
+                        {/* Metrics */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
+                            <Clock className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                            <div className="text-lg font-bold text-white">{lesson.duration}</div>
+                            <div className="text-xs text-slate-400 font-medium">Duration</div>
                           </div>
+                          <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
+                            <Sparkles className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
+                            <div className="text-lg font-bold text-white">{lesson.difficulty}</div>
+                            <div className="text-xs text-slate-400 font-medium">Level</div>
+                          </div>
+                        </div>
 
-                          {/* Metrics */}
-                          <div className="grid grid-cols-3 gap-4">
-                            <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
-                              <Clock className="w-6 h-6 mx-auto mb-2 text-blue-400" />
-                              <div className="text-lg font-bold text-white">{lesson.duration}</div>
-                              <div className="text-xs text-slate-400 font-medium">Duration</div>
-                            </div>
-                            <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
-                              <Users className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-                              <div className="text-lg font-bold text-white">{lesson.students.toLocaleString()}</div>
-                              <div className="text-xs text-slate-400 font-medium">Students</div>
-                            </div>
-                            <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
-                              <Sparkles className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
-                              <div className="text-lg font-bold text-white">4.8</div>
-                              <div className="text-xs text-slate-400 font-medium">Rating</div>
-                            </div>
+                        {/* Instructor info */}
+                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-xl rounded-2xl border border-white/15">
+                          <div>
+                            <p className="text-white font-semibold text-lg">{lesson.instructor}</p>
+                            <p className="text-slate-400 text-sm font-medium">Expert Instructor</p>
                           </div>
-
-                          {/* Instructor info */}
-                          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-xl rounded-2xl border border-white/15">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/60 to-purple-500/60 rounded-full flex items-center justify-center backdrop-blur-xl border border-white/30">
-                                <span className="text-white font-bold text-lg">{lesson.instructor.split(' ').map(n => n[0]).join('')}</span>
+                          {lesson.isLive && lesson.liveDate && (
+                            <div className="text-right">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                                <span className="text-red-400 font-bold text-sm uppercase tracking-wider">LIVE NOW</span>
                               </div>
-                              <div>
-                                <p className="text-white font-semibold text-lg">{lesson.instructor}</p>
-                                <p className="text-slate-400 text-sm font-medium">Expert Instructor</p>
-                              </div>
+                              <p className="text-slate-300 text-sm font-semibold">{lesson.liveDate}</p>
                             </div>
-                            {lesson.isLive && lesson.liveDate && (
-                              <div className="text-right">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                                  <span className="text-red-400 font-bold text-sm uppercase tracking-wider">LIVE NOW</span>
-                                </div>
-                                <p className="text-slate-300 text-sm font-semibold">{lesson.liveDate}</p>
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
+          </div>
 
           {filteredLessons.length === 0 && (
             <div className="relative animate-fade-in">

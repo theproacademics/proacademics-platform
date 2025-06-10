@@ -289,6 +289,19 @@ html {
   scrollbar-color: #3b82f6 rgba(15, 23, 42, 0.8);
 }
 
+/* Scrollbar Hide Utility */
+.scrollbar-hide {
+  /* IE and Edge */
+  -ms-overflow-style: none;
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  /* Chrome, Safari and Opera */
+  display: none;
+}
+
 /* Enhanced Animations */
 @keyframes float-up {
   0% {

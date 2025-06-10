@@ -172,7 +172,7 @@ export function Navigation() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto relative z-10">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide relative z-10">
             {navigation.map((item, index) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
               return (
