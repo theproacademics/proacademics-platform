@@ -514,9 +514,9 @@ export default function LessonsPage() {
   // All import-related functions moved to /admin/lessons/import page
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Animated Background Elements - Extended to cover entire viewport */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Animated Background Elements - Covers entire screen including nav area */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-4 -left-4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-1/3 -right-8 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute -bottom-8 left-1/3 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
@@ -525,21 +525,27 @@ export default function LessonsPage() {
         <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-500/8 rounded-full blur-3xl animate-pulse delay-3000"></div>
         <div className="absolute top-1/2 left-5 w-48 h-48 bg-violet-500/8 rounded-full blur-3xl animate-pulse delay-4000"></div>
         
+        {/* Extended background elements behind nav */}
+        <div className="absolute top-1/4 left-20 w-56 h-56 bg-purple-500/8 rounded-full blur-3xl animate-pulse delay-5000"></div>
+        <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-6000"></div>
+        
         {/* Floating particles */}
         <div className="absolute top-20 left-10 w-2 h-2 bg-purple-400/60 rounded-full animate-bounce delay-500"></div>
         <div className="absolute top-40 right-20 w-1 h-1 bg-blue-400/60 rounded-full animate-bounce delay-1000"></div>
         <div className="absolute bottom-40 left-20 w-1.5 h-1.5 bg-cyan-400/60 rounded-full animate-bounce delay-1500"></div>
         <div className="absolute top-60 left-32 w-1 h-1 bg-indigo-400/60 rounded-full animate-bounce delay-2500"></div>
         <div className="absolute top-80 left-16 w-1.5 h-1.5 bg-violet-400/60 rounded-full animate-bounce delay-3500"></div>
+        <div className="absolute top-32 left-24 w-1 h-1 bg-cyan-400/60 rounded-full animate-bounce delay-7000"></div>
+        <div className="absolute bottom-60 left-12 w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce delay-8000"></div>
         
-        {/* Grid pattern overlay - Extended */}
+        {/* Grid pattern overlay - Covers entire screen */}
         <div className="absolute inset-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDEyNywgNjMsIDI1NSwgMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
       </div>
       
-      {/* Content Container */}
-      <div className="relative z-10 min-h-screen overflow-y-auto">
+      {/* Scrollable Content Container - positioned above navigation */}
+      <div className="absolute inset-0 z-30 overflow-y-auto">
 
-      <div className="relative z-10 p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64">
+      <div className="relative z-10 p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8">
               {/* Enhanced Header */}
         <div className="mb-8 lg:mb-12 text-center">
           <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">

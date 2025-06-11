@@ -32,27 +32,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%)',
-        minHeight: '100vh'
-      }}
-    >
-      {/* Extended Background Coverage to prevent white background on over-scroll */}
-      <div 
-        className="fixed pointer-events-none z-0"
-        style={{ 
-          top: '-100vh', 
-          left: '-50vw', 
-          right: '-50vw', 
-          bottom: '-100vh',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%)'
-        }}
-      />
-      
+    <div className="min-h-screen relative">
       <AdminNavigation />
-      <div className="lg:ml-64 relative z-10">{children}</div>
+      {children}
     </div>
   )
 }
