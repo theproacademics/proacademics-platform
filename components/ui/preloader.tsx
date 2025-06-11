@@ -80,88 +80,118 @@ export const Preloader = ({
   const colors = colorSchemes[colorScheme]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
-        
-        {/* Floating orbs */}
-        <div className={`absolute top-1/4 left-1/4 w-96 h-96 ${colors.orbs[0]} rounded-full blur-3xl animate-pulse`}></div>
-        <div className={`absolute bottom-1/4 right-1/4 w-80 h-80 ${colors.orbs[1]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '1s' }}></div>
-        <div className={`absolute top-3/4 left-1/3 w-72 h-72 ${colors.orbs[2]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '2s' }}></div>
-        
-        {/* Animated particles */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className={`absolute w-1 h-1 ${colors.particles} rounded-full animate-pulse`}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
+    <>
+      {/* Mobile-specific styles */}
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .mobile-safe-area {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+          }
+        }
+      `}</style>
+      
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 min-h-screen mobile-safe-area">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
+          
+          {/* Floating orbs - responsive sizes */}
+          <div className={`absolute top-1/4 left-1/4 w-48 h-48 sm:w-72 sm:h-72 lg:w-96 lg:h-96 ${colors.orbs[0]} rounded-full blur-2xl sm:blur-3xl animate-pulse`}></div>
+          <div className={`absolute bottom-1/4 right-1/4 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 ${colors.orbs[1]} rounded-full blur-2xl sm:blur-3xl animate-pulse`} style={{ animationDelay: '1s' }}></div>
+          <div className={`absolute top-3/4 left-1/3 w-36 h-36 sm:w-56 sm:h-56 lg:w-72 lg:h-72 ${colors.orbs[2]} rounded-full blur-2xl sm:blur-3xl animate-pulse`} style={{ animationDelay: '2s' }}></div>
+          
+          {/* Animated particles - fewer on mobile */}
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className={`absolute w-0.5 h-0.5 sm:w-1 sm:h-1 ${colors.particles} rounded-full animate-pulse hidden sm:block`}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
+          
+          {/* Mobile-only particles - fewer and positioned better */}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={`mobile-${i}`}
+              className={`absolute w-0.5 h-0.5 ${colors.particles} rounded-full animate-pulse sm:hidden`}
+              style={{
+                left: `${20 + Math.random() * 60}%`, // Keep particles more centered on mobile
+                top: `${20 + Math.random() * 60}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
+        </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 text-center">
-        {/* Logo Container */}
-        <div className="mb-12">
-          <div className="relative">
-            {/* Glow effect */}
-            <div className={`absolute inset-0 bg-gradient-to-r ${colors.glow} rounded-3xl blur-2xl animate-pulse`}></div>
-            
-            {/* Logo */}
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h1 className={`text-6xl md:text-8xl font-black text-transparent bg-gradient-to-r ${colors.logo} bg-clip-text animate-gradient`}>
-                ProAcademics
-              </h1>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <Brain className={`w-6 h-6 ${colors.brain} animate-pulse`} />
-                <p className="text-xl text-slate-300 font-medium">Intelligent Learning Platform</p>
-                <Sparkles className={`w-6 h-6 ${colors.sparkles} animate-pulse`} />
+        {/* Main Content */}
+        <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-lg sm:max-w-xl lg:max-w-4xl mx-auto w-full">
+          {/* Logo Container */}
+          <div className="mb-8 sm:mb-12">
+            <div className="relative">
+              {/* Glow effect */}
+              <div className={`absolute inset-0 bg-gradient-to-r ${colors.glow} rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl animate-pulse`}></div>
+              
+              {/* Logo */}
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl">
+                <h1 className={`text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-transparent bg-gradient-to-r ${colors.logo} bg-clip-text animate-gradient leading-tight`}>
+                  ProAcademics
+                </h1>
+                <div className="flex items-center justify-center gap-1 sm:gap-2 mt-2 sm:mt-4 flex-wrap">
+                  <Brain className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${colors.brain} animate-pulse flex-shrink-0`} />
+                  <p className="text-sm sm:text-lg lg:text-xl text-slate-300 font-medium text-center">
+                    Intelligent Learning Platform
+                  </p>
+                  <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${colors.sparkles} animate-pulse flex-shrink-0`} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Loading Animation */}
-        <div className="space-y-6">
-          {/* Progress Bar */}
-          <div className="w-80 mx-auto">
-            <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/10">
-              <div 
-                className={`absolute left-0 top-0 h-full bg-gradient-to-r ${colors.progress} rounded-full transition-all duration-300 ease-out`}
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+          {/* Loading Animation */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Progress Bar */}
+            <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg mx-auto">
+              <div className="relative h-2 sm:h-2.5 bg-slate-800/50 rounded-full overflow-hidden border border-white/10">
+                <div 
+                  className={`absolute left-0 top-0 h-full bg-gradient-to-r ${colors.progress} rounded-full transition-all duration-300 ease-out`}
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
+              <div className="flex justify-between text-xs sm:text-sm text-slate-400 mt-2">
+                <span>Loading...</span>
+                <span>{progress}%</span>
               </div>
             </div>
-            <div className="flex justify-between text-sm text-slate-400 mt-2">
-              <span>Loading...</span>
-              <span>{progress}%</span>
-            </div>
-          </div>
 
-          {/* Loading Text */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 ${colors.dots} rounded-full animate-bounce`}
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
+            {/* Loading Text */}
+            <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+              <div className="flex gap-1 flex-shrink-0">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${colors.dots} rounded-full animate-bounce`}
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  />
+                ))}
+              </div>
+              <p className="text-slate-300 text-sm sm:text-base lg:text-lg font-medium text-center">
+                {loadingText}
+              </p>
             </div>
-            <p className="text-slate-300 text-lg font-medium">
-              {loadingText}
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 } 
