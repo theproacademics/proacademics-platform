@@ -545,7 +545,7 @@ export default function LessonsPage() {
       {/* Scrollable Content Container - positioned below navigation */}
       <div className="absolute inset-0 z-10 overflow-y-auto">
 
-      <div className="relative z-10 p-3 sm:p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
+      <div className="relative z-10 p-3 sm:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
               {/* Enhanced Header */}
         <div className="mb-6 lg:mb-12 text-center">
           <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
@@ -650,53 +650,69 @@ export default function LessonsPage() {
             <div className="mb-4 lg:mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2 lg:mb-3">Search Lessons</label>
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-purple-400 transition-colors duration-200" />
-            <Input
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-purple-400 transition-colors duration-200 z-10" />
+                <Input
                   placeholder="Search by title, subject, subtopic, teacher, or program..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-12 pr-4 py-3 bg-white/[0.03] border border-white/20 rounded-2xl text-white placeholder:text-slate-400 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20 transition-all duration-200 hover:bg-white/[0.05]"
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-12 pr-12 py-3 bg-white/[0.03] border-2 border-white/20 rounded-2xl text-white placeholder:text-slate-400 
+                           focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                           hover:bg-white/[0.05] hover:border-white/30
+                           transition-all duration-300 ease-in-out
+                           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                           text-base sm:text-sm"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => handleSearch('')}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors duration-200"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white 
+                             hover:bg-white/10 rounded-lg p-1 transition-all duration-200 z-10"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
-          </div>
-        </div>
+              </div>
+            </div>
 
             {/* Filter Grid with Enhanced Design */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
               <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Subject</label>
-          <Select value={selectedSubject} onValueChange={handleSubjectFilter}>
-                  <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
+                <Select value={selectedSubject} onValueChange={handleSubjectFilter}>
+                  <SelectTrigger className="bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                         hover:bg-white/[0.05] hover:border-white/30
+                                         focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 
+                                         transition-all duration-300 ease-in-out
+                                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                                         h-11">
                     <SelectValue placeholder="All Subjects" />
-            </SelectTrigger>
+                  </SelectTrigger>
                   <SelectContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl">
                     <SelectItem value="all" className="hover:bg-white/10">All Subjects</SelectItem>
-              {subjects.filter(subject => 
-                subject && 
-                subject.trim() !== '' && 
-                subject.trim() !== '-' &&
-                subject.toLowerCase() !== 'undefined' &&
-                subject.toLowerCase() !== 'null'
-              ).map(subject => (
+                    {subjects.filter(subject => 
+                      subject && 
+                      subject.trim() !== '' && 
+                      subject.trim() !== '-' &&
+                      subject.toLowerCase() !== 'undefined' &&
+                      subject.toLowerCase() !== 'null'
+                    ).map(subject => (
                       <SelectItem key={subject} value={subject} className="hover:bg-white/10">{subject}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Teacher</label>
                 <Select value={selectedTeacher} onValueChange={handleTeacherFilter}>
-                  <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
+                  <SelectTrigger className="bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                         hover:bg-white/[0.05] hover:border-white/30
+                                         focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 
+                                         transition-all duration-300 ease-in-out
+                                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                                         h-11">
                     <SelectValue placeholder="All Teachers" />
-            </SelectTrigger>
+                  </SelectTrigger>
                   <SelectContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl">
                     <SelectItem value="all" className="hover:bg-white/10">All Teachers</SelectItem>
                     {teachers.filter(teacher =>
@@ -707,43 +723,51 @@ export default function LessonsPage() {
                       teacher.toLowerCase() !== 'null'
                     ).map(teacher => (
                       <SelectItem key={teacher} value={teacher} className="hover:bg-white/10">{teacher}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Status</label>
-          <Select value={selectedStatus} onValueChange={handleStatusFilter}>
-                  <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
+                <Select value={selectedStatus} onValueChange={handleStatusFilter}>
+                  <SelectTrigger className="bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                         hover:bg-white/[0.05] hover:border-white/30
+                                         focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 
+                                         transition-all duration-300 ease-in-out
+                                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                                         h-11">
                     <SelectValue placeholder="All Status" />
-            </SelectTrigger>
+                  </SelectTrigger>
                   <SelectContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl">
                     <SelectItem value="all" className="hover:bg-white/10">All Status</SelectItem>
                     <SelectItem value="active" className="hover:bg-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span>Active</span>
-                </div>
-              </SelectItem>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>Active</span>
+                      </div>
+                    </SelectItem>
                     <SelectItem value="draft" className="hover:bg-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span>Draft</span>
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                        <span>Draft</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Clear Filters Button */}
-              <div className="space-y-2 sm:col-span-4 lg:col-span-2">
+              <div className="space-y-2 sm:col-span-1 lg:col-span-2 xl:col-span-2">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider opacity-0">Clear</label>
                 {(searchTerm || selectedSubject !== 'all' || selectedTeacher !== 'all' || selectedStatus !== 'all' || scheduledDateFrom || scheduledDateTo || createdDateFrom || createdDateTo) && (
                   <Button 
                     variant="outline" 
                     onClick={handleClearFilters}
-                    className="w-full bg-white/[0.03] border border-red-400/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 rounded-xl transition-all duration-200"
+                    className="w-full bg-white/[0.03] border-2 border-red-400/30 text-red-400 
+                             hover:bg-red-500/10 hover:border-red-400/50 
+                             focus:ring-4 focus:ring-red-400/20 focus:border-red-400/60
+                             rounded-xl transition-all duration-300 ease-in-out h-11"
                   >
                     <X className="w-4 h-4 mr-2" />
                     Clear All Filters
@@ -752,58 +776,84 @@ export default function LessonsPage() {
               </div>
             </div>
 
-                      {/* Date Filters with Enhanced Design */}
-            <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 mb-4 lg:mb-6">
-              <div className="space-y-2 lg:space-y-3">
+            {/* Date Filters with Enhanced Design */}
+            <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8 mb-6">
+              {/* Scheduled Date Range */}
+              <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-purple-400" />
                   Scheduled Date Range
                 </label>
-                <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-400">From</label>
-                    <Input
-                      type="date"
-                      value={scheduledDateFrom}
-                      onChange={(e) => setScheduledDateFrom(e.target.value)}
-                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-400">To</label>
-                    <Input
-                      type="date"
-                      value={scheduledDateTo}
-                      onChange={(e) => setScheduledDateTo(e.target.value)}
-                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
-                    />
+                <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 font-medium">From</label>
+                      <Input
+                        type="date"
+                        value={scheduledDateFrom}
+                        onChange={(e) => setScheduledDateFrom(e.target.value)}
+                        className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                 hover:bg-white/[0.05] hover:border-white/30
+                                 focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                 transition-all duration-300 ease-in-out
+                                 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                                 h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 font-medium">To</label>
+                      <Input
+                        type="date"
+                        value={scheduledDateTo}
+                        onChange={(e) => setScheduledDateTo(e.target.value)}
+                        className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                 hover:bg-white/[0.05] hover:border-white/30
+                                 focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                 transition-all duration-300 ease-in-out
+                                 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
+                                 h-11 text-base sm:text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 lg:space-y-3">
+              {/* Created Date Range */}
+              <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-400" />
                   Created Date Range
                 </label>
-                <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-400">From</label>
-                    <Input
-                      type="date"
-                      value={createdDateFrom}
-                      onChange={(e) => setCreatedDateFrom(e.target.value)}
-                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-400">To</label>
-                    <Input
-                      type="date"
-                      value={createdDateTo}
-                      onChange={(e) => setCreatedDateTo(e.target.value)}
-                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
-                    />
+                <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 font-medium">From</label>
+                      <Input
+                        type="date"
+                        value={createdDateFrom}
+                        onChange={(e) => setCreatedDateFrom(e.target.value)}
+                        className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                 hover:bg-white/[0.05] hover:border-white/30
+                                 focus:border-blue-400/80 focus:ring-4 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                 transition-all duration-300 ease-in-out
+                                 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/20
+                                 h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 font-medium">To</label>
+                      <Input
+                        type="date"
+                        value={createdDateTo}
+                        onChange={(e) => setCreatedDateTo(e.target.value)}
+                        className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                 hover:bg-white/[0.05] hover:border-white/30
+                                 focus:border-blue-400/80 focus:ring-4 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                 transition-all duration-300 ease-in-out
+                                 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/20
+                                 h-11 text-base sm:text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
