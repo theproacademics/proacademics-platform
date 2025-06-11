@@ -3,7 +3,13 @@ import { userService } from "@/lib/db/users"
 
 export async function GET() {
   try {
+    // Add detailed logging for production debugging
+    console.log("🔍 Admin Students API called")
+    console.log("Environment:", process.env.NODE_ENV)
+    console.log("MongoDB URI exists:", !!process.env.MONGODB_URI)
+    
     const students = await userService.getAllStudents()
+    console.log("✅ Students fetched successfully:", students.length)
     
     // Transform the data to match the frontend interface
     const transformedStudents = students.map(student => ({
@@ -31,9 +37,27 @@ export async function GET() {
       deviceFingerprint: student.deviceFingerprint || ""
     }))
 
-    return NextResponse.json({ students: transformedStudents })
+    console.log("✅ Students transformed successfully:", transformedStudents.length)
+    return NextResponse.json({ 
+      students: transformedStudents,
+      meta: {
+        count: transformedStudents.length,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      }
+    })
   } catch (error) {
-    console.error("Error fetching students:", error)
-    return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 })
+    console.error("❌ Error fetching students:", error)
+    console.error("Error details:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
+    
+    return NextResponse.json({ 
+      error: "Failed to fetch students",
+      details: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
   }
 } 

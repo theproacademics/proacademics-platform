@@ -320,6 +320,40 @@ class UserService {
       }
     }
   }
+
+  // Create production admin user - works in any environment
+  async createProductionAdmin(adminData: {
+    name: string
+    email: string
+    password: string
+  }): Promise<User | null> {
+    try {
+      const collection = await this.getCollection()
+      
+      // Check if admin already exists
+      const existingAdmin = await collection.findOne({ email: adminData.email })
+      if (existingAdmin) {
+        console.log(`Admin user ${adminData.email} already exists`)
+        return existingAdmin
+      }
+
+      // Create admin user
+      const adminUser = await this.createUser({
+        id: `admin-${Date.now()}`,
+        name: adminData.name,
+        email: adminData.email,
+        password: adminData.password,
+        role: "admin" as const,
+        permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
+      })
+
+      console.log(`✅ Production admin user created: ${adminData.email}`)
+      return adminUser
+    } catch (error) {
+      console.error("❌ Failed to create production admin:", error)
+      return null
+    }
+  }
 }
 
 export const userService = new UserService() 
