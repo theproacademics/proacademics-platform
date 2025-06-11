@@ -197,7 +197,21 @@ const getDifficultyColor = (difficulty: string) => {
 
 export default function HomeworkPage() {
   const [selectedTab, setSelectedTab] = useState("all")
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
+
+  // Simulate data loading and mark as ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDataReady(true)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   const filterHomework = (status?: string) => {
     if (!status || status === "all") return mockHomework

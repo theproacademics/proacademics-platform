@@ -135,7 +135,13 @@ export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
 
   // Add styles to prevent white background on scroll
   useEffect(() => {
@@ -188,9 +194,11 @@ export default function LessonsPage() {
         }));
         
         setLessons(transformedLessons)
+        setDataReady(true)
       } catch (error) {
         console.error("Failed to fetch lessons:", error)
         setLessons([])
+        setDataReady(true)
       } finally {
         setIsLoading(false)
       }

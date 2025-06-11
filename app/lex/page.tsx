@@ -134,7 +134,26 @@ export default function LexAIPage() {
     xpEarned: 0,
     topicsStudied: new Set<string>(),
   })
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [pageDataLoaded, setPageDataLoaded] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1500,
+    dependencies: [mockQuestions, pageDataLoaded],
+    waitForImages: true,
+    waitForFonts: true
+  })
+
+  // Simulate data loading and mark page as ready
+  useEffect(() => {
+    const loadPageData = async () => {
+      // Simulate API calls or data processing
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setPageDataLoaded(true)
+    }
+    
+    if (mounted) {
+      loadPageData()
+    }
+  }, [mounted])
 
   useEffect(() => {
     let timer: NodeJS.Timeout

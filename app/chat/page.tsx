@@ -127,7 +127,21 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
+
+  // Simulate data loading and mark as ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDataReady(true)
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })

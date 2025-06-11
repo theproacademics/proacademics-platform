@@ -213,9 +213,12 @@ export default function HomePage() {
   const [userStats, setUserStats] = useState<any>(null)
   const [homework, setHomework] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [dataReady, setDataReady] = useState(false)
   const { showPreloader, mounted } = usePreloader({ 
-    delay: 2500, 
-    dependencies: [session] 
+    delay: 1200, 
+    dependencies: [session, userStats, dataReady],
+    waitForImages: true,
+    waitForFonts: true
   })
 
   // Redirect to signin if not authenticated
@@ -257,6 +260,8 @@ export default function HomePage() {
       console.error('Error fetching homework:', error)
     } finally {
       setLoading(false)
+      // Mark data as ready after a short delay to ensure UI is rendered
+      setTimeout(() => setDataReady(true), 100)
     }
   }
 

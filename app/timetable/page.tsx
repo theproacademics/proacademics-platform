@@ -50,7 +50,13 @@ export default function TimetablePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [schedule, setSchedule] = useState<Record<string, TimetableLesson[]>>({})
   const [searchQuery, setSearchQuery] = useState("")
-  const { showPreloader, mounted: preloaderMounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted: preloaderMounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
 
   useEffect(() => {
     setMounted(true)
@@ -104,6 +110,7 @@ export default function TimetablePage() {
         })
         
         setSchedule(organizedSchedule)
+        setDataReady(true)
         
       } catch (error) {
         console.error("Failed to fetch lessons:", error)
@@ -112,6 +119,7 @@ export default function TimetablePage() {
           Monday: [], Tuesday: [], Wednesday: [], Thursday: [], 
           Friday: [], Saturday: [], Sunday: []
         })
+        setDataReady(true)
       } finally {
         setIsLoading(false)
       }

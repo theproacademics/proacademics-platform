@@ -210,7 +210,21 @@ export default function LeaderboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("all-time")
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedTab, setSelectedTab] = useState("global")
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
+
+  // Simulate data loading and mark as ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDataReady(true)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

@@ -37,7 +37,21 @@ export default function SignUpPage() {
   const [deviceFingerprint, setDeviceFingerprint] = useState("")
   const router = useRouter()
   const { toast } = useToast()
-  const { showPreloader, mounted } = usePreloader({ delay: 2000 })
+  const [dataReady, setDataReady] = useState(false)
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
+
+  // Simulate data loading and mark as ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDataReady(true)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Enhanced Memoized particles with more variety
   const particles = useMemo(() => {
