@@ -545,7 +545,7 @@ export default function LessonsPage() {
       {/* Scrollable Content Container - positioned below navigation */}
       <div className="absolute inset-0 z-10 overflow-y-auto">
 
-      <div className="relative z-10 p-3 sm:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
+      <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-14 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
               {/* Enhanced Header */}
         <div className="mb-6 lg:mb-12 text-center">
           <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
@@ -643,32 +643,32 @@ export default function LessonsPage() {
       </div>
 
         {/* Enhanced Filters Section */}
-        <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-3xl mb-6 lg:mb-8 overflow-hidden shadow-2xl">
+        <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl lg:rounded-3xl mb-4 lg:mb-8 overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5"></div>
-          <CardContent className="relative p-4 lg:p-8">
+          <CardContent className="relative p-3 sm:p-4 lg:p-8">
             {/* Search Bar with Enhanced Design */}
             <div className="mb-4 lg:mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2 lg:mb-3">Search Lessons</label>
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-purple-400 transition-colors duration-200 z-10" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5 group-hover:text-purple-400 transition-colors duration-200 z-10" />
                 <Input
                   placeholder="Search by title, subject, subtopic, teacher, or program..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-12 pr-12 py-3 bg-white/[0.03] border-2 border-white/20 rounded-2xl text-white placeholder:text-slate-400 
-                           focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                  className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 bg-white/[0.03] border-2 border-white/20 rounded-xl sm:rounded-2xl text-white placeholder:text-slate-400 
+                           focus:border-purple-400/80 focus:ring-2 sm:focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
                            hover:bg-white/[0.05] hover:border-white/30
                            transition-all duration-300 ease-in-out
-                           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
-                           text-base sm:text-sm"
+                           focus-visible:outline-none focus-visible:ring-2 sm:focus-visible:ring-4 focus-visible:ring-purple-400/20
+                           text-sm w-full"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => handleSearch('')}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white 
+                    className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white 
                              hover:bg-white/10 rounded-lg p-1 transition-all duration-200 z-10"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 )}
               </div>
