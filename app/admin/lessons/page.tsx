@@ -778,45 +778,41 @@ export default function LessonsPage() {
               )}
             </div>
 
-            {/* Date Filters with Enhanced Design */}
-       {/* Date Filters with Enhanced Mobile Design */}
-       <div className="space-y-4 mb-6">
+         
+ {/* Date Filters with Mobile Fix */}
+ <div className="space-y-4 mb-6">
               <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                 {/* Scheduled Date Range */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-purple-400" />
                     Scheduled Date Range
                   </label>
-                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
-                    <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0">
-                      <div className="space-y-2">
+                  <div className="p-3 bg-white/[0.02] border border-white/10 rounded-xl">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
                         <label className="text-xs text-slate-400 font-medium">From</label>
                         <Input
                           type="date"
                           value={scheduledDateFrom}
                           onChange={(e) => setScheduledDateFrom(e.target.value)}
-                          className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                          className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-purple-400/80 focus:ring-2 focus:ring-purple-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/20
-                                   h-12 text-sm
+                                   focus:border-purple-400/80 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                   transition-all duration-200 h-10
                                    [color-scheme:dark]"
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <label className="text-xs text-slate-400 font-medium">To</label>
                         <Input
                           type="date"
                           value={scheduledDateTo}
                           onChange={(e) => setScheduledDateTo(e.target.value)}
-                          className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                          className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-purple-400/80 focus:ring-2 focus:ring-purple-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/20
-                                   h-12 text-sm
+                                   focus:border-purple-400/80 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                   transition-all duration-200 h-10
                                    [color-scheme:dark]"
                         />
                       </div>
@@ -825,40 +821,36 @@ export default function LessonsPage() {
                 </div>
 
                 {/* Created Date Range */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-400" />
                     Created Date Range
                   </label>
-                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
-                    <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0">
-                      <div className="space-y-2">
+                  <div className="p-3 bg-white/[0.02] border border-white/10 rounded-xl">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
                         <label className="text-xs text-slate-400 font-medium">From</label>
                         <Input
                           type="date"
                           value={createdDateFrom}
                           onChange={(e) => setCreatedDateFrom(e.target.value)}
-                          className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                          className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-blue-400/80 focus:ring-2 focus:ring-blue-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/20
-                                   h-12 text-sm
+                                   focus:border-blue-400/80 focus:ring-1 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                   transition-all duration-200 h-10
                                    [color-scheme:dark]"
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <label className="text-xs text-slate-400 font-medium">To</label>
                         <Input
                           type="date"
                           value={createdDateTo}
                           onChange={(e) => setCreatedDateTo(e.target.value)}
-                          className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                          className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-blue-400/80 focus:ring-2 focus:ring-blue-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/20
-                                   h-12 text-sm
+                                   focus:border-blue-400/80 focus:ring-1 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                   transition-all duration-200 h-10
                                    [color-scheme:dark]"
                         />
                       </div>
