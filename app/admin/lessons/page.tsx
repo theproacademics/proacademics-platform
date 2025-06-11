@@ -545,40 +545,40 @@ export default function LessonsPage() {
       {/* Scrollable Content Container - positioned below navigation */}
       <div className="absolute inset-0 z-10 overflow-y-auto">
 
-      <div className="relative z-10 p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
+      <div className="relative z-10 p-3 sm:p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
               {/* Enhanced Header */}
-        <div className="mb-8 lg:mb-12 text-center">
+        <div className="mb-6 lg:mb-12 text-center">
           <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
+            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <BookOpen className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
             </div>
             <span className="text-xs lg:text-sm text-purple-300 font-medium tracking-wider uppercase">Admin Panel</span>
           </div>
-          <h1 className="text-3xl lg:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3 tracking-tight">
             Lesson Management
           </h1>
-          <p className="text-base lg:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
             Create, edit, and manage educational lessons with advanced analytics and insights
           </p>
           <div className="mt-4 h-1 w-32 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mx-auto animate-pulse"></div>
         </div>
 
               {/* Enhanced Stats with Hover Effects */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-12">
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-4 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-blue-400/30">
+            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-blue-400/30">
             <div className="flex items-center justify-between">
               <div>
                   <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Total Lessons</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalLessons || 0}</p>
+                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalLessons || 0}</p>
                   <div className="text-xs text-blue-400 mt-1 flex items-center gap-1">
                     <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
                     All content
               </div>
             </div>
-                <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <BookOpen className="w-6 h-6 lg:w-7 lg:h-7 text-blue-400" />
+                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <BookOpen className="w-5 h-5 lg:w-7 lg:h-7 text-blue-400" />
                 </div>
               </div>
         </Card>
@@ -586,18 +586,18 @@ export default function LessonsPage() {
 
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-4 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-green-400/30">
+            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-green-400/30">
             <div className="flex items-center justify-between">
               <div>
                   <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Active</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-white counter-animation">{stats?.activeLessons || 0}</p>
+                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.activeLessons || 0}</p>
                   <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
                     <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
                     Published
               </div>
             </div>
-                <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Play className="w-6 h-6 lg:w-7 lg:h-7 text-green-400" />
+                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Play className="w-5 h-5 lg:w-7 lg:h-7 text-green-400" />
                 </div>
               </div>
         </Card>
@@ -605,18 +605,18 @@ export default function LessonsPage() {
 
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-4 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-yellow-400/30">
+            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-yellow-400/30">
             <div className="flex items-center justify-between">
               <div>
                   <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Draft</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-white counter-animation">{stats?.draftLessons || 0}</p>
+                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.draftLessons || 0}</p>
                   <div className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                     <div className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></div>
                     In progress
               </div>
             </div>
-                <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="w-6 h-6 lg:w-7 lg:h-7 text-yellow-400" />
+                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="w-5 h-5 lg:w-7 lg:h-7 text-yellow-400" />
                 </div>
               </div>
         </Card>
@@ -624,18 +624,18 @@ export default function LessonsPage() {
 
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-4 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-purple-400/30">
+            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-purple-400/30">
             <div className="flex items-center justify-between">
               <div>
                   <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Teachers</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalTeachers || 0}</p>
+                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalTeachers || 0}</p>
                   <div className="text-xs text-purple-400 mt-1 flex items-center gap-1">
                     <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
                     Educators
               </div>
             </div>
-                <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-6 h-6 lg:w-7 lg:h-7 text-purple-400" />
+                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-5 h-5 lg:w-7 lg:h-7 text-purple-400" />
                 </div>
               </div>
         </Card>
@@ -643,12 +643,12 @@ export default function LessonsPage() {
       </div>
 
         {/* Enhanced Filters Section */}
-        <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-3xl mb-8 overflow-hidden shadow-2xl">
+        <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-3xl mb-6 lg:mb-8 overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5"></div>
-          <CardContent className="relative p-6 lg:p-8">
+          <CardContent className="relative p-4 lg:p-8">
             {/* Search Bar with Enhanced Design */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-3">Search Lessons</label>
+            <div className="mb-4 lg:mb-6">
+              <label className="block text-sm font-medium text-slate-300 mb-2 lg:mb-3">Search Lessons</label>
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-hover:text-purple-400 transition-colors duration-200" />
             <Input
@@ -670,7 +670,7 @@ export default function LessonsPage() {
 
             {/* Filter Grid with Enhanced Design */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-              <div className="space-y-2">
+              <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Subject</label>
           <Select value={selectedSubject} onValueChange={handleSubjectFilter}>
                   <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
@@ -691,7 +691,7 @@ export default function LessonsPage() {
           </Select>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Teacher</label>
                 <Select value={selectedTeacher} onValueChange={handleTeacherFilter}>
                   <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
@@ -712,7 +712,7 @@ export default function LessonsPage() {
           </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Status</label>
           <Select value={selectedStatus} onValueChange={handleStatusFilter}>
                   <SelectTrigger className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200">
@@ -737,7 +737,7 @@ export default function LessonsPage() {
               </div>
 
               {/* Clear Filters Button */}
-              <div className="space-y-2 xl:col-span-2">
+              <div className="space-y-2 sm:col-span-4 lg:col-span-2">
                 <label className="text-xs font-medium text-slate-400 uppercase tracking-wider opacity-0">Clear</label>
                 {(searchTerm || selectedSubject !== 'all' || selectedTeacher !== 'all' || selectedStatus !== 'all' || scheduledDateFrom || scheduledDateTo || createdDateFrom || createdDateTo) && (
                   <Button 
@@ -753,13 +753,13 @@ export default function LessonsPage() {
             </div>
 
                       {/* Date Filters with Enhanced Design */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6">
               <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-purple-400" />
                   Scheduled Date Range
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-slate-400">From</label>
                     <Input
@@ -786,7 +786,7 @@ export default function LessonsPage() {
                   <Clock className="w-4 h-4 text-blue-400" />
                   Created Date Range
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-slate-400">From</label>
                     <Input
@@ -810,7 +810,7 @@ export default function LessonsPage() {
             </div>
 
                       {/* Action Buttons with Enhanced Design */}
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Button 
             variant="outline" 
             onClick={handleExportLessons}
@@ -837,8 +837,8 @@ export default function LessonsPage() {
                 <span className="sm:hidden">Delete</span>
           </Button>
           
-          <Link href="/admin/lessons/import">
-                <Button variant="outline" className="bg-green-500/10 border border-green-400/30 text-green-400 hover:bg-green-500/20 hover:border-green-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm">
+          <Link href="/admin/lessons/import" className="block">
+                <Button variant="outline" className="w-full bg-green-500/10 border border-green-400/30 text-green-400 hover:bg-green-500/20 hover:border-green-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm">
               <Upload className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Import CSV</span>
                   <span className="sm:hidden">Import</span>
@@ -849,7 +849,7 @@ export default function LessonsPage() {
             <DialogTrigger asChild>
               <Button 
                 variant="outline" 
-                className="bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm"
+                className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Create New Lesson</span>
