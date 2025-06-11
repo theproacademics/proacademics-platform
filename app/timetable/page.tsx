@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Plus, Video, User, Clock, Search, Filter, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookOpen, Video, User, Clock, Search, Filter, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 
@@ -214,11 +214,6 @@ export default function TimetablePage() {
                   <Filter className="w-4 h-4 mr-2 relative z-10" />
                   <span className="relative z-10">Filter</span>
                 </Button>
-                <Button className="group relative bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <Plus className="w-4 h-4 mr-2 relative z-10" />
-                  <span className="relative z-10">Add Event</span>
-                </Button>
               </div>
             }
           />
@@ -385,14 +380,9 @@ export default function TimetablePage() {
                                 <h3 className="text-lg font-semibold text-white mb-2">
                                   {searchQuery ? 'No matching classes found' : `No classes scheduled for ${day}`}
                                 </h3>
-                                <p className="text-gray-400 mb-6">
+                                <p className="text-gray-400">
                                   {searchQuery ? 'Try adjusting your search terms' : 'Your schedule is free for this day'}
                                 </p>
-                                <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 group/btn relative overflow-hidden">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                                  <Plus className="w-4 h-4 mr-2 relative z-10" />
-                                  <span className="relative z-10">Add New Class</span>
-                                </Button>
                               </div>
                             )}
                           </div>

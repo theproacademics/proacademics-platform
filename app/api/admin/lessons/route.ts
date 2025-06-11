@@ -9,16 +9,24 @@ export async function GET(req: Request) {
     const limit = parseInt(url.searchParams.get('limit') || '10')
     const search = url.searchParams.get('search') || ''
     const subject = url.searchParams.get('subject') || 'all'
-    const instructor = url.searchParams.get('instructor') || 'all'
+    const teacher = url.searchParams.get('teacher') || 'all'
     const status = url.searchParams.get('status') || 'all'
+    const scheduledDateFrom = url.searchParams.get('scheduledDateFrom') || ''
+    const scheduledDateTo = url.searchParams.get('scheduledDateTo') || ''
+    const createdDateFrom = url.searchParams.get('createdDateFrom') || ''
+    const createdDateTo = url.searchParams.get('createdDateTo') || ''
 
     const result = await lessonService.getAllLessons({
       page,
       limit,
       search,
       subject,
-      instructor,
-      status
+      teacher,
+      status,
+      scheduledDateFrom,
+      scheduledDateTo,
+      createdDateFrom,
+      createdDateTo
     })
 
     return NextResponse.json(result)
@@ -32,7 +40,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, instructor, duration, videoUrl, week, scheduledDate, grade, status } = body
+    const { title, subject, subtopic, teacher, program, duration, videoUrl, week, scheduledDate, grade, status } = body
 
     if (!title || !subject) {
       return NextResponse.json({ error: "Missing required fields: title, subject" }, { status: 400 })
@@ -43,7 +51,8 @@ export async function POST(req: Request) {
       title,
       subject,
       subtopic: subtopic || "",
-      instructor: instructor || "",
+      teacher: teacher || "",
+      program: program || "",
       duration: duration || "",
       videoUrl: videoUrl || "",
       week: week || "",

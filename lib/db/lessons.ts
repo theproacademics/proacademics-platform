@@ -31,7 +31,8 @@ export interface Lesson {
   title: string
   subject: string
   subtopic?: string
-  instructor?: string // Made optional
+  teacher?: string // Made optional
+  program?: string // New field
   duration?: string // Made optional
   description?: string
   videoUrl?: string
@@ -49,8 +50,12 @@ export interface LessonQuery {
   limit?: number
   search?: string
   subject?: string
-  instructor?: string
+  teacher?: string
   status?: string
+  scheduledDateFrom?: string
+  scheduledDateTo?: string
+  createdDateFrom?: string
+  createdDateTo?: string
 }
 
 class LessonService {
@@ -99,7 +104,18 @@ class LessonService {
     totalPages: number
   }> {
     const collection = await this.getCollection()
-    const { page = 1, limit = 10, search, subject, instructor, status } = query
+    const { 
+      page = 1, 
+      limit = 10, 
+      search, 
+      subject, 
+      teacher, 
+      status,
+      scheduledDateFrom,
+      scheduledDateTo,
+      createdDateFrom,
+      createdDateTo
+    } = query
 
     // Build filter
     const filter: any = {}
@@ -108,8 +124,9 @@ class LessonService {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
         { subject: { $regex: search, $options: 'i' } },
-        { module: { $regex: search, $options: 'i' } },
-        { instructor: { $regex: search, $options: 'i', $exists: true } }
+        { subtopic: { $regex: search, $options: 'i', $exists: true } },
+        { teacher: { $regex: search, $options: 'i', $exists: true } },
+        { program: { $regex: search, $options: 'i', $exists: true } }
       ]
     }
     
@@ -117,12 +134,37 @@ class LessonService {
       filter.subject = subject
     }
     
-    if (instructor && instructor !== 'all') {
-      filter.instructor = instructor
+    if (teacher && teacher !== 'all') {
+      filter.teacher = teacher
     }
     
     if (status && status !== 'all') {
       filter.status = status
+    }
+
+    // Date filtering for scheduledDate
+    if (scheduledDateFrom || scheduledDateTo) {
+      filter.scheduledDate = {}
+      if (scheduledDateFrom) {
+        filter.scheduledDate.$gte = scheduledDateFrom
+      }
+      if (scheduledDateTo) {
+        filter.scheduledDate.$lte = scheduledDateTo
+      }
+    }
+
+    // Date filtering for createdAt
+    if (createdDateFrom || createdDateTo) {
+      filter.createdAt = {}
+      if (createdDateFrom) {
+        filter.createdAt.$gte = new Date(createdDateFrom)
+      }
+      if (createdDateTo) {
+        // Add 23:59:59 to include the entire day
+        const endDate = new Date(createdDateTo)
+        endDate.setHours(23, 59, 59, 999)
+        filter.createdAt.$lte = endDate
+      }
     }
 
     const total = await collection.countDocuments(filter)
@@ -190,16 +232,16 @@ class LessonService {
     )
   }
 
-  // Get unique instructors for filtering
-  async getUniqueInstructors(): Promise<string[]> {
+  // Get unique teachers for filtering
+  async getUniqueTeachers(): Promise<string[]> {
     const collection = await this.getCollection()
-    const instructors = await collection.distinct('instructor')
-    return instructors.filter(instructor => 
-      instructor && 
-      instructor.trim() !== '' && 
-      instructor.trim() !== '-' &&
-      instructor.toLowerCase() !== 'undefined' &&
-      instructor.toLowerCase() !== 'null'
+    const teachers = await collection.distinct('teacher')
+    return teachers.filter(teacher => 
+      teacher && 
+      teacher.trim() !== '' && 
+      teacher.trim() !== '-' &&
+      teacher.toLowerCase() !== 'undefined' &&
+      teacher.toLowerCase() !== 'null'
     )
   }
 
@@ -208,7 +250,7 @@ class LessonService {
     totalLessons: number
     activeLessons: number
     draftLessons: number
-    totalInstructors: number
+    totalTeachers: number
     subjectBreakdown: { subject: string; count: number }[]
   }> {
     const collection = await this.getCollection()
@@ -216,13 +258,13 @@ class LessonService {
     const totalLessons = await collection.countDocuments()
     const activeLessons = await collection.countDocuments({ status: 'active' })
     const draftLessons = await collection.countDocuments({ status: 'draft' })
-    const instructors = await collection.distinct('instructor')
-    const totalInstructors = instructors.filter(instructor => 
-      instructor && 
-      instructor.trim() !== '' && 
-      instructor.trim() !== '-' &&
-      instructor.toLowerCase() !== 'undefined' &&
-      instructor.toLowerCase() !== 'null'
+    const teachers = await collection.distinct('teacher')
+    const totalTeachers = teachers.filter(teacher => 
+      teacher && 
+      teacher.trim() !== '' && 
+      teacher.trim() !== '-' &&
+      teacher.toLowerCase() !== 'undefined' &&
+      teacher.toLowerCase() !== 'null'
     ).length
 
     const subjectBreakdown = await collection.aggregate([
@@ -248,7 +290,7 @@ class LessonService {
       totalLessons,
       activeLessons,
       draftLessons,
-      totalInstructors,
+      totalTeachers,
       subjectBreakdown: subjectBreakdown as { subject: string; count: number }[]
     }
   }
