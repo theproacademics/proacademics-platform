@@ -120,47 +120,81 @@ export function Navigation() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-4 left-4 z-50 safe-area-inset">
         <Button
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="glass-card border-white/20 hover:bg-white/10 transition-all duration-300"
+          className={cn(
+            "glass-card border-white/20 hover:bg-white/10 transition-all duration-300 shadow-lg",
+            "backdrop-blur-md bg-black/20 hover:bg-black/30",
+            "hover:scale-105 active:scale-95 hover:shadow-xl"
+          )}
         >
-          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          <div className="relative">
+            <Menu 
+              className={cn(
+                "h-4 w-4 transition-all duration-300",
+                isOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
+              )} 
+            />
+            <X 
+              className={cn(
+                "h-4 w-4 absolute inset-0 transition-all duration-300",
+                isOpen ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
+              )} 
+            />
+          </div>
         </Button>
       </div>
 
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-40 transform transition-all duration-300 ease-out lg:translate-x-0",
+          // Responsive width - better mobile sizing
+          "w-72 sm:w-72 lg:w-72",
+          // Mobile transforms with spring animation
+          isOpen 
+            ? "translate-x-0 shadow-2xl" 
+            : "-translate-x-full shadow-none",
+          // Mobile-specific styling
+          "lg:shadow-none"
         )}
       >
-        <div className="flex h-full flex-col glass-card m-4 rounded-2xl overflow-hidden relative">
+        <div className="flex h-full flex-col glass-card lg:m-4 lg:rounded-2xl m-2 rounded-xl overflow-hidden relative safe-area-inset">
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
           </div>
 
-          {/* Logo */}
-          <div className="flex items-center justify-center h-16 px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 relative z-10">
-            <Link href="/" className="flex items-center space-x-3 transition-transform hover:scale-105 duration-300">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <Zap className="w-6 h-6 text-white" />
+          {/* Logo with close button on mobile */}
+          <div className="flex items-center justify-between h-14 lg:h-16 px-4 lg:px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 relative z-10">
+            <Link href="/" className="flex items-center space-x-2 lg:space-x-3 transition-transform hover:scale-105 duration-300" onClick={() => setIsOpen(false)}>
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <Zap className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
               </div>
-              <span className="text-xl font-bold gradient-text">ProAcademics</span>
+              <span className="text-lg lg:text-xl font-bold gradient-text">ProAcademics</span>
             </Link>
+            
+            {/* Close button for mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="lg:hidden w-8 h-8 hover:bg-white/10 transition-all duration-300"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
-          {/* User info */}
-          <div className="p-6 border-b border-white/10 relative z-10">
-            <div className="flex flex-col space-y-3">
+          {/* User info - Clean mobile layout */}
+          <div className="p-4 lg:p-6 border-b border-white/10 relative z-10">
+            <div className="flex flex-col space-y-2 lg:space-y-3">
               <div>
                 <p className="text-sm font-medium text-white truncate">{user?.name || "Loading..."}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+                <p className="text-xs text-muted-foreground truncate lg:block hidden">{user?.email || ""}</p>
               </div>
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
@@ -172,7 +206,7 @@ export function Navigation() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide relative z-10">
+          <nav className="flex-1 px-3 lg:px-4 py-4 lg:py-6 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide relative z-10">
             {navigation.map((item, index) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
               return (
@@ -180,29 +214,30 @@ export function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 group relative overflow-hidden",
+                    "flex items-center px-3 lg:px-4 py-2.5 lg:py-3 text-sm font-medium rounded-lg lg:rounded-xl transition-all duration-300 group relative overflow-hidden",
+                    "active:scale-95 touch-manipulation", // Better mobile interaction
                     isActive
                       ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white neon-glow border border-blue-500/30 shadow-lg"
                       : "text-muted-foreground hover:text-white hover:bg-white/5 hover:border-white/10 border border-transparent",
                   )}
                   style={{
-                    animationDelay: `${index * 50}ms`,
+                    animationDelay: `${index * 30}ms`, // Faster animation on mobile
                   }}
                   onClick={() => setIsOpen(false)}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <item.icon className={cn("mr-3 h-5 w-5 transition-colors relative z-10", isActive && "text-blue-400")} />
-                  <span className="relative z-10">{item.name}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                  <item.icon className={cn("mr-3 h-4 w-4 lg:h-5 lg:w-5 transition-colors relative z-10 flex-shrink-0", isActive && "text-blue-400")} />
+                  <span className="relative z-10 truncate">{item.name}</span>
                   {isActive && (
-                    <div className="ml-auto w-2 h-2 bg-blue-400 rounded-full animate-pulse relative z-10" />
+                    <div className="ml-auto w-1.5 h-1.5 lg:w-2 lg:h-2 bg-blue-400 rounded-full animate-pulse relative z-10 flex-shrink-0" />
                   )}
                 </Link>
               )
             })}
           </nav>
 
-          {/* XP Progress */}
-          <div className="p-6 border-t border-white/10 relative z-10">
+          {/* XP Progress - Desktop only */}
+          <div className="p-6 border-t border-white/10 relative z-10 hidden lg:block">
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Progress to Level {userStats.level + 1}</span>
@@ -219,38 +254,41 @@ export function Navigation() {
           </div>
 
           {/* User Actions */}
-          <div className="p-4 border-t border-white/10 space-y-2 relative z-10">
+          <div className="p-3 lg:p-4 border-t border-white/10 space-y-1 lg:space-y-2 relative z-10">
             <Button 
               variant="ghost" 
-              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group"
+              size="sm"
+              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group py-2 lg:py-2.5 active:scale-95"
               onClick={handleProfileClick}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-              <User className="mr-3 h-4 w-4 relative z-10" />
-              <span className="relative z-10">Profile</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+              <User className="mr-3 h-4 w-4 relative z-10 flex-shrink-0" />
+              <span className="relative z-10 text-sm">Profile</span>
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group"
+              size="sm"
+              className="w-full justify-start hover:bg-white/5 transition-all duration-300 group py-2 lg:py-2.5 active:scale-95"
               onClick={handleSettingsClick}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-              <Settings className="mr-3 h-4 w-4 relative z-10" />
-              <span className="relative z-10">Settings</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+              <Settings className="mr-3 h-4 w-4 relative z-10 flex-shrink-0" />
+              <span className="relative z-10 text-sm">Settings</span>
             </Button>
             <Button
               onClick={handleSignOut}
               disabled={isSigningOut}
               variant="ghost"
-              className="w-full justify-start hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group relative overflow-hidden"
+              size="sm"
+              className="w-full justify-start hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group relative overflow-hidden py-2 lg:py-2.5 active:scale-95"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
               {isSigningOut ? (
-                <Loader2 className="mr-3 h-4 w-4 animate-spin relative z-10" />
+                <Loader2 className="mr-3 h-4 w-4 animate-spin relative z-10 flex-shrink-0" />
               ) : (
-                <LogOut className="mr-3 h-4 w-4 relative z-10" />
+                <LogOut className="mr-3 h-4 w-4 relative z-10 flex-shrink-0" />
               )}
-              <span className="relative z-10">
+              <span className="relative z-10 text-sm">
                 {isSigningOut ? "Signing out..." : "Sign Out"}
               </span>
             </Button>
@@ -258,11 +296,15 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Overlay */}
+      {/* Enhanced Overlay with better UX */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" 
-          onClick={() => setIsOpen(false)} 
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-md lg:hidden transition-all duration-300 ease-out" 
+          onClick={() => setIsOpen(false)}
+          style={{
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
         />
       )}
     </>
