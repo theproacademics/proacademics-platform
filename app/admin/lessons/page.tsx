@@ -779,16 +779,17 @@ export default function LessonsPage() {
             </div>
 
             {/* Date Filters with Enhanced Design */}
-            <div className="space-y-4 lg:space-y-6 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+       {/* Date Filters with Enhanced Mobile Design */}
+       <div className="space-y-4 mb-6">
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                 {/* Scheduled Date Range */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-purple-400" />
                     Scheduled Date Range
                   </label>
-                  <div className="p-3 lg:p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
+                    <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0">
                       <div className="space-y-2">
                         <label className="text-xs text-slate-400 font-medium">From</label>
                         <Input
@@ -797,10 +798,11 @@ export default function LessonsPage() {
                           onChange={(e) => setScheduledDateFrom(e.target.value)}
                           className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                   focus:border-purple-400/80 focus:ring-2 focus:ring-purple-400/20 focus:bg-white/[0.08]
                                    transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
-                                   h-10 lg:h-11 text-sm"
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/20
+                                   h-12 text-sm
+                                   [color-scheme:dark]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -811,10 +813,11 @@ export default function LessonsPage() {
                           onChange={(e) => setScheduledDateTo(e.target.value)}
                           className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-purple-400/80 focus:ring-4 focus:ring-purple-400/20 focus:bg-white/[0.08]
+                                   focus:border-purple-400/80 focus:ring-2 focus:ring-purple-400/20 focus:bg-white/[0.08]
                                    transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/20
-                                   h-10 lg:h-11 text-sm"
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/20
+                                   h-12 text-sm
+                                   [color-scheme:dark]"
                         />
                       </div>
                     </div>
@@ -827,8 +830,8 @@ export default function LessonsPage() {
                     <Clock className="w-4 h-4 text-blue-400" />
                     Created Date Range
                   </label>
-                  <div className="p-3 lg:p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
+                    <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0">
                       <div className="space-y-2">
                         <label className="text-xs text-slate-400 font-medium">From</label>
                         <Input
@@ -837,10 +840,11 @@ export default function LessonsPage() {
                           onChange={(e) => setCreatedDateFrom(e.target.value)}
                           className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-blue-400/80 focus:ring-4 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                   focus:border-blue-400/80 focus:ring-2 focus:ring-blue-400/20 focus:bg-white/[0.08]
                                    transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/20
-                                   h-10 lg:h-11 text-sm"
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/20
+                                   h-12 text-sm
+                                   [color-scheme:dark]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -851,16 +855,78 @@ export default function LessonsPage() {
                           onChange={(e) => setCreatedDateTo(e.target.value)}
                           className="w-full bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
                                    hover:bg-white/[0.05] hover:border-white/30
-                                   focus:border-blue-400/80 focus:ring-4 focus:ring-blue-400/20 focus:bg-white/[0.08]
+                                   focus:border-blue-400/80 focus:ring-2 focus:ring-blue-400/20 focus:bg-white/[0.08]
                                    transition-all duration-300 ease-in-out
-                                   focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/20
-                                   h-10 lg:h-11 text-sm"
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/20
+                                   h-12 text-sm
+                                   [color-scheme:dark]"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Action Buttons with Enhanced Mobile Design */}
+            <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-3">
+              <Button 
+                variant="outline" 
+                onClick={handleExportLessons}
+                className="w-full bg-orange-500/10 border border-orange-400/30 text-orange-400 
+                         hover:bg-orange-500/20 hover:border-orange-400/50 
+                         focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
+                         rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span>Export</span>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={handleDeleteAllLessons}
+                disabled={bulkActionLoading || totalLessons === 0}
+                className="w-full bg-red-500/10 border border-red-400/30 text-red-400 
+                         hover:bg-red-500/20 hover:border-red-400/50 
+                         focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
+                         rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-12"
+                title={totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
+              >
+                {bulkActionLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                <span>Delete</span>
+              </Button>
+              
+              <Link href="/admin/lessons/import" className="block">
+                <Button 
+                  variant="outline" 
+                  className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
+                           hover:bg-green-500/20 hover:border-green-400/50 
+                           focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
+                           rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  <span>Import</span>
+                </Button>
+              </Link>
+              
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
+                             hover:bg-purple-500/20 hover:border-purple-400/50 
+                             focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
+                             rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span>Create</span>
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
 
                       {/* Action Buttons with Enhanced Design */}
