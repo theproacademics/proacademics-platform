@@ -847,19 +847,14 @@ export default function LessonsPage() {
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-                    <Button className="relative bg-gradient-to-r from-purple-600 via-purple-500 to-blue-500 hover:from-purple-700 hover:via-purple-600 hover:to-blue-600 text-white rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-purple-500/40 border border-purple-400/20 hover:border-purple-300/40 px-6 py-3 font-semibold tracking-wide hover:scale-105 active:scale-95">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                          <Plus className="w-3 h-3" />
-                        </div>
-                        <span className="hidden sm:inline">Create New Lesson</span>
-                        <span className="sm:hidden">Create</span>
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+              <Button 
+                variant="outline" 
+                className="bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Create New Lesson</span>
+                <span className="sm:hidden">Create</span>
               </Button>
-                  </div>
             </DialogTrigger>
           </Dialog>
         </div>
