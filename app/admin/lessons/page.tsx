@@ -778,9 +778,8 @@ export default function LessonsPage() {
               )}
             </div>
 
-         
- {/* Date Filters with Mobile Fix */}
- <div className="space-y-4 mb-6">
+                     {/* Date Filters - Mobile Optimized */}
+            <div className="space-y-4 mb-6">
               <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                 {/* Scheduled Date Range */}
                 <div className="space-y-2">
@@ -788,10 +787,10 @@ export default function LessonsPage() {
                     <Calendar className="w-4 h-4 text-purple-400" />
                     Scheduled Date Range
                   </label>
-                  <div className="p-3 bg-white/[0.02] border border-white/10 rounded-xl">
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-400 font-medium">From</label>
+                  <div className="p-2 sm:p-3 bg-white/[0.02] border border-white/10 rounded-xl">
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-slate-400 font-medium mb-1 block">From</label>
                         <Input
                           type="date"
                           value={scheduledDateFrom}
@@ -799,12 +798,12 @@ export default function LessonsPage() {
                           className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
                                    focus:border-purple-400/80 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-200 h-10
+                                   transition-all duration-200 h-9 px-3
                                    [color-scheme:dark]"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-400 font-medium">To</label>
+                      <div>
+                        <label className="text-xs text-slate-400 font-medium mb-1 block">To</label>
                         <Input
                           type="date"
                           value={scheduledDateTo}
@@ -812,7 +811,7 @@ export default function LessonsPage() {
                           className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
                                    focus:border-purple-400/80 focus:ring-1 focus:ring-purple-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-200 h-10
+                                   transition-all duration-200 h-9 px-3
                                    [color-scheme:dark]"
                         />
                       </div>
@@ -826,10 +825,10 @@ export default function LessonsPage() {
                     <Clock className="w-4 h-4 text-blue-400" />
                     Created Date Range
                   </label>
-                  <div className="p-3 bg-white/[0.02] border border-white/10 rounded-xl">
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-400 font-medium">From</label>
+                  <div className="p-2 sm:p-3 bg-white/[0.02] border border-white/10 rounded-xl">
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-slate-400 font-medium mb-1 block">From</label>
                         <Input
                           type="date"
                           value={createdDateFrom}
@@ -837,12 +836,12 @@ export default function LessonsPage() {
                           className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
                                    focus:border-blue-400/80 focus:ring-1 focus:ring-blue-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-200 h-10
+                                   transition-all duration-200 h-9 px-3no
                                    [color-scheme:dark]"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-400 font-medium">To</label>
+                      <div>
+                        <label className="text-xs text-slate-400 font-medium mb-1 block">To</label>
                         <Input
                           type="date"
                           value={createdDateTo}
@@ -850,7 +849,7 @@ export default function LessonsPage() {
                           className="w-full bg-white/[0.03] border border-white/20 rounded-lg text-white text-sm
                                    hover:bg-white/[0.05] hover:border-white/30
                                    focus:border-blue-400/80 focus:ring-1 focus:ring-blue-400/20 focus:bg-white/[0.08]
-                                   transition-all duration-200 h-10
+                                   transition-all duration-200 h-9 px-3
                                    [color-scheme:dark]"
                         />
                       </div>
@@ -860,17 +859,17 @@ export default function LessonsPage() {
               </div>
             </div>
 
-            {/* Action Buttons with Enhanced Mobile Design */}
-            <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-3">
+            {/* Action Buttons - Mobile Optimized */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
                 onClick={handleExportLessons}
-                className="w-full bg-orange-500/10 border border-orange-400/30 text-orange-400 
+                className="bg-orange-500/10 border border-orange-400/30 text-orange-400 
                          hover:bg-orange-500/20 hover:border-orange-400/50 
                          focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
-                         rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+                         rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 <span>Export</span>
               </Button>
               
@@ -878,16 +877,16 @@ export default function LessonsPage() {
                 variant="outline" 
                 onClick={handleDeleteAllLessons}
                 disabled={bulkActionLoading || totalLessons === 0}
-                className="w-full bg-red-500/10 border border-red-400/30 text-red-400 
+                className="bg-red-500/10 border border-red-400/30 text-red-400 
                          hover:bg-red-500/20 hover:border-red-400/50 
                          focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
-                         rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-12"
+                         rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-10 text-xs sm:text-sm"
                 title={totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
               >
                 {bulkActionLoading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
                 ) : (
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 )}
                 <span>Delete</span>
               </Button>
@@ -898,9 +897,9 @@ export default function LessonsPage() {
                   className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
                            hover:bg-green-500/20 hover:border-green-400/50 
                            focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
-                           rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+                           rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   <span>Import</span>
                 </Button>
               </Link>
@@ -912,64 +911,16 @@ export default function LessonsPage() {
                     className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
                              hover:bg-purple-500/20 hover:border-purple-400/50 
                              focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
-                             rounded-xl transition-all duration-200 backdrop-blur-sm h-12"
+                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     <span>Create</span>
                   </Button>
                 </DialogTrigger>
               </Dialog>
             </div>
 
-                      {/* Action Buttons with Enhanced Design */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleExportLessons}
-                className="bg-orange-500/10 border border-orange-400/30 text-orange-400 hover:bg-orange-500/20 hover:border-orange-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm"
-          >
-            <Download className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Export CSV</span>
-                <span className="sm:hidden">Export</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={handleDeleteAllLessons}
-            disabled={bulkActionLoading || totalLessons === 0}
-                className="bg-red-500/10 border border-red-400/30 text-red-400 hover:bg-red-500/20 hover:border-red-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50"
-            title={totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
-          >
-            {bulkActionLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4 mr-2" />
-            )}
-                <span className="hidden sm:inline">Delete All</span>
-                <span className="sm:hidden">Delete</span>
-          </Button>
-          
-          <Link href="/admin/lessons/import" className="block">
-                <Button variant="outline" className="w-full bg-green-500/10 border border-green-400/30 text-green-400 hover:bg-green-500/20 hover:border-green-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm">
-              <Upload className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Import CSV</span>
-                  <span className="sm:hidden">Import</span>
-            </Button>
-          </Link>
-          
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400/50 rounded-xl transition-all duration-200 backdrop-blur-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Create New Lesson</span>
-                <span className="sm:hidden">Create</span>
-              </Button>
-            </DialogTrigger>
-          </Dialog>
-        </div>
+
         </CardContent>
       </Card>
 
