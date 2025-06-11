@@ -542,10 +542,10 @@ export default function LessonsPage() {
         <div className="absolute inset-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDEyNywgNjMsIDI1NSwgMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
       </div>
       
-      {/* Scrollable Content Container - positioned above navigation */}
-      <div className="absolute inset-0 z-30 overflow-y-auto">
+      {/* Scrollable Content Container - positioned below navigation */}
+      <div className="absolute inset-0 z-10 overflow-y-auto">
 
-      <div className="relative z-10 p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8">
+      <div className="relative z-10 p-4 lg:p-8 lg:pt-20 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 lg:pt-20">
               {/* Enhanced Header */}
         <div className="mb-8 lg:mb-12 text-center">
           <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">

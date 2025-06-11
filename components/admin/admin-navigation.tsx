@@ -22,12 +22,12 @@ export function AdminNavigation() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50 safe-area-inset">
+      <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="backdrop-blur-xl bg-transparent border-white/20 hover:bg-white/10 text-white shadow-lg"
+          className="backdrop-blur-xl bg-slate-800/80 border-white/20 hover:bg-slate-700/80 text-white shadow-lg w-10 h-10"
         >
           {isOpen ? (
             <X className="h-4 w-4" />
@@ -40,7 +40,7 @@ export function AdminNavigation() {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-20 transform transition-all duration-300 ease-out lg:translate-x-0 admin-nav-container",
+          "fixed inset-y-0 left-0 z-40 transform transition-all duration-300 ease-out lg:translate-x-0 admin-nav-container",
           // Responsive width - better mobile sizing
           "w-72 sm:w-72 lg:w-72",
           // Mobile transforms with spring animation
