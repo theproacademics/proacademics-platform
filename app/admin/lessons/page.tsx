@@ -753,20 +753,20 @@ export default function LessonsPage() {
             </div>
 
                       {/* Date Filters with Enhanced Design */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6">
-              <div className="space-y-3">
+            <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 mb-4 lg:mb-6">
+              <div className="space-y-2 lg:space-y-3">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-purple-400" />
                   Scheduled Date Range
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-slate-400">From</label>
                     <Input
                       type="date"
                       value={scheduledDateFrom}
                       onChange={(e) => setScheduledDateFrom(e.target.value)}
-                      className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
+                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
                     />
                   </div>
                   <div className="space-y-1">
@@ -775,25 +775,25 @@ export default function LessonsPage() {
                       type="date"
                       value={scheduledDateTo}
                       onChange={(e) => setScheduledDateTo(e.target.value)}
-                      className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
+                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 lg:space-y-3">
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-400" />
                   Created Date Range
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-slate-400">From</label>
                     <Input
                       type="date"
                       value={createdDateFrom}
                       onChange={(e) => setCreatedDateFrom(e.target.value)}
-                      className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
+                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
                     />
                   </div>
                   <div className="space-y-1">
@@ -802,7 +802,7 @@ export default function LessonsPage() {
                       type="date"
                       value={createdDateTo}
                       onChange={(e) => setCreatedDateTo(e.target.value)}
-                      className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
+                      className="w-full bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200"
                     />
                   </div>
                 </div>
