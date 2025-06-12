@@ -27,6 +27,7 @@ interface Lesson {
   program?: string
   duration?: string
   videoUrl?: string
+  embedVideoUrl?: string
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -59,6 +60,7 @@ interface LessonFormData {
   program: string
   duration: string
   videoUrl: string
+  embedVideoUrl: string
   week: string
   scheduledDate: string
   grade: string
@@ -74,6 +76,7 @@ const createEmptyFormData = (): LessonFormData => ({
   program: "",
   duration: "",
   videoUrl: "",
+  embedVideoUrl: "",
   week: "",
   scheduledDate: "",
   grade: "",
@@ -92,9 +95,13 @@ const getYouTubeVideoId = (url: string): string | null => {
 
 const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
+const isValidEmbedUrl = (url: string): boolean => {
+  return url.includes('embed') || url.includes('iframe') || url.startsWith('<iframe')
+}
+
 const exportToCSV = (lessons: Lesson[], filename: string): void => {
   const csvContent = [
-    ['Topic', 'Subject', 'Subtopic', 'Teacher', 'Program', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL'],
+    ['Topic', 'Subject', 'Subtopic', 'Teacher', 'Program', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL', 'Embed Video URL'],
     ...lessons.map(lesson => [
       lesson.title,
       lesson.subject,
@@ -107,7 +114,8 @@ const exportToCSV = (lessons: Lesson[], filename: string): void => {
       lesson.scheduledDate || '',
       lesson.duration || '',
       new Date(lesson.createdAt).toLocaleDateString(),
-      lesson.videoUrl || ''
+      lesson.videoUrl || '',
+      lesson.embedVideoUrl || ''
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
 
@@ -375,10 +383,11 @@ export default function LessonsPage() {
       subtopic: lesson.subtopic || "",
       teacher: lesson.teacher || "",
       program: lesson.program || "",
-      duration: lesson.duration || "",
-      videoUrl: lesson.videoUrl || "",
-      week: lesson.week || "",
-      scheduledDate: lesson.scheduledDate || "",
+              duration: lesson.duration || "",
+        videoUrl: lesson.videoUrl || "",
+        embedVideoUrl: lesson.embedVideoUrl || "",
+        week: lesson.week || "",
+        scheduledDate: lesson.scheduledDate || "",
       grade: lesson.grade || "",
       status: lesson.status || "draft"
     })
@@ -1561,7 +1570,23 @@ export default function LessonsPage() {
                   onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
                     className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
                 />
-                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">Embed Video URL (Optional)</label>
+                  <Input 
+                    placeholder="Embed URL or iframe code" 
+                    value={formData.embedVideoUrl}
+                    onChange={(e) => setFormData({...formData, embedVideoUrl: e.target.value})}
+                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-teal-400/50 transition-all duration-200" 
+                  />
+                  {formData.embedVideoUrl && (
+                    <p className="text-xs text-teal-400 flex items-center gap-1">
+                      <Play className="w-3 h-3" />
+                      Embed link provided
+                    </p>
+                  )}
+                </div>
                 </div>
             </div>
 
@@ -1773,6 +1798,22 @@ export default function LessonsPage() {
             </div>
             <div className="grid grid-cols-1 gap-4">
               <div>
+                <label className="text-sm font-medium mb-2 block">Embed Video URL (Optional)</label>
+                <Input 
+                  placeholder="Embed URL" 
+                  value={formData.embedVideoUrl}
+                  onChange={(e) => setFormData({...formData, embedVideoUrl: e.target.value})}
+                  className="glass-card border-white/20" 
+                />
+                {formData.embedVideoUrl && (
+                  <p className="text-xs text-teal-400 mt-1">
+                    🎬 Embed link provided
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <label className="text-sm font-medium mb-2 block">Program</label>
                 <Input 
                   placeholder="Program name"
@@ -1921,6 +1962,32 @@ export default function LessonsPage() {
                       <span className="text-sm text-gray-300">{selectedLesson.videoUrl}</span>
                     </div>
                   )}
+                </div>
+              )}
+              
+              {selectedLesson.embedVideoUrl && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Embed Video Content</h3>
+                  <div className="space-y-2">
+                    {selectedLesson.embedVideoUrl.startsWith('<iframe') ? (
+                      <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                        <div className="text-xs text-teal-400 mb-2">Iframe Embed Code:</div>
+                        <code className="text-xs text-gray-300 break-all">{selectedLesson.embedVideoUrl}</code>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <Play className="w-4 h-4 text-teal-400" />
+                        <a 
+                          href={selectedLesson.embedVideoUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-teal-400 hover:text-teal-300 underline break-all"
+                        >
+                          {selectedLesson.embedVideoUrl}
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               

@@ -32,6 +32,7 @@ interface Lesson {
   duration?: string
   description?: string
   videoUrl?: string
+  embedVideoUrl?: string
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -45,6 +46,10 @@ const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toS
 
 const isValidVideoUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
+}
+
+const isValidEmbedUrl = (url: string): boolean => {
+  return url.includes('embed') || url.includes('iframe') || url.startsWith('<iframe')
 }
 
 // Enhanced parsing utility to handle both CSV and TSV with multi-line content
@@ -169,6 +174,7 @@ export default function LessonsImportPage() {
       const instructorValue = findHeaderValue(row, ['Instructor', 'Teacher', 'Tutor', 'Educator'])
       const durationValue = findHeaderValue(row, ['Duration', 'Time', 'Length'])
       const videoUrlValue = findHeaderValue(row, ['Video URL', 'VideoURL', 'Video Link', 'URL', 'Link'])
+      const embedVideoUrlValue = findHeaderValue(row, ['Embed Video URL', 'EmbedVideoURL', 'Embed Video Link', 'Embed URL', 'Embed Link', 'Iframe URL'])
       const descriptionValue = findHeaderValue(row, ['Description', 'Details', 'Notes', 'Content'])
       const weekValue = findHeaderValue(row, ['Week', 'Week Number', 'Week #'])
       const dateValue = findHeaderValue(row, ['Date', 'Scheduled Date', 'Lesson Date'])
@@ -247,6 +253,7 @@ export default function LessonsImportPage() {
          instructor: instructorValue || '-',
          duration: durationValue || '-',
          videoUrl: videoUrlValue || '',
+         embedVideoUrl: embedVideoUrlValue || '',
          description: descriptionValue || '',
          status: formattedStatus,
          scheduledDate: formattedDate || '',
@@ -369,6 +376,9 @@ export default function LessonsImportPage() {
       if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
         errors.push('Invalid video URL')
       }
+      if (row.embedVideoUrl && row.embedVideoUrl.trim() !== '' && !isValidEmbedUrl(row.embedVideoUrl)) {
+        errors.push('Invalid embed video URL')
+      }
       return errors.length > 0
     }).length
     const valid = total - withErrors
@@ -400,6 +410,10 @@ export default function LessonsImportPage() {
     
     if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
       errors.push('Invalid video URL format')
+    }
+    
+    if (row.embedVideoUrl && row.embedVideoUrl.trim() !== '' && !isValidEmbedUrl(row.embedVideoUrl)) {
+      errors.push('Invalid embed video URL format')
     }
     
     return errors
