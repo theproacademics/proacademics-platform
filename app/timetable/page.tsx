@@ -363,7 +363,10 @@ export default function TimetablePage() {
                                         </div>
                                       )}
                                     </div>
-                                    <Button className="ml-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 group/btn relative overflow-hidden">
+                                    <Button 
+                                      className="ml-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 group/btn relative overflow-hidden"
+                                      onClick={() => window.location.href = `/lesson/${lesson.id}`}
+                                    >
                                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
                                       <span className="relative z-10">
                                         {lesson.videoUrl ? "Watch Lesson" : "Start Lesson"}
