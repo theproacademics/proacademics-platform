@@ -91,7 +91,7 @@ export default function TimetablePage() {
         
         setLessons(transformedLessons)
         
-        // Organize lessons by day of week (simple distribution)
+        // Organize lessons by day of week based on scheduledDate
         const organizedSchedule: Record<string, TimetableLesson[]> = {
           Monday: [],
           Tuesday: [],
@@ -102,11 +102,13 @@ export default function TimetablePage() {
           Sunday: []
         }
         
-        // Simple distribution across days
-        transformedLessons.forEach((lesson, index) => {
-          const dayIndex = index % 7
-          const dayName = daysOfWeek[dayIndex]
-          organizedSchedule[dayName].push(lesson)
+        // Distribute lessons based on their scheduledDate
+        transformedLessons.forEach((lesson) => {
+          if (lesson.scheduledDate) {
+            const date = new Date(lesson.scheduledDate)
+            const dayName = daysOfWeek[date.getDay() === 0 ? 6 : date.getDay() - 1] // Convert Sunday (0) to index 6
+            organizedSchedule[dayName].push(lesson)
+          }
         })
         
         setSchedule(organizedSchedule)
@@ -145,11 +147,21 @@ export default function TimetablePage() {
   }
 
   const filteredClasses = (schedule[selectedDay] || []).filter(
-    (lesson) =>
-      lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lesson.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lesson.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (lesson.subtopic && lesson.subtopic.toLowerCase().includes(searchQuery.toLowerCase()))
+    (lesson) => {
+      const matchesSearch = lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lesson.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lesson.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lesson.subtopic && lesson.subtopic.toLowerCase().includes(searchQuery.toLowerCase()))
+      
+      // Check if the lesson's scheduled date matches the selected day's date
+      if (lesson.scheduledDate) {
+        const lessonDate = new Date(lesson.scheduledDate)
+        const selectedDate = weekDates[daysOfWeek.indexOf(selectedDay)]
+        return matchesSearch && lessonDate.toDateString() === selectedDate.toDateString()
+      }
+      
+      return matchesSearch
+    }
   )
 
   if (showPreloader || !preloaderMounted || isLoading) {

@@ -1528,37 +1528,33 @@ export default function LessonsPage() {
                       type="date"
                       value={formData.scheduledDate ? (() => {
                         try {
+                          // Always expect ISO format (YYYY-MM-DD)
                           const dateStr = formData.scheduledDate
-                          if (dateStr.includes('/')) {
-                            const parts = dateStr.split(' ')
-                            if (parts.length > 1) {
-                            const datePart = parts[1]
-                              const [day, month, year] = datePart.split('/')
-                              const fullYear = year.length === 2 ? `20${year}` : year
-                              return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-                            }
+                          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                            return dateStr
                           }
-                          return new Date(dateStr).toISOString().split('T')[0]
+                          // Try to parse other formats
+                          const parsed = new Date(dateStr)
+                          if (!isNaN(parsed.getTime())) {
+                            return parsed.toISOString().split('T')[0]
+                          }
+                          return ''
                         } catch {
                           return ''
                         }
                       })() : ''}
                       onChange={(e) => {
-                        if (e.target.value) {
-                          const date = new Date(e.target.value)
-                          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-                          const formattedDate = `${dayName} ${date.toLocaleDateString('en-GB')}`
-                          setFormData({...formData, scheduledDate: formattedDate})
-                        } else {
-                          setFormData({...formData, scheduledDate: ''})
-                        }
+                        setFormData({...formData, scheduledDate: e.target.value})
                       }}
                     className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
                     />
                     {formData.scheduledDate && (
                     <p className="text-xs text-green-400 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {formData.scheduledDate}
+                      {(() => {
+                        const d = new Date(formData.scheduledDate)
+                        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) : formData.scheduledDate
+                      })()}
                       </p>
                     )}
                   </div>
@@ -1728,41 +1724,35 @@ export default function LessonsPage() {
                   type="date"
                   value={formData.scheduledDate ? (() => {
                     try {
-                      // Try to parse existing date formats
+                      // Always expect ISO format (YYYY-MM-DD)
                       const dateStr = formData.scheduledDate
-                      if (dateStr.includes('/')) {
-                        // Handle "Monday 15/09/25" format
-                        const parts = dateStr.split(' ')
-                        if (parts.length > 1) {
-                          const datePart = parts[1] // "15/09/25"
-                          const [day, month, year] = datePart.split('/')
-                          const fullYear = year.length === 2 ? `20${year}` : year
-                          return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-                        }
+                      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                        return dateStr
                       }
-                      // Try direct parsing
-                      return new Date(dateStr).toISOString().split('T')[0]
+                      // Try to parse other formats
+                      const parsed = new Date(dateStr)
+                      if (!isNaN(parsed.getTime())) {
+                        return parsed.toISOString().split('T')[0]
+                      }
+                      return ''
                     } catch {
                       return ''
                     }
                   })() : ''}
                   onChange={(e) => {
-                    if (e.target.value) {
-                      const date = new Date(e.target.value)
-                      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-                      const formattedDate = `${dayName} ${date.toLocaleDateString('en-GB')}`
-                      setFormData({...formData, scheduledDate: formattedDate})
-                    } else {
-                      setFormData({...formData, scheduledDate: ''})
-                    }
+                    setFormData({...formData, scheduledDate: e.target.value})
                   }}
-                  className="glass-card border-white/20" 
-                />
-                {formData.scheduledDate && (
-                  <p className="text-xs text-green-400 mt-1">
-                    📅 {formData.scheduledDate}
-                  </p>
-                )}
+                  className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
+                  />
+                  {formData.scheduledDate && (
+                    <p className="text-xs text-green-400 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {(() => {
+                        const d = new Date(formData.scheduledDate)
+                        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) : formData.scheduledDate
+                      })()}
+                      </p>
+                    )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
