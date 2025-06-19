@@ -46,8 +46,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields: title, subject" }, { status: 400 })
     }
 
-    const lesson = await lessonService.createLesson({
-      id: `lesson-${Date.now()}`,
+    // Generate unique lesson ID
+    const lessonId = `lesson-${Date.now()}`
+
+    const lesson: Lesson = {
+      id: lessonId,
       title,
       subject,
       subtopic: subtopic || "",
@@ -55,13 +58,18 @@ export async function POST(req: Request) {
       program: program || "",
       duration: duration || "",
       videoUrl: videoUrl || "",
-      week: week || "",
+      status: status || 'draft',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Optional fields from CSV import
       scheduledDate: scheduledDate || "",
-      grade: grade || "",
-      status: status || "draft"
-    })
+      week: week || "",
+      grade: grade || ""
+    }
 
-    return NextResponse.json({ lesson }, { status: 201 })
+    const createdLesson = await lessonService.createLesson(lesson)
+
+    return NextResponse.json({ lesson: createdLesson }, { status: 201 })
   } catch (error) {
     console.error("Error creating lesson:", error)
     return NextResponse.json({ error: "Failed to create lesson" }, { status: 500 })

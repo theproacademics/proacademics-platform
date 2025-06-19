@@ -127,6 +127,34 @@ interface Lesson {
   isLive: boolean;
   liveDate?: string;
   description: string;
+  videoUrl?: string;
+  scheduledDate?: string;
+}
+
+// Helper functions for date logic
+const isLiveToday = (scheduledDate?: string) => {
+  if (!scheduledDate) return false
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+  return scheduledDate === today
+}
+
+const isDatePassed = (scheduledDate?: string) => {
+  if (!scheduledDate) return false
+  const today = new Date().toISOString().split('T')[0]
+  return scheduledDate < today
+}
+
+const getLessonStatus = (lesson: Lesson) => {
+  const hasRegularVideo = !!(lesson.videoUrl)
+  const isLive = isLiveToday(lesson.scheduledDate)
+  const isPast = isDatePassed(lesson.scheduledDate)
+  
+  return {
+    isLiveNow: lesson.isLive && isLive,
+    hasVideo: hasRegularVideo,
+    isPastLesson: isPast,
+    isUpcoming: lesson.scheduledDate && !isLive && !isPast
+  }
 }
 
 export default function LessonsPage() {
@@ -187,10 +215,12 @@ export default function LessonsPage() {
           duration: lesson.duration || 'N/A',
           difficulty: lesson.difficulty || 'Intermediate',
           xp: lesson.xp || 50,
-          instructor: lesson.instructor || 'ProAcademics Team',
+          instructor: lesson.teacher || lesson.instructor || 'ProAcademics Team',
           isLive: lesson.status === 'active',
           liveDate: lesson.scheduledDate,
           description: lesson.description || 'Join us for this exciting lesson!',
+          videoUrl: lesson.videoUrl,
+          scheduledDate: lesson.scheduledDate,
         }));
         
         setLessons(transformedLessons)
@@ -281,212 +311,47 @@ export default function LessonsPage() {
 
       <main className="lg:ml-72 min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
-          {/* Ultra-Modern Hero Section */}
-          <div className="relative mb-20 animate-fade-in overflow-hidden">
-            {/* Multiple layered backgrounds */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-[2rem] blur-3xl"></div>
-            <div className="absolute inset-2 bg-gradient-to-br from-cyan-500/10 via-violet-500/10 to-fuchsia-500/10 rounded-[2rem] blur-2xl"></div>
-            
-            <div className="relative bg-gradient-to-br from-slate-900/60 via-slate-800/60 to-slate-900/60 backdrop-blur-3xl rounded-[2rem] border border-white/30 shadow-2xl overflow-hidden">
-              {/* Animated mesh gradient overlay */}
-              <div className="absolute inset-0 opacity-30">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 animate-gradient-shift"></div>
-              </div>
+          {/* Compact Hero Section */}
+          <div className="relative mb-8 animate-fade-in">
+            <div className="relative bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl overflow-hidden h-16">
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
               
-              {/* Advanced glass highlights */}
-              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-              <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-white/50 to-transparent"></div>
-              <div className="absolute bottom-0 right-0 w-full h-px bg-gradient-to-l from-transparent via-white/30 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 w-px h-full bg-gradient-to-t from-transparent via-white/30 to-transparent"></div>
-              
-              <div className="relative p-12 lg:p-16">
-                <div className="flex flex-col lg:flex-row items-center gap-12">
-                  {/* Content Section */}
-                  <div className="flex-1 space-y-8">
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/40 to-purple-500/40 rounded-2xl blur-xl animate-pulse"></div>
-                          <div className="relative p-4 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-2xl backdrop-blur-xl border border-white/30">
-                            <BookOpen className="w-8 h-8 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-sm font-semibold text-green-400 uppercase tracking-wider">Live Lessons Available</span>
-                        </div>
-                      </div>
-                      
-                      <div className="relative">
-                        <h1 className="text-5xl lg:text-7xl font-black leading-tight">
-                          <span className="block text-transparent bg-gradient-to-r from-white via-blue-200 to-white bg-clip-text animate-gradient-text">
-                            Lessons
-                          </span>
-                          <span className="block text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text mt-2 animate-gradient-text-reverse">
-                            Library
-                          </span>
-                        </h1>
-                        <div className="absolute inset-0 text-5xl lg:text-7xl font-black text-blue-500/10 blur-3xl">
-                          Lessons Library
-                        </div>
-                      </div>
-                      
-                      <p className="text-xl lg:text-2xl text-slate-300 font-medium leading-relaxed max-w-2xl">
-                        Discover <span className="text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text font-bold">expert-led lessons</span> designed to accelerate your learning journey
-                      </p>
-                    </div>
-                    
-                    {/* Action buttons */}
-                    <div className="flex flex-wrap gap-4">
-                      <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl group-hover:blur-2xl opacity-70 group-hover:opacity-100 transition-all duration-500"></div>
-                        <Button size="lg" className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-105 transition-all duration-300">
-                          <Play className="w-5 h-5 mr-3" />
-                          Start Learning
-                        </Button>
-                      </div>
-                      <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-500"></div>
-                        <Button size="lg" variant="outline" className="relative bg-white/10 hover:bg-white/20 border border-white/30 text-white rounded-2xl px-8 py-4 text-lg font-semibold backdrop-blur-xl hover:scale-105 transition-all duration-300">
-                          <Filter className="w-5 h-5 mr-3" />
-                          Browse Filters
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Visual Element */}
+              {/* Content */}
+              <div className="relative flex items-center justify-between h-full px-6">
+                <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="relative w-64 h-64 lg:w-80 lg:h-80">
-                      {/* Floating elements */}
-                      <div className="absolute top-8 left-8 w-16 h-16 bg-gradient-to-br from-blue-500/60 to-cyan-500/60 rounded-2xl backdrop-blur-xl border border-white/30 flex items-center justify-center animate-float-slow shadow-2xl">
-                        <Sparkles className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="absolute top-16 right-12 w-12 h-12 bg-gradient-to-br from-purple-500/60 to-pink-500/60 rounded-xl backdrop-blur-xl border border-white/30 flex items-center justify-center animate-float-slow-reverse shadow-2xl" style={{ animationDelay: '1s' }}>
-                        <Zap className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="absolute bottom-16 left-16 w-14 h-14 bg-gradient-to-br from-green-500/60 to-emerald-500/60 rounded-xl backdrop-blur-xl border border-white/30 flex items-center justify-center animate-float-slow shadow-2xl" style={{ animationDelay: '2s' }}>
-                        <Star className="w-7 h-7 text-white" />
-                      </div>
-                      <div className="absolute bottom-8 right-8 w-10 h-10 bg-gradient-to-br from-orange-500/60 to-red-500/60 rounded-lg backdrop-blur-xl border border-white/30 flex items-center justify-center animate-float-slow-reverse shadow-2xl" style={{ animationDelay: '0.5s' }}>
-                        <Users className="w-5 h-5 text-white" />
-                      </div>
-                      
-                      {/* Central orb */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-2xl animate-pulse"></div>
-                          <div className="relative w-32 h-32 bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-full backdrop-blur-3xl border border-white/40 flex items-center justify-center shadow-2xl">
-                            <div className="text-center">
-                              <div className="text-3xl font-black text-white mb-1">∞</div>
-                              <div className="text-xs font-semibold text-slate-300">INFINITE</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-xl backdrop-blur-xl border border-white/30 flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-white" />
                     </div>
                   </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-white via-blue-200 to-purple-400 bg-clip-text">
+                      Lessons Library
+                    </h1>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-green-400 uppercase tracking-wider">Live Lessons Available</span>
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                  <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-xl px-4 py-2 text-sm font-semibold">
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Learning
+                  </Button>
+                  <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 border border-white/30 text-white rounded-xl px-4 py-2 text-sm font-medium backdrop-blur-xl">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Browse Filters
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Revolutionary Stats Grid */}
-          <div className="mb-20 animate-fade-in" style={{ animationDelay: "300ms" }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
-              {stats.map((stat, index) => (
-                <div 
-                  key={stat.id}
-                  className="group relative animate-fade-in"
-                  style={{ animationDelay: `${400 + index * 150}ms` }}
-                >
-                  {/* Dynamic glow effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${
-                    stat.color === 'blue' ? 'from-blue-500/30 to-cyan-500/30' :
-                    stat.color === 'green' ? 'from-green-500/30 to-emerald-500/30' :
-                    stat.color === 'purple' ? 'from-purple-500/30 to-pink-500/30' :
-                    'from-orange-500/30 to-red-500/30'
-                  } rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700`}></div>
-                  
-                  {/* Main card */}
-                  <div className="relative bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-3xl rounded-3xl border border-white/20 shadow-2xl group-hover:shadow-3xl group-hover:scale-[1.02] transition-all duration-500 overflow-hidden">
-                    {/* Animated gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${
-                      stat.color === 'blue' ? 'from-blue-500/10 via-cyan-500/5 to-transparent' :
-                      stat.color === 'green' ? 'from-green-500/10 via-emerald-500/5 to-transparent' :
-                      stat.color === 'purple' ? 'from-purple-500/10 via-pink-500/5 to-transparent' :
-                      'from-orange-500/10 via-red-500/5 to-transparent'
-                    } opacity-0 group-hover:opacity-100 transition-all duration-500`}></div>
-                    
-                    {/* Glass edges */}
-                    <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                    <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-                    
-                    <div className="relative p-8">
-                      {/* Icon and trend */}
-                      <div className="flex items-center justify-between mb-8">
-                        <div className="relative">
-                          <div className={`absolute inset-0 bg-gradient-to-br ${
-                            stat.color === 'blue' ? 'from-blue-500/40 to-cyan-500/40' :
-                            stat.color === 'green' ? 'from-green-500/40 to-emerald-500/40' :
-                            stat.color === 'purple' ? 'from-purple-500/40 to-pink-500/40' :
-                            'from-orange-500/40 to-red-500/40'
-                          } rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500`}></div>
-                          <div className={`relative p-4 bg-gradient-to-br ${
-                            stat.color === 'blue' ? 'from-blue-500/30 to-cyan-500/30' :
-                            stat.color === 'green' ? 'from-green-500/30 to-emerald-500/30' :
-                            stat.color === 'purple' ? 'from-purple-500/30 to-pink-500/30' :
-                            'from-orange-500/30 to-red-500/30'
-                          } rounded-2xl backdrop-blur-xl border border-white/30 group-hover:scale-110 transition-transform duration-500`}>
-                            {stat.icon}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center text-xs px-3 py-1.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 backdrop-blur-sm">
-                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                            Live
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Value and title */}
-                      <div className="space-y-3">
-                        <div className={`text-4xl lg:text-5xl font-black ${
-                          stat.color === 'blue' ? 'text-blue-400' :
-                          stat.color === 'green' ? 'text-green-400' :
-                          stat.color === 'purple' ? 'text-purple-400' :
-                          'text-orange-400'
-                        } group-hover:scale-105 transition-transform duration-300`}>
-                          {typeof stat.value === 'string' ? stat.value : stat.value.toLocaleString()}
-                        </div>
-                        <p className="text-lg font-semibold text-slate-300 group-hover:text-white transition-colors duration-300">
-                          {stat.title}
-                        </p>
-                        
-                        {/* Progress bar */}
-                        <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden mt-4">
-                          <div className={`absolute left-0 top-0 h-full bg-gradient-to-r ${
-                            stat.color === 'blue' ? 'from-blue-500 to-cyan-500' :
-                            stat.color === 'green' ? 'from-green-500 to-emerald-500' :
-                            stat.color === 'purple' ? 'from-purple-500 to-pink-500' :
-                            'from-orange-500 to-red-500'
-                          } rounded-full transition-all duration-1000 group-hover:scale-x-110`}
-                          style={{ width: `${Math.min(100, (typeof stat.value === 'number' ? stat.value : 75))}%` }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           {/* Enhanced Filters */}
           <div className="mb-12 animate-fade-in" style={{ animationDelay: "400ms" }}>
@@ -553,7 +418,12 @@ export default function LessonsPage() {
           <div className="animate-fade-in" style={{ animationDelay: "600ms" }}>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
               {filteredLessons.map((lesson, index) => (
-                <div key={lesson.id} className="group overflow-hidden animate-fade-in" style={{ animationDelay: `${600 + index * 100}ms` }}>
+                <div 
+                  key={lesson.id} 
+                  className="group overflow-hidden animate-fade-in cursor-pointer" 
+                  style={{ animationDelay: `${600 + index * 100}ms` }}
+                  onClick={() => window.location.href = `/lesson/${lesson.id}`}
+                >
                   <div className="relative">
                     {/* Background glow */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
@@ -581,26 +451,47 @@ export default function LessonsPage() {
                         
                         {/* Status badges */}
                         <div className="absolute top-6 left-6 flex flex-col gap-3">
-                          {lesson.isLive && (
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-red-500/40 rounded-2xl blur-xl animate-pulse"></div>
-                              <div className="relative bg-red-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></div>
-                                  <span className="text-white font-bold text-sm uppercase tracking-wider">LIVE</span>
+                          {(() => {
+                            const status = getLessonStatus(lesson)
+                            
+                            return (
+                              <>
+                                {status.isUpcoming && (
+                                  <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500/40 rounded-2xl blur-lg"></div>
+                                    <div className="relative bg-blue-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
+                                      <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-white" />
+                                        <span className="text-white font-bold text-sm">UPCOMING</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                {status.hasVideo && !status.isUpcoming && (
+                                  <div className="relative">
+                                    <div className="absolute inset-0 bg-green-500/40 rounded-2xl blur-lg"></div>
+                                    <div className="relative bg-green-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
+                                      <div className="flex items-center gap-2">
+                                        <Play className="w-4 h-4 text-white" />
+                                        <span className="text-white font-bold text-sm">
+                                          CONTENT
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="relative">
+                                  <div className="absolute inset-0 bg-yellow-500/40 rounded-2xl blur-lg"></div>
+                                  <div className="relative bg-yellow-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
+                                    <div className="flex items-center gap-2">
+                                      <Zap className="w-4 h-4 text-white" />
+                                      <span className="text-white font-bold text-sm">{lesson.xp} XP</span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          )}
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-yellow-500/40 rounded-2xl blur-lg"></div>
-                            <div className="relative bg-yellow-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                              <div className="flex items-center gap-2">
-                                <Zap className="w-4 h-4 text-white" />
-                                <span className="text-white font-bold text-sm">{lesson.xp} XP</span>
-                              </div>
-                            </div>
-                          </div>
+                              </>
+                            )
+                          })()}
                         </div>
                         
                         {/* Difficulty badge */}
@@ -618,9 +509,18 @@ export default function LessonsPage() {
                           <div className="text-center space-y-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500">
                             <div className="relative">
                               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl"></div>
-                              <Button size="lg" className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-110 transition-all duration-300">
+                              <Button 
+                                size="lg" 
+                                className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-110 transition-all duration-300"
+                                onClick={() => window.location.href = `/lesson/${lesson.id}`}
+                              >
                                 <Play className="w-6 h-6 mr-3" />
-                                {lesson.isLive ? "Join Live Session" : "Start Lesson"}
+                                {(() => {
+                                  const status = getLessonStatus(lesson)
+                                  if (status.isUpcoming) return "View Details"
+                                  if (status.hasVideo) return status.isPastLesson ? "Watch Recording" : "Watch Lesson"
+                                  return "Start Lesson"
+                                })()}
                               </Button>
                             </div>
                             <p className="text-white/80 font-medium">Click to begin learning</p>

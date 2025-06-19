@@ -21,20 +21,24 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, instructor, duration, videoUrl, week, scheduledDate, grade, status } = body
+    const { title, subject, subtopic, teacher, program, duration, videoUrl, week, scheduledDate, grade, status } = body
 
-    const updatedLesson = await lessonService.updateLesson(params.id, {
+    const updateData = {
       title,
       subject,
       subtopic: subtopic || '',
-      instructor: instructor || '',
+      teacher: teacher || '',
+      program: program || '',
       duration: duration || '',
       videoUrl: videoUrl || '',
       week: week || '',
       scheduledDate: scheduledDate || '',
       grade: grade || '',
-      status: status || 'draft'
-    })
+      status: status || 'draft',
+      updatedAt: new Date()
+    }
+
+    const updatedLesson = await lessonService.updateLesson(params.id, updateData)
 
     if (!updatedLesson) {
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 })

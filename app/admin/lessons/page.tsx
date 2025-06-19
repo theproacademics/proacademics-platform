@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, Loader2, Download, MoreHorizontal, CheckSquare, Square, Youtube, AlertTriangle, Check, X, FileText, Settings, Calendar } from "lucide-react"
+import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, Video } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -27,7 +27,6 @@ interface Lesson {
   program?: string
   duration?: string
   videoUrl?: string
-  embedVideoUrl?: string
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -60,7 +59,6 @@ interface LessonFormData {
   program: string
   duration: string
   videoUrl: string
-  embedVideoUrl: string
   week: string
   scheduledDate: string
   grade: string
@@ -76,13 +74,15 @@ const createEmptyFormData = (): LessonFormData => ({
   program: "",
   duration: "",
   videoUrl: "",
-  embedVideoUrl: "",
   week: "",
   scheduledDate: "",
   grade: "",
   status: "draft"
 })
 
+
+
+// Helper functions for video handling
 const isValidVideoUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
 }
@@ -95,13 +95,11 @@ const getYouTubeVideoId = (url: string): string | null => {
 
 const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-const isValidEmbedUrl = (url: string): boolean => {
-  return url.includes('embed') || url.includes('iframe') || url.startsWith('<iframe')
-}
+
 
 const exportToCSV = (lessons: Lesson[], filename: string): void => {
   const csvContent = [
-    ['Topic', 'Subject', 'Subtopic', 'Teacher', 'Program', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL', 'Embed Video URL'],
+    ['Topic', 'Subject', 'Subtopic', 'Teacher', 'Program', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL'],
     ...lessons.map(lesson => [
       lesson.title,
       lesson.subject,
@@ -114,8 +112,7 @@ const exportToCSV = (lessons: Lesson[], filename: string): void => {
       lesson.scheduledDate || '',
       lesson.duration || '',
       new Date(lesson.createdAt).toLocaleDateString(),
-      lesson.videoUrl || '',
-      lesson.embedVideoUrl || ''
+      lesson.videoUrl || ''
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
 
@@ -139,6 +136,10 @@ export default function LessonsPage() {
   const [stats, setStats] = useState<LessonStats | null>(null)
   const [subjects, setSubjects] = useState<string[]>([])
   const [teachers, setTeachers] = useState<string[]>([])
+  
+  // Viewing analytics states
+  const [viewingStats, setViewingStats] = useState<any>(null)
+  const [loadingViewingStats, setLoadingViewingStats] = useState(false)
   
   // Filter and pagination states
   const [searchTerm, setSearchTerm] = useState("")
@@ -236,6 +237,22 @@ export default function LessonsPage() {
     }
   }
 
+  // Fetch viewing analytics
+  const fetchViewingStats = async () => {
+    try {
+      setLoadingViewingStats(true)
+      const response = await fetch('/api/lessons/track-view')
+      if (response.ok) {
+        const data = await response.json()
+        setViewingStats(data)
+      }
+    } catch (error) {
+      console.error('Error fetching viewing stats:', error)
+    } finally {
+      setLoadingViewingStats(false)
+    }
+  }
+
   // Effect hooks
   useEffect(() => {
     fetchLessons()
@@ -244,6 +261,7 @@ export default function LessonsPage() {
   useEffect(() => {
     fetchFilterOptions()
     fetchStats()
+    fetchViewingStats()
   }, [])
 
   // CRUD Operations with optimized error handling
@@ -383,11 +401,10 @@ export default function LessonsPage() {
       subtopic: lesson.subtopic || "",
       teacher: lesson.teacher || "",
       program: lesson.program || "",
-              duration: lesson.duration || "",
-        videoUrl: lesson.videoUrl || "",
-        embedVideoUrl: lesson.embedVideoUrl || "",
-        week: lesson.week || "",
-        scheduledDate: lesson.scheduledDate || "",
+      duration: lesson.duration || "",
+      videoUrl: lesson.videoUrl || "",
+      week: lesson.week || "",
+      scheduledDate: lesson.scheduledDate || "",
       grade: lesson.grade || "",
       status: lesson.status || "draft"
     })
@@ -650,6 +667,147 @@ export default function LessonsPage() {
         </Card>
           </div>
       </div>
+
+        {/* Viewing Analytics Section */}
+        <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl lg:rounded-3xl mb-4 lg:mb-8 overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-teal-500/5"></div>
+          <CardContent className="relative p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 rounded-xl flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Viewing Analytics</h3>
+                  <p className="text-sm text-slate-400">Real-time lesson engagement metrics</p>
+                </div>
+              </div>
+              <Button
+                onClick={fetchViewingStats}
+                disabled={loadingViewingStats}
+                variant="outline"
+                size="sm"
+                className="bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/50 rounded-xl"
+              >
+                {loadingViewingStats ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  'Refresh'
+                )}
+              </Button>
+            </div>
+
+            {loadingViewingStats ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-2" />
+                  <p className="text-slate-400">Loading analytics...</p>
+                </div>
+              </div>
+            ) : viewingStats ? (
+              <div className="space-y-6">
+                {/* Overview Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-400/20 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <Eye className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-white">{viewingStats.totalViewsAcrossAllLessons || 0}</p>
+                        <p className="text-sm text-cyan-300">Total Views</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-teal-500/10 to-emerald-500/10 border border-teal-400/20 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-teal-500/20 rounded-lg flex items-center justify-center">
+                        <Play className="w-5 h-5 text-teal-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-white">{viewingStats.totalLessonsViewed || 0}</p>
+                        <p className="text-sm text-teal-300">Lessons Viewed</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-emerald-400/20 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-white">
+                          {viewingStats.lessons?.reduce((total: number, lesson: any) => total + lesson.uniqueViewers, 0) || 0}
+                        </p>
+                        <p className="text-sm text-emerald-300">Unique Viewers</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top Viewed Lessons */}
+                {viewingStats.lessons && viewingStats.lessons.length > 0 && (
+                  <div>
+                    <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+                      <Star className="w-4 h-4 text-yellow-400" />
+                      Most Viewed Lessons
+                    </h4>
+                    <div className="space-y-3">
+                      {viewingStats.lessons
+                        .sort((a: any, b: any) => b.totalViews - a.totalViews)
+                        .slice(0, 5)
+                        .map((lessonStat: any) => {
+                          const lesson = lessons.find(l => l.id === lessonStat.lessonId)
+                          return (
+                            <div key={lessonStat.lessonId} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white font-medium truncate">
+                                    {lesson?.title || `Lesson ${lessonStat.lessonId}`}
+                                  </p>
+                                  {lesson && (
+                                    <p className="text-sm text-slate-400">
+                                      {lesson.subject} • {lesson.teacher}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <div className="text-center">
+                                    <p className="text-cyan-400 font-bold">{lessonStat.totalViews}</p>
+                                    <p className="text-slate-400">Views</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-teal-400 font-bold">{lessonStat.uniqueViewers}</p>
+                                    <p className="text-slate-400">Unique</p>
+                                  </div>
+                                  {lessonStat.lastViewed && (
+                                    <div className="text-center">
+                                      <p className="text-emerald-400 font-bold">
+                                        {new Date(lessonStat.lastViewed).toLocaleDateString()}
+                                      </p>
+                                      <p className="text-slate-400">Last View</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Eye className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                <p className="text-slate-400">No viewing data available yet</p>
+                <p className="text-sm text-slate-500">Analytics will appear when students start watching lessons</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Enhanced Filters Section */}
         <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl lg:rounded-3xl mb-4 lg:mb-8 overflow-hidden shadow-2xl">
@@ -1568,21 +1726,7 @@ export default function LessonsPage() {
                 />
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Embed Video URL (Optional)</label>
-                  <Input 
-                    placeholder="Embed URL or iframe code" 
-                    value={formData.embedVideoUrl}
-                    onChange={(e) => setFormData({...formData, embedVideoUrl: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-teal-400/50 transition-all duration-200" 
-                  />
-                  {formData.embedVideoUrl && (
-                    <p className="text-xs text-teal-400 flex items-center gap-1">
-                      <Play className="w-3 h-3" />
-                      Embed link provided
-                    </p>
-                  )}
-                </div>
+
                 </div>
             </div>
 
@@ -1786,22 +1930,7 @@ export default function LessonsPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Embed Video URL (Optional)</label>
-                <Input 
-                  placeholder="Embed URL" 
-                  value={formData.embedVideoUrl}
-                  onChange={(e) => setFormData({...formData, embedVideoUrl: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-                {formData.embedVideoUrl && (
-                  <p className="text-xs text-teal-400 mt-1">
-                    🎬 Embed link provided
-                  </p>
-                )}
-              </div>
-            </div>
+
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Program</label>
@@ -1920,31 +2049,15 @@ export default function LessonsPage() {
               {selectedLesson.videoUrl && (
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Video Content</h3>
-                  {isValidVideoUrl(selectedLesson.videoUrl) ? (
-                    <div className="space-y-2">
-                      {getYouTubeVideoId(selectedLesson.videoUrl) ? (
-                        <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}`}
-                            title="Lesson Video"
-                            className="w-full h-full"
-                            allowFullScreen
-                            frameBorder="0"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
-                          <Youtube className="w-4 h-4 text-red-400" />
-                          <a 
-                            href={selectedLesson.videoUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-400 hover:text-blue-300 underline"
-                          >
-                            {selectedLesson.videoUrl}
-                          </a>
-                        </div>
-                      )}
+                  {isValidVideoUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) ? (
+                    <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
+                        title="Lesson Video"
+                        className="w-full h-full"
+                        allowFullScreen
+                        frameBorder="0"
+                      />
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
@@ -1955,31 +2068,7 @@ export default function LessonsPage() {
                 </div>
               )}
               
-              {selectedLesson.embedVideoUrl && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Embed Video Content</h3>
-                  <div className="space-y-2">
-                    {selectedLesson.embedVideoUrl.startsWith('<iframe') ? (
-                      <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-xs text-teal-400 mb-2">Iframe Embed Code:</div>
-                        <code className="text-xs text-gray-300 break-all">{selectedLesson.embedVideoUrl}</code>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
-                        <Play className="w-4 h-4 text-teal-400" />
-                        <a 
-                          href={selectedLesson.embedVideoUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm text-teal-400 hover:text-teal-300 underline break-all"
-                        >
-                          {selectedLesson.embedVideoUrl}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+
               
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div>

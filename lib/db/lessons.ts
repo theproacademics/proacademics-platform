@@ -236,8 +236,8 @@ class LessonService {
   async getUniqueTeachers(): Promise<string[]> {
     const collection = await this.getCollection()
     const teachers = await collection.distinct('teacher')
-    return teachers.filter(teacher => 
-      teacher && 
+    return teachers.filter((teacher): teacher is string => 
+      typeof teacher === 'string' && 
       teacher.trim() !== '' && 
       teacher.trim() !== '-' &&
       teacher.toLowerCase() !== 'undefined' &&

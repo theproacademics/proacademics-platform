@@ -22,23 +22,19 @@ const IMPORT_STEPS = {
 }
 
 // Types
-interface Lesson {
-  _id?: string
-  id: string
+interface ImportLesson {
   title: string
   subject: string
   subtopic?: string
-  instructor?: string
+  teacher?: string
+  program?: string
   duration?: string
-  description?: string
   videoUrl?: string
-  embedVideoUrl?: string
   status: 'draft' | 'active'
-  createdAt: string
-  updatedAt: string
   scheduledDate?: string
   week?: string
   grade?: string
+  description?: string
 }
 
 // Utility functions
@@ -48,9 +44,7 @@ const isValidVideoUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
 }
 
-const isValidEmbedUrl = (url: string): boolean => {
-  return url.includes('embed') || url.includes('iframe') || url.startsWith('<iframe')
-}
+
 
 // Enhanced parsing utility to handle both CSV and TSV with multi-line content
 const parseDelimitedData = (text: string): string[][] => {
@@ -115,20 +109,20 @@ const parseDelimitedData = (text: string): string[][] => {
 export default function LessonsImportPage() {
   // Import states  
   const [isImporting, setIsImporting] = useState(false)
-  const [importPreview, setImportPreview] = useState<Lesson[]>([])
+  const [importPreview, setImportPreview] = useState<ImportLesson[]>([])
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [importProgress, setImportProgress] = useState(0)
   const [importStatus, setImportStatus] = useState('')
   const [selectedImportRows, setSelectedImportRows] = useState<string[]>([])
   const [importPreviewFilter, setImportPreviewFilter] = useState("")
   const [editingRow, setEditingRow] = useState<string | null>(null)
-  const [editRowData, setEditRowData] = useState<Partial<Lesson>>({})
+  const [editRowData, setEditRowData] = useState<Partial<ImportLesson>>({})
   const [previewCurrentPage, setPreviewCurrentPage] = useState(1)
   const [defaultStatus, setDefaultStatus] = useState<'active' | 'draft'>('active')
   const [csvText, setCsvText] = useState<string>('')
 
   // Enhanced parsing to handle CSV/TSV with multi-line content
-  const parseCSV = useCallback((csvText: string, statusDefault: 'active' | 'draft' = 'active'): Lesson[] => {
+  const parseCSV = useCallback((csvText: string, statusDefault: 'active' | 'draft' = 'active'): ImportLesson[] => {
     const parsedRows = parseDelimitedData(csvText)
     if (parsedRows.length === 0) return []
     
@@ -174,7 +168,7 @@ export default function LessonsImportPage() {
       const instructorValue = findHeaderValue(row, ['Instructor', 'Teacher', 'Tutor', 'Educator'])
       const durationValue = findHeaderValue(row, ['Duration', 'Time', 'Length'])
       const videoUrlValue = findHeaderValue(row, ['Video URL', 'VideoURL', 'Video Link', 'URL', 'Link'])
-      const embedVideoUrlValue = findHeaderValue(row, ['Embed Video URL', 'EmbedVideoURL', 'Embed Video Link', 'Embed URL', 'Embed Link', 'Iframe URL'])
+
       const descriptionValue = findHeaderValue(row, ['Description', 'Details', 'Notes', 'Content'])
       const weekValue = findHeaderValue(row, ['Week', 'Week Number', 'Week #'])
       const dateValue = findHeaderValue(row, ['Date', 'Scheduled Date', 'Lesson Date'])
@@ -245,20 +239,19 @@ export default function LessonsImportPage() {
        const formattedStatus: 'draft' | 'active' = statusDefault
 
        // Build lesson object with proper fallbacks and "missing" indicators
-       const lesson: Lesson = {
-         id: generateUniqueId(),
+       const lesson: ImportLesson = {
          title: finalTitle,
          subject: subjectValue || '-', // Only use if Subject header exists
          subtopic: cleanSubtopic || '-',
-         instructor: instructorValue || '-',
+         teacher: instructorValue || '-',
+         program: moduleValue || '-',
          duration: durationValue || '-',
          videoUrl: videoUrlValue || '',
-         embedVideoUrl: embedVideoUrlValue || '',
-         description: descriptionValue || '',
          status: formattedStatus,
          scheduledDate: formattedDate || '',
          week: formattedWeek || '',
          grade: formattedGrade || '',
+         description: descriptionValue || '',
          createdAt: new Date().toISOString(),
          updatedAt: new Date().toISOString()
        }
@@ -271,7 +264,7 @@ export default function LessonsImportPage() {
 
   const handleImport = useCallback(async () => {
     const lessonsToImport = selectedImportRows.length > 0 
-      ? importPreview.filter(lesson => selectedImportRows.includes(lesson.id))
+      ? importPreview.filter(lesson => selectedImportRows.includes(lesson.title))
       : importPreview
     
     if (lessonsToImport.length === 0) return
@@ -349,7 +342,7 @@ export default function LessonsImportPage() {
         row.title.toLowerCase().includes(importPreviewFilter.toLowerCase()) ||
         row.subject.toLowerCase().includes(importPreviewFilter.toLowerCase()) ||
         (row.subtopic && row.subtopic.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
-        (row.instructor && row.instructor.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
+        (row.teacher && row.teacher.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
         (row.duration && row.duration.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
         (row.week && row.week.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
         (row.grade && row.grade.toLowerCase().includes(importPreviewFilter.toLowerCase())) ||
@@ -376,9 +369,6 @@ export default function LessonsImportPage() {
       if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
         errors.push('Invalid video URL')
       }
-      if (row.embedVideoUrl && row.embedVideoUrl.trim() !== '' && !isValidEmbedUrl(row.embedVideoUrl)) {
-        errors.push('Invalid embed video URL')
-      }
       return errors.length > 0
     }).length
     const valid = total - withErrors
@@ -399,21 +389,17 @@ export default function LessonsImportPage() {
     if (selectedImportRows.length === filteredImportRows.length) {
       setSelectedImportRows([])
     } else {
-      setSelectedImportRows(filteredImportRows.map(row => row.id))
+      setSelectedImportRows(filteredImportRows.map(row => row.title))
     }
   }, [selectedImportRows.length, filteredImportRows])
 
-  const validateImportRow = useCallback((row: Lesson) => {
+  const validateImportRow = useCallback((row: ImportLesson) => {
     const errors = []
     if (!row.title || row.title.trim() === '') errors.push('Title is required')
     if (!row.subject || row.subject.trim() === '' || row.subject === '-') errors.push('Subject is missing from CSV')
     
     if (row.videoUrl && row.videoUrl.trim() !== '' && !isValidVideoUrl(row.videoUrl)) {
       errors.push('Invalid video URL format')
-    }
-    
-    if (row.embedVideoUrl && row.embedVideoUrl.trim() !== '' && !isValidEmbedUrl(row.embedVideoUrl)) {
-      errors.push('Invalid embed video URL format')
     }
     
     return errors
@@ -445,7 +431,7 @@ export default function LessonsImportPage() {
           setCsvText(csvTextContent) // Store for re-parsing
           const parsedLessons = parseCSV(csvTextContent, defaultStatus)
           setImportPreview(parsedLessons)
-          setSelectedImportRows(parsedLessons.map(lesson => lesson.id))
+          setSelectedImportRows(parsedLessons.map(lesson => lesson.title))
           setPreviewCurrentPage(1)
           toast.success(`Successfully parsed ${parsedLessons.length} lessons from CSV`)
         } catch (error) {
@@ -470,7 +456,7 @@ export default function LessonsImportPage() {
       try {
         const parsedLessons = parseCSV(csvText, newStatus)
         setImportPreview(parsedLessons)
-        setSelectedImportRows(parsedLessons.map(lesson => lesson.id))
+        setSelectedImportRows(parsedLessons.map(lesson => lesson.title))
         toast.success(`Updated default status to ${newStatus} for ${parsedLessons.length} lessons`)
       } catch (error) {
         console.error('Error re-parsing CSV:', error)
@@ -479,8 +465,8 @@ export default function LessonsImportPage() {
     }
   }, [csvText, parseCSV])
 
-  const handleEditImportRow = useCallback((lesson: Lesson) => {
-    setEditingRow(lesson.id)
+  const handleEditImportRow = useCallback((lesson: ImportLesson) => {
+    setEditingRow(lesson.title)
     setEditRowData(lesson)
   }, [])
 
@@ -488,7 +474,7 @@ export default function LessonsImportPage() {
     if (!editingRow) return
     
     setImportPreview(prev => prev.map(row => 
-      row.id === editingRow 
+      row.title === editingRow 
         ? { ...row, ...editRowData }
         : row
     ))
@@ -498,7 +484,7 @@ export default function LessonsImportPage() {
   }, [editingRow, editRowData])
 
   const handleDeleteImportRow = useCallback((rowId: string) => {
-    setImportPreview(prev => prev.filter(row => row.id !== rowId))
+    setImportPreview(prev => prev.filter(row => row.title !== rowId))
     setSelectedImportRows(prev => prev.filter(id => id !== rowId))
     toast.success('Row removed from import')
   }, [])
@@ -738,22 +724,22 @@ export default function LessonsImportPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paginatedImportRows.map((lesson: Lesson) => {
+                        {paginatedImportRows.map((lesson: ImportLesson) => {
                           const errors = validateImportRow(lesson)
                           const hasErrors = errors.length > 0
-                          const isSelected = selectedImportRows.includes(lesson.id)
-                          const isEditing = editingRow === lesson.id
+                          const isSelected = selectedImportRows.includes(lesson.title)
+                          const isEditing = editingRow === lesson.title
                           
                           return (
                             <TableRow 
-                              key={lesson.id} 
+                              key={lesson.title} 
                               className={`${isSelected ? "bg-blue-500/10" : ""} ${hasErrors ? "bg-red-500/5" : ""} border-white/10`}
                             >
                               <TableCell className="text-center">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleSelectImportRow(lesson.id)}
+                                  onClick={() => handleSelectImportRow(lesson.title)}
                                   className="h-6 w-6 p-0"
                                 >
                                   {isSelected ? (
@@ -808,13 +794,13 @@ export default function LessonsImportPage() {
                               <TableCell>
                                 {isEditing ? (
                                   <Input 
-                                    value={editRowData.instructor || ''}
-                                    onChange={(e) => setEditRowData({...editRowData, instructor: e.target.value})}
+                                    value={editRowData.teacher || ''}
+                                    onChange={(e) => setEditRowData({...editRowData, teacher: e.target.value})}
                                     className="h-8 text-xs"
                                     placeholder="Instructor name"
                                   />
                                 ) : (
-                                  <span className="text-sm text-gray-300">{lesson.instructor || '-'}</span>
+                                  <span className="text-sm text-gray-300">{lesson.teacher || '-'}</span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -935,7 +921,7 @@ export default function LessonsImportPage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDeleteImportRow(lesson.id)}
+                                        onClick={() => handleDeleteImportRow(lesson.title)}
                                         className="h-7 w-7 p-0 text-red-400 hover:text-red-300"
                                         title="Remove Row"
                                       >
