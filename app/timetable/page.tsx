@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Calendar } from "@/components/ui/calendar"
 import Particles from "@/components/ui/particles"
 import { 
   BookOpen, 
@@ -619,16 +618,16 @@ export default function TimetablePage() {
         </ResponsiveContainer>
       </main>
 
-      {/* Enhanced Calendar Dialog */}
+      {/* Custom Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-sm bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden relative">
+        <DialogContent className="w-full max-w-[320px] sm:max-w-[380px] bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl p-0">
           {/* Enhanced gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none"></div>
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 pointer-events-none"></div>
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none rounded-2xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 pointer-events-none rounded-2xl"></div>
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent rounded-t-2xl"></div>
           
           <div className="relative z-10">
-            <DialogHeader className="pb-4 border-b border-white/20">
+            <DialogHeader className="p-6 pb-4 border-b border-white/20">
               <DialogTitle className="text-white flex items-center text-lg font-semibold">
                 <div className="p-2 bg-blue-500/20 rounded-lg mr-3 border border-blue-400/30">
                   <CalendarIcon className="w-5 h-5 text-blue-400" />
@@ -640,38 +639,125 @@ export default function TimetablePage() {
               </DialogTitle>
             </DialogHeader>
             
-            <div className="p-4">
-              <div className="bg-white/8 backdrop-blur-2xl border border-white/15 rounded-xl p-4 shadow-inner relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
+            <div className="p-6">
+              <div className="bg-white/8 backdrop-blur-2xl border border-white/15 rounded-xl p-4 shadow-inner relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none rounded-xl"></div>
                 <div className="relative z-10">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateSelect}
-                  className="w-full"
-                  classNames={{
-                    months: "flex w-full",
-                    month: "w-full space-y-4",
-                    caption: "flex justify-between items-center mb-4 px-0",
-                    caption_label: "text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent",
-                    nav: "flex items-center space-x-2",
-                    nav_button: "h-8 w-8 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-lg transition-all duration-200 text-white flex items-center justify-center disabled:opacity-50 border border-white/20 hover:border-white/30",
-                    nav_button_previous: "",
-                    nav_button_next: "",
-                    table: "w-full",
-                    head_row: "flex w-full mb-3",
-                    head_cell: "text-gray-300 w-full text-center py-2 text-sm font-semibold",
-                    row: "flex w-full mb-1",
-                    cell: "w-full text-center p-0.5",
-                    day: "h-9 w-full p-0 font-semibold text-white hover:bg-white/20 hover:scale-105 rounded-lg transition-all duration-200 flex items-center justify-center text-sm border border-transparent hover:border-white/20",
-                    day_selected: "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 border-blue-400/40 shadow-lg scale-105",
-                    day_today: "bg-white/15 text-white font-black border-2 border-amber-400/80 shadow-lg shadow-amber-400/20",
-                    day_outside: "text-gray-500 opacity-40",
-                    day_disabled: "text-gray-600 opacity-20",
-                    day_range_middle: "bg-blue-500/30 text-white",
-                    day_hidden: "invisible",
-                  }}
-                />
+                  {/* Custom Calendar Implementation */}
+                  <div className="space-y-4">
+                    {/* Calendar Header */}
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={() => {
+                          const newDate = new Date(selectedDate)
+                          newDate.setMonth(newDate.getMonth() - 1)
+                          setSelectedDate(newDate)
+                        }}
+                        className="h-8 w-8 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-lg transition-all duration-200 text-white flex items-center justify-center border border-white/20 hover:border-white/30"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </h3>
+                      
+                      <button
+                        onClick={() => {
+                          const newDate = new Date(selectedDate)
+                          newDate.setMonth(newDate.getMonth() + 1)
+                          setSelectedDate(newDate)
+                        }}
+                        className="h-8 w-8 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-lg transition-all duration-200 text-white flex items-center justify-center border border-white/20 hover:border-white/30"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Days of Week */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                        <div key={day} className="text-gray-300 text-center py-2 text-sm font-semibold">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const year = selectedDate.getFullYear()
+                        const month = selectedDate.getMonth()
+                        const firstDay = new Date(year, month, 1)
+                        const lastDay = new Date(year, month + 1, 0)
+                        const daysInMonth = lastDay.getDate()
+                        const startingDayOfWeek = firstDay.getDay()
+                        
+                        const days = []
+                        
+                        // Previous month's trailing days
+                        const prevMonth = new Date(year, month - 1, 0)
+                        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                          const day = prevMonth.getDate() - i
+                          days.push(
+                            <button
+                              key={`prev-${day}`}
+                              className="h-9 sm:h-10 w-full p-0 font-medium text-gray-500 opacity-40 hover:bg-white/10 hover:opacity-60 rounded-lg transition-all duration-200 flex items-center justify-center text-sm"
+                              onClick={() => {
+                                const newDate = new Date(year, month - 1, day)
+                                handleDateSelect(newDate)
+                              }}
+                            >
+                              {day}
+                            </button>
+                          )
+                        }
+                        
+                        // Current month days
+                        for (let day = 1; day <= daysInMonth; day++) {
+                          const date = new Date(year, month, day)
+                          const isToday = date.toDateString() === new Date().toDateString()
+                          const isSelected = date.toDateString() === selectedDate.toDateString()
+                          
+                          days.push(
+                            <button
+                              key={day}
+                              className={cn(
+                                "h-9 sm:h-10 w-full p-0 font-semibold rounded-lg transition-all duration-200 flex items-center justify-center text-sm border border-transparent",
+                                isSelected
+                                  ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 border-blue-400/40 shadow-lg scale-105"
+                                  : isToday
+                                  ? "bg-white/15 text-white font-black border-2 border-amber-400/80 shadow-lg shadow-amber-400/20"
+                                  : "text-white hover:bg-white/20 hover:scale-105 hover:border-white/20"
+                              )}
+                              onClick={() => handleDateSelect(date)}
+                            >
+                              {day}
+                            </button>
+                          )
+                        }
+                        
+                        // Next month's leading days
+                        const remainingDays = 42 - days.length // 6 rows × 7 days
+                        for (let day = 1; day <= remainingDays; day++) {
+                          days.push(
+                            <button
+                              key={`next-${day}`}
+                              className="h-9 sm:h-10 w-full p-0 font-medium text-gray-500 opacity-40 hover:bg-white/10 hover:opacity-60 rounded-lg transition-all duration-200 flex items-center justify-center text-sm"
+                              onClick={() => {
+                                const newDate = new Date(year, month + 1, day)
+                                handleDateSelect(newDate)
+                              }}
+                            >
+                              {day}
+                            </button>
+                          )
+                        }
+                        
+                        return days
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

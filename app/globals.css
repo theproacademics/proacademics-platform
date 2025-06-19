@@ -123,6 +123,13 @@
     z-index: 1;
   }
 
+  /* Exception for dialog components */
+  [data-radix-dialog-overlay],
+  [data-radix-dialog-content] {
+    position: fixed !important;
+    z-index: initial !important;
+  }
+
   /* Reset z-index for background elements */
   html,
   body {
@@ -161,11 +168,15 @@
 
   /* Dialogs and modals should be highest */
   [data-radix-dialog-overlay] {
-    z-index: 900;
+    z-index: 9999 !important;
   }
   
   [data-radix-dialog-content] {
-    z-index: 950;
+    z-index: 10000 !important;
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
   }
 }
 
