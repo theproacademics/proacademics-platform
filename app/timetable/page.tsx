@@ -371,7 +371,7 @@ export default function TimetablePage() {
 
                 {/* Desktop Day Tabs */}
                 <div className="hidden lg:block mb-4">
-                  <div className="bg-white/10 border border-white/20 grid grid-cols-7 w-full p-1 rounded-lg">
+                  <div className="bg-white/10 border border-white/20 grid grid-cols-7 w-full p-2 gap-1 rounded-lg">
                     {daysOfWeek.map((day, index) => {
                       const date = weekDates[index]
                       const today = isToday(date)
