@@ -11,7 +11,7 @@ import { ResponsiveContainer } from "@/components/ui/responsive-container"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import Particles from "@/components/ui/particles"
 import { 
   BookOpen, 
@@ -24,7 +24,8 @@ import {
   ChevronRight, 
   Target,
   Play,
-  GraduationCap
+  GraduationCap,
+  X
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -620,13 +621,19 @@ export default function TimetablePage() {
 
       {/* Custom Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="w-full max-w-[320px] sm:max-w-[380px] bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl p-0">
+        <DialogContent className="w-full max-w-[320px] sm:max-w-[380px] bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl p-0 [&>button:last-child]:hidden">
           {/* Enhanced gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none rounded-2xl"></div>
           <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 pointer-events-none rounded-2xl"></div>
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent rounded-t-2xl"></div>
           
           <div className="relative z-10">
+            {/* Custom Close Button */}
+            <DialogClose className="absolute right-4 top-4 z-50 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 w-8 h-8 flex items-center justify-center text-white hover:text-white transition-all duration-200 hover:scale-105">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+
             <DialogHeader className="p-6 pb-4 border-b border-white/20">
               <DialogTitle className="text-white flex items-center text-lg font-semibold">
                 <div className="p-2 bg-blue-500/20 rounded-lg mr-3 border border-blue-400/30">

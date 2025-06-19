@@ -328,25 +328,28 @@ export default function LessonPage() {
       <main className="lg:ml-72 min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
           <div className="space-y-6 pb-16">
-            {/* Compact Header */}
+            {/* Enhanced Header */}
             <div className="flex items-center justify-between">
               <Button 
                 variant="ghost" 
-                className="text-white hover:text-purple-300 group rounded-full px-4 py-2 hover:bg-white/10 transition-all duration-200"
+                className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
                 onClick={() => window.location.href = '/timetable'}
               >
                 <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                Back
+                <span className="font-medium">Back to Timetable</span>
               </Button>
               
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm`}>
+              <div className="flex items-center gap-3">
+                <div className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-4 py-2 text-sm font-bold border rounded-full shadow-lg backdrop-blur-xl`}>
+                  <BookOpen className="w-4 h-4 mr-2" />
                   {lesson.subject}
-                </span>
+                </div>
                 {lesson.status === 'active' && (
-                  <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-emerald-500/25 border-green-400/40 text-green-100 px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm">
-                    Active
-                  </span>
+                  <div className="inline-flex items-center bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-400/50 text-green-100 px-4 py-2 text-sm font-bold rounded-full shadow-lg backdrop-blur-xl relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 animate-pulse rounded-full"></div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse shadow-lg shadow-green-400/50 relative z-10"></div>
+                    <span className="relative z-10">Active</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -403,11 +406,12 @@ export default function LessonPage() {
                   )}
 
                   {lesson.scheduledDate && (
-                    <div className="inline-flex items-center bg-slate-500/15 px-2 py-1 rounded-md border border-slate-400/25 text-xs col-span-2">
-                      <Calendar className="w-3 h-3 mr-1 text-slate-400" />
-                      <span className="text-slate-300 font-medium">
+                    <div className="inline-flex items-center bg-gradient-to-r from-indigo-500/20 to-violet-500/20 px-3 py-2 rounded-lg border border-indigo-400/30 text-sm col-span-2 shadow-md backdrop-blur-sm">
+                      <Calendar className="w-4 h-4 mr-2 text-indigo-400" />
+                      <span className="text-indigo-200 font-semibold">
                         {new Date(lesson.scheduledDate).toLocaleDateString('en-US', { 
-                          month: 'short', 
+                          weekday: 'short',
+                          month: 'long', 
                           day: 'numeric',
                           year: 'numeric'
                         })}
@@ -567,11 +571,23 @@ export default function LessonPage() {
                                   Coming Soon
                                 </Button>
                               ) : isVideoUnlocked ? (
-                                <div className="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/25 to-emerald-500/25 border-2 border-green-400/40 rounded-xl shadow-lg shadow-green-500/20 relative overflow-hidden">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 animate-pulse"></div>
-                                  <div className="flex items-center gap-3 relative z-10">
-                                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                                    <span className="text-green-200 font-bold text-base">Premium Access Active</span>
+                                <div className="w-full bg-gradient-to-r from-emerald-500/30 to-green-500/30 border-2 border-emerald-400/50 rounded-2xl p-6 text-center shadow-2xl shadow-emerald-500/25 relative overflow-hidden">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 animate-pulse"></div>
+                                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"></div>
+                                  <div className="relative z-10 space-y-3">
+                                    <div className="flex items-center justify-center gap-3">
+                                      <div className="relative">
+                                        <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-lg animate-pulse"></div>
+                                        <div className="w-5 h-5 bg-emerald-400 rounded-full animate-pulse shadow-xl shadow-emerald-400/60 relative flex items-center justify-center">
+                                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                                        </div>
+                                      </div>
+                                      <span className="text-emerald-100 font-bold text-lg">Premium Access</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2">
+                                      <CheckCircle className="w-4 h-4 text-green-300" />
+                                      <span className="text-green-200 font-semibold text-sm">Full Content Unlocked</span>
+                                    </div>
                                   </div>
                                 </div>
                               ) : (
