@@ -552,19 +552,19 @@ export default function TimetablePage() {
                               )}
                             </div>
 
-                                                        {lesson.scheduledDate && (() => {
+                            {lesson.scheduledDate && (() => {
                               const date = new Date(lesson.scheduledDate)
                               if (!isNaN(date.getTime())) {
                                 return (
                                   <div className="inline-flex items-center bg-slate-500/15 px-2 py-1 rounded-md border border-slate-400/25 text-xs">
                                     <CalendarIcon className="w-3 h-3 mr-1 text-slate-400" />
                                     <span className="text-slate-300 font-medium">
-                                      {date.toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
+                                    {date.toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
                                     </span>
                                   </div>
                                 )

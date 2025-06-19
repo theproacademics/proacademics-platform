@@ -330,15 +330,15 @@ export default function LessonPage() {
           <div className="space-y-6 pb-16">
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
-              <Button 
-                variant="ghost" 
+            <Button 
+              variant="ghost" 
                 className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
-                onClick={() => window.location.href = '/timetable'}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+              onClick={() => window.location.href = '/timetable'}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                 <span className="font-medium">Back to Timetable</span>
-              </Button>
-              
+            </Button>
+
               <div className="flex items-center gap-3">
                 <div className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-4 py-2 text-sm font-bold border rounded-full shadow-lg backdrop-blur-xl`}>
                   <BookOpen className="w-4 h-4 mr-2" />
@@ -424,51 +424,51 @@ export default function LessonPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Video Player */}
                   <div className="lg:col-span-2">
-                    <div className="aspect-video w-full bg-black rounded-xl overflow-hidden relative">
-                      {lesson.videoUrl ? (
-                        <>
-                          {/* Video Content */}
-                          {isVideoUnlocked ? (
-                            isStreamingUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
+                <div className="aspect-video w-full bg-black rounded-xl overflow-hidden relative">
+                  {lesson.videoUrl ? (
+                    <>
+                      {/* Video Content */}
+                      {isVideoUnlocked ? (
+                                                  isStreamingUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
                               // Handle YouTube URLs
-                              <iframe
+                            <iframe
                                 src={`https://www.youtube.com/embed/${getYouTubeVideoId(lesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                                title={lesson.title}
-                                className="w-full h-full"
-                                allowFullScreen
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                onLoad={() => {
-                                  setTimeout(() => setVideoWatched(true), 30000)
-                                }}
-                              />
-                            ) : (
-                              // Handle direct video files
-                              <video
-                                src={lesson.videoUrl}
-                                controls
-                                className="w-full h-full"
-                                poster="/video-placeholder.jpg"
-                                onEnded={handleVideoEnd}
-                                onTimeUpdate={(e) => {
-                                  const video = e.currentTarget
-                                  if (video.duration && video.currentTime >= video.duration * 0.9) {
-                                    setVideoWatched(true)
-                                  }
-                                }}
-                              />
-                            )
+                              title={lesson.title}
+                              className="w-full h-full"
+                              allowFullScreen
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              onLoad={() => {
+                                setTimeout(() => setVideoWatched(true), 30000)
+                              }}
+                            />
                           ) : (
-                            /* Locked Video State */
+                                                      // Handle direct video files
+                            <video
+                              src={lesson.videoUrl}
+                              controls
+                              className="w-full h-full"
+                              poster="/video-placeholder.jpg"
+                              onEnded={handleVideoEnd}
+                              onTimeUpdate={(e) => {
+                                const video = e.currentTarget
+                                if (video.duration && video.currentTime >= video.duration * 0.9) {
+                                  setVideoWatched(true)
+                                }
+                              }}
+                            />
+                        )
+                      ) : (
+                        /* Locked Video State */
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900/95 via-indigo-900/40 to-slate-900/95 relative overflow-hidden">
                               {/* Premium animated background */}
                               <div className="absolute inset-0 opacity-20">
-                                <div className="w-full h-full" style={{
+                            <div className="w-full h-full" style={{
                                   backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(139,92,246,0.4) 2px, transparent 0)',
                                   backgroundSize: '40px 40px'
-                                }}></div>
-                              </div>
-                              
+                            }}></div>
+                          </div>
+                          
                               {/* Floating orbs */}
                               <div className="absolute top-10 left-10 w-20 h-20 bg-purple-500/20 rounded-full blur-xl animate-pulse"></div>
                               <div className="absolute bottom-10 right-10 w-16 h-16 bg-blue-500/20 rounded-full blur-lg animate-pulse delay-1000"></div>
@@ -478,34 +478,34 @@ export default function LessonPage() {
                               
                               {/* Enhanced content */}
                               <div className="relative text-center space-y-6 p-8 max-w-md">
-                                <div className="relative">
+                            <div className="relative">
                                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full blur-2xl animate-pulse"></div>
                                   <div className="relative w-24 h-24 mx-auto bg-gradient-to-br from-purple-500/40 to-blue-500/40 rounded-full flex items-center justify-center backdrop-blur-xl border-2 border-white/40 shadow-2xl">
                                     <Lock className="w-12 h-12 text-white drop-shadow-lg" />
-                                  </div>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                  <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent">Premium Lesson</h3>
-                                  <p className="text-slate-200 text-base leading-relaxed">
-                                    {(() => {
-                                      const status = getLessonStatus()
-                                      if (status.type === 'past') {
-                                        return 'Unlock this premium lesson content'
-                                      } else if (status.type === 'live') {
-                                        return 'Join the live learning experience'
-                                      } else if (status.type === 'future') {
-                                        return 'Coming soon - scheduled for later'
-                                      }
-                                      return 'Discover premium educational content'
-                                    })()}
-                                  </p>
-                                </div>
                               </div>
                             </div>
-                          )}
-                        </>
-                      ) : (
+                            
+                            <div className="space-y-3">
+                                  <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent">Premium Lesson</h3>
+                                  <p className="text-slate-200 text-base leading-relaxed">
+                                {(() => {
+                                  const status = getLessonStatus()
+                                  if (status.type === 'past') {
+                                        return 'Unlock this premium lesson content'
+                                  } else if (status.type === 'live') {
+                                        return 'Join the live learning experience'
+                                  } else if (status.type === 'future') {
+                                        return 'Coming soon - scheduled for later'
+                                  }
+                                      return 'Discover premium educational content'
+                                })()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 relative overflow-hidden">
                           <div className="absolute inset-0 opacity-20">
                             <div className="w-full h-full" style={{
@@ -526,51 +526,51 @@ export default function LessonPage() {
                   </div>
 
                   {/* Actions Sidebar */}
-                  <div className="space-y-4">
+                    <div className="space-y-4">
                     <div>
                       <h3 className="text-white font-semibold mb-3 text-lg">Actions</h3>
                       <div className="space-y-3">
-                        {(() => {
-                          const status = getLessonStatus()
-                          
-                          return (
-                            <>
-                              {/* Primary Action Button */}
-                              {status.type === 'past' && !isVideoUnlocked ? (
-                                <Button 
-                                  onClick={handleUnlockVideo}
-                                  disabled={isUnlocking}
+                      {(() => {
+                        const status = getLessonStatus()
+                        
+                        return (
+                          <>
+                            {/* Primary Action Button */}
+                            {status.type === 'past' && !isVideoUnlocked ? (
+                              <Button 
+                                onClick={handleUnlockVideo}
+                                disabled={isUnlocking}
                                   className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 border border-purple-400/30 relative overflow-hidden group"
-                                >
+                              >
                                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                  {isUnlocking ? (
-                                    <>
+                                {isUnlocking ? (
+                                  <>
                                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                                       Unlocking Premium...
-                                    </>
-                                  ) : (
-                                    <>
+                                  </>
+                                ) : (
+                                  <>
                                       <Play className="w-5 h-5 mr-2" />
                                       Start Premium Lesson
-                                    </>
-                                  )}
-                                </Button>
-                              ) : status.type === 'live' ? (
+                                  </>
+                                )}
+                              </Button>
+                            ) : status.type === 'live' ? (
                                 <Button className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-red-500/30 animate-pulse border border-red-400/40 relative overflow-hidden group">
                                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
                                   <div className="w-3 h-3 bg-white rounded-full mr-2 animate-ping shadow-lg"></div>
                                   Join Live Session
-                                </Button>
-                              ) : status.type === 'future' ? (
-                                <Button 
-                                  disabled
+                              </Button>
+                            ) : status.type === 'future' ? (
+                              <Button 
+                                disabled
                                   className="w-full bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60 font-bold py-4 rounded-full cursor-not-allowed border border-slate-500/30 shadow-lg relative overflow-hidden"
-                                >
+                              >
                                   <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 to-slate-600/10"></div>
                                   <Calendar className="w-5 h-5 mr-2" />
                                   Coming Soon
-                                </Button>
-                              ) : isVideoUnlocked ? (
+                              </Button>
+                            ) : isVideoUnlocked ? (
                                 <div className="w-full bg-gradient-to-r from-emerald-500/30 to-green-500/30 border-2 border-emerald-400/50 rounded-2xl p-6 text-center shadow-2xl shadow-emerald-500/25 relative overflow-hidden">
                                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 animate-pulse"></div>
                                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"></div>
@@ -588,80 +588,80 @@ export default function LessonPage() {
                                       <CheckCircle className="w-4 h-4 text-green-300" />
                                       <span className="text-green-200 font-semibold text-sm">Full Content Unlocked</span>
                                     </div>
-                                  </div>
                                 </div>
-                              ) : (
-                                <Button 
-                                  onClick={handleUnlockVideo}
-                                  disabled={isUnlocking}
+                              </div>
+                            ) : (
+                              <Button 
+                                onClick={handleUnlockVideo}
+                                disabled={isUnlocking}
                                   className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 border border-purple-400/30 relative overflow-hidden group"
-                                >
+                              >
                                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                  {isUnlocking ? (
-                                    <>
+                                {isUnlocking ? (
+                                  <>
                                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                                       Unlocking Premium...
-                                    </>
-                                  ) : (
-                                    <>
+                                  </>
+                                ) : (
+                                  <>
                                       <Play className="w-5 h-5 mr-2" />
                                       Start Premium Lesson
-                                    </>
-                                  )}
-                                </Button>
-                              )}
+                                  </>
+                                )}
+                              </Button>
+                            )}
 
-                              {/* Mark as Finished Button */}
-                              {isVideoUnlocked && videoWatched && !isFinished && (
-                                <Button 
-                                  onClick={handleMarkAsFinished}
-                                  disabled={isFinishing}
+                            {/* Mark as Finished Button */}
+                            {isVideoUnlocked && videoWatched && !isFinished && (
+                              <Button 
+                                onClick={handleMarkAsFinished}
+                                disabled={isFinishing}
                                   className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-full shadow-2xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300 border border-amber-400/30 relative overflow-hidden group"
-                                >
+                              >
                                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                  {isFinishing ? (
-                                    <>
+                                {isFinishing ? (
+                                  <>
                                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                                       Earning Premium XP...
-                                    </>
-                                  ) : (
-                                    <>
+                                  </>
+                                ) : (
+                                  <>
                                       <Trophy className="w-5 h-5 mr-2" />
                                       Complete & Earn XP
-                                    </>
-                                  )}
-                                </Button>
-                              )}
+                                  </>
+                                )}
+                              </Button>
+                            )}
 
-                              {/* Completion Status */}
-                              {isFinished && (
+                            {/* Completion Status */}
+                            {isFinished && (
                                 <div className="w-full bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-xl p-5 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden">
                                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 animate-pulse"></div>
                                   <div className="relative z-10">
-                                    <div className="flex items-center justify-center gap-3 mb-2">
+                                <div className="flex items-center justify-center gap-3 mb-2">
                                       <div className="relative">
                                         <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-md animate-pulse"></div>
                                         <CheckCircle className="w-6 h-6 text-emerald-300 relative" />
                                       </div>
                                       <span className="text-emerald-200 font-bold text-lg">Lesson Mastered!</span>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2">
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
                                       <Trophy className="w-4 h-4 text-yellow-400" />
                                       <span className="text-yellow-300 font-bold text-base">+50 Premium XP Earned</span>
                                     </div>
-                                  </div>
                                 </div>
-                              )}
+                              </div>
+                            )}
 
-                              {/* Secondary Actions */}
+                            {/* Secondary Actions */}
                               <Button className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/40 text-blue-200 hover:from-blue-500/30 hover:to-indigo-600/30 hover:border-blue-300/50 transition-all duration-300 rounded-full py-3 font-semibold shadow-lg hover:shadow-blue-500/20 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                                 <MessageSquare className="w-5 h-5 mr-2" />
                                 Ask AI Tutor
-                              </Button>
-                            </>
-                          )
-                        })()}
+                            </Button>
+                          </>
+                        )
+                      })()}
                       </div>
                     </div>
 
@@ -678,9 +678,9 @@ export default function LessonPage() {
                       </div>
                     )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                    </div>
+                  </CardContent>
+                </Card>
           </div>
         </ResponsiveContainer>
       </main>

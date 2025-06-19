@@ -163,11 +163,6 @@ export function Navigation() {
         )}
       >
         <div className="flex h-full flex-col glass-card lg:m-4 lg:rounded-2xl m-2 rounded-xl overflow-hidden relative safe-area-inset">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
-          </div>
 
           {/* Logo with close button on mobile */}
           <div className="flex items-center justify-between h-14 lg:h-16 px-4 lg:px-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 relative z-10">
@@ -228,9 +223,6 @@ export function Navigation() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
                   <item.icon className={cn("mr-3 h-4 w-4 lg:h-5 lg:w-5 transition-colors relative z-10 flex-shrink-0", isActive && "text-blue-400")} />
                   <span className="relative z-10 truncate">{item.name}</span>
-                  {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 lg:w-2 lg:h-2 bg-blue-400 rounded-full animate-pulse relative z-10 flex-shrink-0" />
-                  )}
                 </Link>
               )
             })}

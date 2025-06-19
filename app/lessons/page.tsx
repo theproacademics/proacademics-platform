@@ -6,112 +6,55 @@ import { useState, useEffect } from "react"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
-import { PageHeader } from "@/components/layout/page-header"
-import { StatsGrid } from "@/components/ui/stats-grid"
-import { AnimatedCard } from "@/components/ui/animated-card"
-import { ResponsiveContainer } from "@/components/ui/responsive-container"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Play, Clock, Star, Search, Zap, Users, Calendar, Sparkles } from "lucide-react"
+import { BookOpen, Play, Clock, Star, Search, Zap, Users, Calendar, ArrowRight, User, Video, Award, ChevronLeft, ChevronRight } from "lucide-react"
 
-// Enhanced Particle Background Component
-const ParticleBackground = () => {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Large floating orbs */}
-      <div className="absolute -top-32 -left-32 w-64 h-64 bg-gradient-to-br from-blue-500/15 to-purple-500/15 rounded-full blur-3xl animate-float-slow opacity-70"></div>
-      <div className="absolute -top-32 -right-32 w-80 h-80 bg-gradient-to-bl from-purple-500/15 to-pink-500/15 rounded-full blur-3xl animate-float-slow-reverse opacity-70" style={{ animationDelay: '2s' }}></div>
-      <div className="absolute -bottom-32 left-1/4 w-72 h-72 bg-gradient-to-tr from-cyan-500/15 to-blue-500/15 rounded-full blur-3xl animate-float-slow opacity-70" style={{ animationDelay: '4s' }}></div>
-      
-      {/* Moving particles */}
-      {[...Array(60)].map((_, i) => {
-        const size = Math.random() * 3 + 1;
-        const colors = [
-          'from-blue-400/40 to-cyan-400/40',
-          'from-purple-400/40 to-pink-400/40',
-          'from-cyan-400/40 to-blue-400/40',
-          'from-indigo-400/40 to-purple-400/40'
-        ];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        return (
-          <div
-            key={i}
-            className={`absolute rounded-full bg-gradient-to-br ${randomColor} animate-particle-float`}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${size}px`,
-              height: `${size}px`,
-              animationDelay: `${Math.random() * 20}s`,
-              animationDuration: `${Math.random() * 15 + 10}s`,
-              filter: `blur(${Math.random() * 1}px)`,
-              boxShadow: `0 0 ${size * 3}px currentColor`
-            }}
-          />
-        );
-      })}
-      
-      {/* Shooting stars */}
-      {[...Array(6)].map((_, i) => (
-        <div
-          key={`star-${i}`}
-          className="absolute w-1 h-1 bg-white/60 rounded-full animate-shooting-star"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 15}s`,
-            animationDuration: '3s'
-          }}
-        />
-      ))}
-      
-      {/* Floating geometric shapes */}
-      {[...Array(12)].map((_, i) => (
-        <div
-          key={`shape-${i}`}
-          className="absolute animate-shape-float opacity-20"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 10}s`,
-            animationDuration: `${Math.random() * 20 + 15}s`
-          }}
-        >
-          {i % 3 === 0 && (
-            <div className="w-1.5 h-1.5 border border-blue-400/30 rotate-45 transform"></div>
-          )}
-          {i % 3 === 1 && (
-            <div className="w-1 h-1 bg-purple-400/30 rounded-full"></div>
-          )}
-          {i % 3 === 2 && (
-            <div className="w-1.5 h-1.5 border border-cyan-400/30 rounded-full"></div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
+// Helper function to get YouTube video ID
+const getYouTubeVideoId = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+  const match = url.match(regex)
+  return match ? match[1] : null
 }
 
-const difficultyColors = {
-  Beginner: "border-green-500 text-green-400",
-  Intermediate: "border-yellow-500 text-yellow-400",
-  Advanced: "border-red-500 text-red-400",
+// Helper function to get video thumbnail
+const getVideoThumbnail = (videoUrl: string): string | null => {
+  if (!videoUrl) return null
+  
+  // For YouTube videos, get thumbnail
+  const youtubeId = getYouTubeVideoId(videoUrl)
+  if (youtubeId) {
+    return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+  }
+  
+  // For other video URLs, return null (will show placeholder)
+  return null
 }
 
-// Background color utilities for difficulty badges
-const difficultyBg: Record<string, string> = {
-  Beginner: "bg-green-500/40",
-  Intermediate: "bg-yellow-500/40",
-  Advanced: "bg-red-500/40",
+// Helper function to check if URL is a streaming URL
+const isStreamingUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
 }
 
-const difficultyBgSolid: Record<string, string> = {
-  Beginner: "bg-green-500/90",
-  Intermediate: "bg-yellow-500/90",
-  Advanced: "bg-red-500/90",
+
+
+// Subject colors for consistent theming
+const subjectColors: Record<string, string> = {
+  Mathematics: "bg-blue-500/10 border-blue-400/30 text-blue-300",
+  Physics: "bg-green-500/10 border-green-400/30 text-green-300",
+  Chemistry: "bg-purple-500/10 border-purple-400/30 text-purple-300",
+  Biology: "bg-orange-500/10 border-orange-400/30 text-orange-300",
+  "Computer Science": "bg-indigo-500/10 border-indigo-400/30 text-indigo-300",
+  English: "bg-pink-500/10 border-pink-400/30 text-pink-300",
+}
+
+// Difficulty colors
+const difficultyColors: Record<string, string> = {
+  Beginner: "bg-green-500/15 text-green-300 border-green-400/30",
+  Intermediate: "bg-yellow-500/15 text-yellow-300 border-yellow-400/30",
+  Advanced: "bg-red-500/15 text-red-300 border-red-400/30",
 }
 
 // Define the lesson type for the frontend component
@@ -164,55 +107,29 @@ export default function LessonsPage() {
   const [selectedSubject, setSelectedSubject] = useState("all")
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
   const [dataReady, setDataReady] = useState(false)
-  const { showPreloader, mounted } = usePreloader({ 
-    delay: 1200,
+  const [currentSlide, setCurrentSlide] = useState(0)
+  
+  const { showPreloader } = usePreloader({ 
+    delay: 800,
     dependencies: [dataReady],
     waitForImages: true,
     waitForFonts: true 
   })
 
-  // Add styles to prevent white background on scroll
-  useEffect(() => {
-    const style = document.createElement('style')
-    style.textContent = `
-      /* Fix background coverage for all scroll scenarios */
-      html, body {
-        background: linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%) !important;
-        background-attachment: fixed !important;
-        min-height: 100vh !important;
-      }
-      
-      /* Prevent elastic scroll on mobile */
-      body {
-        overscroll-behavior: none;
-        -webkit-overflow-scrolling: touch;
-      }
-    `
-    document.head.appendChild(style)
-    
-    return () => {
-      if (document.head.contains(style)) {
-        document.head.removeChild(style)
-      }
-    }
-  }, [])
-
   useEffect(() => {
     const fetchLessons = async () => {
       setIsLoading(true)
       try {
-        // Fetch all lessons by setting a high limit and filtering to show only active ones
         const response = await fetch('/api/admin/lessons?limit=1000&status=active')
         const apiResult = await response.json()
         
         const apiLessons = apiResult.lessons || []
-
         const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({
           id: lesson.id,
           title: lesson.title,
           subject: lesson.subject,
-          topic: lesson.subtopic || 'General Topic',
-          duration: lesson.duration || 'N/A',
+          topic: lesson.subtopic || lesson.topic || 'General Topic',
+          duration: lesson.duration || '30 min',
           difficulty: lesson.difficulty || 'Intermediate',
           xp: lesson.xp || 50,
           instructor: lesson.teacher || lesson.instructor || 'ProAcademics Team',
@@ -221,7 +138,7 @@ export default function LessonsPage() {
           description: lesson.description || 'Join us for this exciting lesson!',
           videoUrl: lesson.videoUrl,
           scheduledDate: lesson.scheduledDate,
-        }));
+        }))
         
         setLessons(transformedLessons)
         setDataReady(true)
@@ -237,341 +154,489 @@ export default function LessonsPage() {
     fetchLessons()
   }, [])
 
-  const subjects = ["all", "Mathematics", "Physics", "Chemistry", "Biology"]
+  // Get unique subjects from lessons data
+  const subjects = ["all", ...Array.from(new Set(lessons.map(l => l.subject)))]
   const difficulties = ["all", "Beginner", "Intermediate", "Advanced"]
 
   const filteredLessons = lessons.filter((lesson) => {
-    const matchesSearch =
-      lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lesson.topic.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lesson.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lesson.instructor.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSubject = selectedSubject === "all" || lesson.subject === selectedSubject
     const matchesDifficulty = selectedDifficulty === "all" || lesson.difficulty === selectedDifficulty
 
     return matchesSearch && matchesSubject && matchesDifficulty
   })
 
-  const stats = [
-    {
-      id: "total",
-      title: "Total Lessons",
-      value: lessons.length,
-      icon: <BookOpen className="w-6 h-6" />,
-      color: "blue" as const,
-    },
-    {
-      id: "live",
-      title: "Published",
-      value: lessons.filter((l) => l.isLive).length,
-      icon: <Calendar className="w-6 h-6" />,
-      color: "green" as const,
-    },
-    {
-      id: "xp",
-      title: "Avg XP",
-      value: lessons.length > 0 ? Math.round(lessons.reduce((acc, l) => acc + l.xp, 0) / lessons.length) : 0,
-      icon: <Zap className="w-6 h-6" />,
-      color: "purple" as const,
-    },
-    {
-      id: "subjects",
-      title: "Subjects",
-      value: [...new Set(lessons.map(l => l.subject))].length,
-      icon: <Sparkles className="w-6 h-6" />,
-      color: "orange" as const,
-    },
-  ]
+  const handleLessonClick = (lessonId: string) => {
+    window.location.href = `/lesson/${lessonId}`
+  }
 
-  // Show preloader
+  // Get featured lessons (first 3 lessons)
+  const featuredLessons = filteredLessons.slice(0, 3)
+
+  // Auto-slide functionality
+  useEffect(() => {
+    if (featuredLessons.length <= 1) return
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % featuredLessons.length)
+    }, 5000) // Change slide every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [featuredLessons.length])
+
+  // Manual navigation functions
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % featuredLessons.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + featuredLessons.length) % featuredLessons.length)
+  }
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index)
+  }
+
   if (showPreloader || isLoading) {
-    return <Preloader isVisible={showPreloader || isLoading} colorScheme="purple" loadingText="Loading lessons and content" />
+    return <Preloader isVisible={showPreloader || isLoading} colorScheme="purple" loadingText="Loading lessons library..." />
   }
 
   return (
+    <div className="min-h-screen relative">
+      {/* Enhanced lessons page background with better particles */}
+      <div className="fixed inset-0 overflow-hidden z-0">
+        {/* Modern gradient background - darker and more sophisticated */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/30 via-transparent to-purple-900/30"></div>
+        
+        {/* Large atmospheric orbs - more subtle */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }}></div>
+        <div className="absolute top-3/4 left-1/3 w-72 h-72 bg-indigo-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }}></div>
+        
+        {/* Refined floating particles - fewer but better quality */}
+        {[...Array(25)].map((_, i) => {
+          const size = Math.random() * 3 + 1;
+          const opacity = Math.random() * 0.6 + 0.2;
+
+  return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden"
+              key={i}
+              className="absolute rounded-full bg-white animate-float-slow"
       style={{
-        background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)',
-        minHeight: '100vh'
-      }}
-    >
-      {/* Extended Background Coverage to prevent white background on over-scroll */}
-      <div 
-        className="fixed pointer-events-none z-0"
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${size}px`,
+                height: `${size}px`,
+                opacity: opacity,
+                animationDelay: `${Math.random() * 15}s`,
+                animationDuration: `${Math.random() * 10 + 8}s`,
+                filter: `blur(${Math.random() * 0.5}px)`,
+              }}
+            />
+          );
+        })}
+        
+        {/* Elegant geometric elements */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={`geo-${i}`}
+            className="absolute animate-float-slow opacity-20"
         style={{ 
-          top: '-100vh', 
-          left: '-50vw', 
-          right: '-50vw', 
-          bottom: '-100vh',
-          background: 'linear-gradient(135deg, #111827 0%, #1e3a8a 40%, #581c87 100%)'
-        }}
-      />
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 12}s`,
+              animationDuration: `${Math.random() * 15 + 10}s`
+            }}
+          >
+            {i % 3 === 0 && (
+              <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+            )}
+            {i % 3 === 1 && (
+              <div className="w-0.5 h-8 bg-gradient-to-b from-blue-400/50 to-transparent"></div>
+            )}
+            {i % 3 === 2 && (
+              <div className="w-2 h-2 border border-blue-400/30 rounded-full"></div>
+            )}
+          </div>
+        ))}
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30"></div>
+        
+        {/* Depth and atmosphere */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
+      </div>
       
-      <ParticleBackground />
       <Navigation />
 
       <main className="lg:ml-72 min-h-screen relative z-10">
-        <ResponsiveContainer padding="lg" animated>
-          {/* Compact Hero Section */}
-          <div className="relative mb-8 animate-fade-in">
-            <div className="relative bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-xl border border-white/20 shadow-xl overflow-hidden h-14">
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
-              
-              {/* Content */}
-              <div className="relative flex items-center h-full px-6">
-                <div className="flex items-center gap-3">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex flex-col gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                  Lessons Library
+                </h1>
+                <p className="text-slate-400">
+                  Discover and learn from our comprehensive collection of lessons
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Featured Lesson Carousel */}
+          {featuredLessons.length > 0 && (
+            <div className="mb-8">
+              <div className="relative group overflow-hidden rounded-xl">
+                {/* Carousel Container */}
                   <div className="relative">
-                    <div className="w-7 h-7 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-lg backdrop-blur-xl border border-white/30 flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-white" />
+                  {/* Slides */}
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                  >
+                    {featuredLessons.map((lesson, index) => (
+                      <div
+                        key={lesson.id}
+                        className="w-full flex-shrink-0 cursor-pointer"
+                        onClick={() => handleLessonClick(lesson.id)}
+                      >
+                        {/* Full-width YouTube Thumbnail */}
+                        <div className="aspect-[21/9] relative overflow-hidden">
+                          {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
+                            <img 
+                              src={getVideoThumbnail(lesson.videoUrl)!}
+                              alt={lesson.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                const youtubeId = getYouTubeVideoId(lesson.videoUrl)
+                                if (youtubeId && !target.src.includes('mqdefault')) {
+                                  target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-blue-600/30 to-purple-600/30 flex items-center justify-center">
+                              <Video className="w-20 h-20 text-white/60" />
+                            </div>
+                          )}
+                          
+                          {/* Dark overlay for better text readability */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
+                          
+                          {/* Content overlaid on thumbnail */}
+                          <div className="absolute inset-0 p-6 lg:p-8 flex items-center">
+                            <div className="max-w-2xl space-y-4">
+                              {/* Featured Badge */}
+                              <div className="flex items-start gap-4">
+                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
+                                  <Star className="w-3 h-3 mr-1 fill-current" />
+                                  Featured
+                                </Badge>
+                              </div>
+                              
+                              {/* Badges Row */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge className="bg-white/20 backdrop-blur-sm text-white border-0">
+                                  {lesson.subject}
+                                </Badge>
+                                <Badge variant="outline" className="border-white/40 text-white bg-white/10 backdrop-blur-sm">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {lesson.duration}
+                                </Badge>
+                                <Badge className="bg-white/20 backdrop-blur-sm text-white border-0">
+                                  {lesson.difficulty}
+                                </Badge>
+                              </div>
+                              
+                              {/* Title */}
+                              <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
+                                {lesson.title}
+                              </h2>
+                              
+                              {/* Description */}
+                              <p className="text-white/90 text-lg leading-relaxed line-clamp-2 max-w-xl">
+                                {lesson.description}
+                              </p>
+                              
+                              {/* Instructor and XP */}
+                              <div className="flex items-center gap-6 text-white/80">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4" />
+                                  <span className="font-medium">{lesson.instructor}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Zap className="w-4 h-4 text-yellow-400" />
+                                  <span className="text-yellow-400 font-semibold">{lesson.xp} XP</span>
                     </div>
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold text-transparent bg-gradient-to-r from-white via-blue-200 to-purple-400 bg-clip-text">
-                      Lessons Library
-                    </h1>
+                              
+                              {/* Watch Now Button */}
+                              <div className="pt-2">
+                                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-3 text-lg font-semibold group-hover:scale-105 transition-all duration-300">
+                                  <Play className="w-5 h-5 mr-2" />
+                                  Watch Now
+                                  <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
                   </div>
+                  </div>
+                </div>
+                
+
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Navigation Arrows */}
+                  {featuredLessons.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          prevSlide()
+                        }}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-white" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          nextSlide()
+                        }}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronRight className="w-5 h-5 text-white" />
+                      </button>
+                    </>
+                  )}
+                  
+                  {/* Pagination Dots */}
+                  {featuredLessons.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                      {featuredLessons.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            goToSlide(index)
+                          }}
+                          className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                            index === currentSlide 
+                              ? 'bg-white scale-110' 
+                              : 'bg-white/50 hover:bg-white/70'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Redesigned Filters Section */}
-          <div className="mb-8 animate-fade-in" style={{ animationDelay: "400ms" }}>
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-              {/* Search Input */}
-              <div className="flex-1 relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
-                <Input
-                  placeholder="Search lessons..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-500/50 focus:bg-slate-800/70 transition-all duration-200 text-sm"
-                />
-              </div>
+          {/* Filters */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                      <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search lessons, topics, or instructors..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:border-blue-500/50"
+                        />
+                      </div>
+                    </div>
               
-              {/* Filter Dropdowns */}
               <div className="flex gap-3">
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger className="w-32 sm:w-36 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white text-sm py-2.5 hover:bg-slate-800/70 transition-all duration-200">
-                    <SelectValue placeholder="Subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject === "all" ? "All Subjects" : subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
+                          <SelectValue placeholder="Subject" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject} value={subject}>
+                              {subject === "all" ? "All Subjects" : subject}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                 
-                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                  <SelectTrigger className="w-32 sm:w-36 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white text-sm py-2.5 hover:bg-slate-800/70 transition-all duration-200">
+                      <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                  <SelectTrigger className="w-36 bg-white/5 border-white/10 text-white">
                     <SelectValue placeholder="Level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {difficulties.map((difficulty) => (
-                      <SelectItem key={difficulty} value={difficulty}>
-                        {difficulty === "all" ? "All Levels" : difficulty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {difficulties.map((difficulty) => (
+                            <SelectItem key={difficulty} value={difficulty}>
+                              {difficulty === "all" ? "All Levels" : difficulty}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+          {/* Results Count */}
+          <div className="mb-6">
+            <p className="text-slate-400">
+              Showing {filteredLessons.length} of {lessons.length} lessons
+            </p>
           </div>
 
-          {/* Enhanced Lessons Grid */}
-          <div className="animate-fade-in" style={{ animationDelay: "600ms" }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-              {filteredLessons.map((lesson, index) => (
+          {/* Lessons Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredLessons.map((lesson) => (
                 <div 
                   key={lesson.id} 
-                  className="group overflow-hidden animate-fade-in cursor-pointer" 
-                  style={{ animationDelay: `${600 + index * 100}ms` }}
-                  onClick={() => window.location.href = `/lesson/${lesson.id}`}
-                >
-                  <div className="relative">
-                    {/* Background glow */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                className="group"
+              >
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 hover:scale-[1.02] transition-all duration-300">
+                  {/* Full-width Thumbnail Background */}
+                  <div className="aspect-video relative overflow-hidden">
+                    {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
+                      <img 
+                        src={getVideoThumbnail(lesson.videoUrl)!}
+                        alt={lesson.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          const youtubeId = getYouTubeVideoId(lesson.videoUrl)
+                          if (youtubeId && !target.src.includes('mqdefault')) {
+                            target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                        <Video className="w-16 h-16 text-slate-400" />
+                      </div>
+                    )}
                     
-                    {/* Main card */}
-                    <div className="relative bg-gradient-to-br from-white/8 via-white/15 to-white/8 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl hover:shadow-purple-500/25 hover:scale-[1.02] transition-all duration-500 overflow-hidden">
-                      {/* Glass edge highlights */}
-                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                      <div className="absolute left-0 top-0 w-px h-full bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-                      
-                      {/* Image Section with Advanced Overlay */}
-                      <div className="relative overflow-hidden">
-                        {/* Background gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
-                        
-                        {/* Placeholder for now - can be replaced with actual image */}
-                        <div className="w-full h-64 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 flex items-center justify-center">
-                          <div className="text-center space-y-3">
-                            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-                              <Play className="w-8 h-8 text-white" />
-                            </div>
-                            <p className="text-slate-400 font-medium">Preview Available</p>
-                          </div>
-                        </div>
-                        
-                        {/* Status badges */}
-                        <div className="absolute top-6 left-6 flex flex-col gap-3">
+                    {/* Dark overlay for better text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+                    
+                    {/* Content overlaid on thumbnail */}
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                      {/* Top badges */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col gap-2">
                           {(() => {
                             const status = getLessonStatus(lesson)
-                            
                             return (
                               <>
+                                {status.isLiveNow && (
+                                  <Badge className="bg-red-500/90 text-white border-0 w-fit">
+                                    <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
+                                    LIVE
+                                  </Badge>
+                                )}
+                                {status.hasVideo && !status.isLiveNow && (
+                                  <Badge className="bg-green-500/90 text-white border-0 w-fit">
+                                    <Play className="w-3 h-3 mr-1" />
+                                    Available
+                                  </Badge>
+                                )}
                                 {status.isUpcoming && (
-                                  <div className="relative">
-                                    <div className="absolute inset-0 bg-blue-500/40 rounded-2xl blur-lg"></div>
-                                    <div className="relative bg-blue-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                                      <div className="flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-white" />
-                                        <span className="text-white font-bold text-sm">UPCOMING</span>
-                                      </div>
-                                    </div>
-                                  </div>
+                                  <Badge className="bg-blue-500/90 text-white border-0 w-fit">
+                                    <Calendar className="w-3 h-3 mr-1" />
+                                    Upcoming
+                                  </Badge>
                                 )}
-                                {status.hasVideo && !status.isUpcoming && (
-                                  <div className="relative">
-                                    <div className="absolute inset-0 bg-green-500/40 rounded-2xl blur-lg"></div>
-                                    <div className="relative bg-green-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                                      <div className="flex items-center gap-2">
-                                        <Play className="w-4 h-4 text-white" />
-                                        <span className="text-white font-bold text-sm">
-                                          CONTENT
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="relative">
-                                  <div className="absolute inset-0 bg-yellow-500/40 rounded-2xl blur-lg"></div>
-                                  <div className="relative bg-yellow-500/90 backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl">
-                                    <div className="flex items-center gap-2">
-                                      <Zap className="w-4 h-4 text-white" />
-                                      <span className="text-white font-bold text-sm">{lesson.xp} XP</span>
-                                    </div>
-                                  </div>
-                                </div>
                               </>
                             )
                           })()}
                         </div>
                         
-                        {/* Difficulty badge */}
-                        <div className="absolute top-6 right-6">
-                          <div className="relative">
-                            <div className={`absolute inset-0 ${difficultyBg[lesson.difficulty] || 'bg-gray-500/40'} rounded-2xl blur-lg`}></div>
-                            <div className={`relative ${difficultyBgSolid[lesson.difficulty] || 'bg-gray-500/90'} backdrop-blur-2xl border border-white/30 rounded-2xl px-4 py-2 shadow-2xl`}>
-                              <span className="text-white font-bold text-sm">{lesson.difficulty}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Interactive overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-sm">
-                          <div className="text-center space-y-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl"></div>
-                              <Button 
-                                size="lg" 
-                                className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl hover:scale-110 transition-all duration-300"
-                                onClick={() => window.location.href = `/lesson/${lesson.id}`}
-                              >
-                                <Play className="w-6 h-6 mr-3" />
-                                {(() => {
-                                  const status = getLessonStatus(lesson)
-                                  if (status.isUpcoming) return "View Details"
-                                  if (status.hasVideo) return status.isPastLesson ? "Watch Recording" : "Watch Lesson"
-                                  return "Start Lesson"
-                                })()}
-                              </Button>
-                            </div>
-                            <p className="text-white/80 font-medium">Click to begin learning</p>
-                          </div>
-                        </div>
+                        {/* XP Badge */}
+                        <Badge className="bg-yellow-500/90 text-white border-0">
+                          <Zap className="w-3 h-3 mr-1" />
+                          {lesson.xp} XP
+                        </Badge>
                       </div>
 
-                      {/* Content Section */}
-                      <div className="relative p-8 space-y-6">
-                        {/* Subject */}
-                        <div className="flex items-center">
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-blue-500/30 rounded-xl blur-lg"></div>
-                            <div className="relative bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
-                              <span className="text-blue-300 font-semibold text-sm">{lesson.subject}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Title and description */}
-                        <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-white group-hover:text-blue-300 transition-colors duration-300 leading-tight">
+                      {/* Bottom content */}
+                      <div className="space-y-3">
+                        {/* Title - Move to top */}
+                        <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight">
                             {lesson.title}
                           </h3>
-                          <p className="text-slate-400 text-base leading-relaxed line-clamp-3">
-                            {lesson.description}
-                          </p>
+                        
+                        {/* Subject and difficulty badges */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 text-xs">
+                            {lesson.subject}
+                          </Badge>
+                          <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 text-xs">
+                            {lesson.difficulty}
+                          </Badge>
+                          <Badge variant="outline" className="border-white/40 text-white text-xs bg-white/10 backdrop-blur-sm">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {lesson.duration}
+                          </Badge>
                         </div>
 
-                        {/* Metrics */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
-                            <Clock className="w-6 h-6 mx-auto mb-2 text-blue-400" />
-                            <div className="text-lg font-bold text-white">{lesson.duration}</div>
-                            <div className="text-xs text-slate-400 font-medium">Duration</div>
-                          </div>
-                          <div className="text-center p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
-                            <Sparkles className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
-                            <div className="text-lg font-bold text-white">{lesson.difficulty}</div>
-                            <div className="text-xs text-slate-400 font-medium">Level</div>
-                          </div>
+                        {/* Instructor and Watch Now button */}
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-white/80 text-sm min-w-0 flex-1">
+                            <User className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{lesson.instructor}</span>
                         </div>
 
-                        {/* Instructor info */}
-                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-xl rounded-2xl border border-white/15">
-                          <div>
-                            <p className="text-white font-semibold text-lg">{lesson.instructor}</p>
-                            <p className="text-slate-400 text-sm font-medium">Expert Instructor</p>
-                          </div>
-                          {lesson.isLive && lesson.liveDate && (
-                            <div className="text-right">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                                <span className="text-red-400 font-bold text-sm uppercase tracking-wider">LIVE NOW</span>
-                              </div>
-                              <p className="text-slate-300 text-sm font-semibold">{lesson.liveDate}</p>
-                            </div>
-                          )}
+                          {/* Watch Now Button */}
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleLessonClick(lesson.id)
+                            }}
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-full px-4 py-2 text-xs font-semibold group-hover:scale-105 transition-all duration-300 flex-shrink-0"
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            Watch Now
+                          </Button>
                         </div>
                       </div>
+                    </div>
+                    
+
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
           </div>
 
+          {/* Empty State */}
           {filteredLessons.length === 0 && (
-            <div className="relative animate-fade-in">
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 to-slate-600/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-gradient-to-br from-white/8 via-white/15 to-white/8 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-16 text-center">
-                {/* Glass edge highlights */}
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                <div className="absolute left-0 top-0 w-px h-full bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-                
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-400/20 to-slate-500/20 rounded-full blur-2xl"></div>
-                  <BookOpen className="relative w-20 h-20 mx-auto text-slate-400 opacity-60" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-white">No lessons found</h3>
-                <p className="text-lg text-slate-400 font-medium">Try adjusting your search criteria or filters</p>
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-12 h-12 text-slate-400" />
               </div>
+              <h3 className="text-xl font-semibold text-white mb-2">No lessons found</h3>
+              <p className="text-slate-400 mb-6">Try adjusting your search or filter criteria</p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm("")
+                  setSelectedSubject("all")
+                  setSelectedDifficulty("all")
+                }}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Clear Filters
+              </Button>
             </div>
           )}
-        </ResponsiveContainer>
+        </div>
       </main>
     </div>
   )
