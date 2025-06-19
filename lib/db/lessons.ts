@@ -245,6 +245,11 @@ class LessonService {
     )
   }
 
+  // Get unique instructors for filtering (alias for teachers)
+  async getUniqueInstructors(): Promise<string[]> {
+    return this.getUniqueTeachers()
+  }
+
   // Get lesson statistics
   async getLessonStats(): Promise<{
     totalLessons: number

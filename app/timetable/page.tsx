@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
+import Particles from "@/components/ui/particles"
 import { 
   BookOpen, 
   Video, 
@@ -61,7 +62,6 @@ export default function TimetablePage() {
   const [lessons, setLessons] = useState<TimetableLesson[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [schedule, setSchedule] = useState<Record<string, TimetableLesson[]>>({})
-  const [searchQuery, setSearchQuery] = useState("")
   const [dataReady, setDataReady] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -235,22 +235,17 @@ export default function TimetablePage() {
     return dayLessons.filter((lesson) => {
       if (!lesson || !lesson.title) return false
       
-      const matchesSearch = (lesson.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (lesson.subject || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (lesson.instructor || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (lesson.subtopic && lesson.subtopic.toLowerCase().includes(searchQuery.toLowerCase()))
-      
       if (lesson.scheduledDate) {
         const lessonDate = new Date(lesson.scheduledDate)
         const dayIndex = daysOfWeek.indexOf(selectedDay)
         
         if (dayIndex !== -1 && weekDates[dayIndex] && !isNaN(lessonDate.getTime())) {
           const selectedDate = weekDates[dayIndex]
-          return matchesSearch && lessonDate.toDateString() === selectedDate.toDateString()
+          return lessonDate.toDateString() === selectedDate.toDateString()
         }
       }
       
-      return matchesSearch
+      return true
     })
   })()
 
@@ -261,33 +256,114 @@ export default function TimetablePage() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Gradient Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-tr from-blue-900/20 via-transparent to-indigo-900/20 pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] pointer-events-none" />
+      
+      {/* Animated Particles */}
+      <Particles
+        className="fixed inset-0 pointer-events-none"
+        quantity={60}
+        ease={80}
+        color="#60a5fa"
+        size={0.6}
+        staticity={50}
+      />
+
+      {/* Additional smaller particles for depth */}
+      <Particles
+        className="fixed inset-0 pointer-events-none"
+        quantity={80}
+        ease={40}
+        color="#a78bfa"
+        size={0.3}
+        staticity={30}
+      />
+
+      {/* Subtle geometric patterns */}
+      <div className="fixed inset-0 opacity-20 pointer-events-none">
+        <svg 
+          className="absolute inset-0 w-full h-full" 
+          width="100%" 
+          height="100%" 
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern 
+              id="grid-pattern" 
+              width="120" 
+              height="120" 
+              patternUnits="userSpaceOnUse"
+            >
+              <path 
+                d="M 120 0 L 0 0 0 120" 
+                fill="none" 
+                stroke="#60a5fa" 
+                strokeWidth="1"
+                opacity="0.6"
+              />
+            </pattern>
+            <pattern 
+              id="dot-pattern" 
+              width="60" 
+              height="60" 
+              patternUnits="userSpaceOnUse"
+            >
+              <circle 
+                cx="30" 
+                cy="30" 
+                r="1.5" 
+                fill="#a78bfa"
+                opacity="0.4"
+              />
+            </pattern>
+          </defs>
+          <rect 
+            width="100%" 
+            height="100%" 
+            fill="url(#grid-pattern)" 
+          />
+          <rect 
+            width="100%" 
+            height="100%" 
+            fill="url(#dot-pattern)" 
+          />
+        </svg>
+      </div>
+
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen">
+      <main className="lg:ml-72 min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
-          <PageHeader
-            title="My Timetable"
-            description="Your personalized schedule with smart notifications and quick access"
-            actions={
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                  My Timetable
+                </h1>
+                <p className="text-gray-300 text-base">
+                  Track your learning journey with scheduled classes
+                </p>
+              </div>
+              
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search classes..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64 bg-white/10 backdrop-blur-xl border border-white/20 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 rounded-lg"
-                  />
+                <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-2">
+                  <CalendarIcon className="w-5 h-5 text-blue-400 mr-2" />
+                  <span className="text-white font-medium">Week View</span>
                 </div>
               </div>
-            }
-          />
+            </div>
+          </div>
 
-          <div className="space-y-6 mb-10">
-            {/* Compact Weekly Schedule */}
-            <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-lg">
-              <CardHeader className="pb-4">
+          <div className="space-y-4 mb-8">
+            {/* Weekly Schedule */}
+            <Card className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-xl shadow-xl shadow-purple-500/5 hover:shadow-purple-500/10 transition-all duration-300 relative overflow-hidden group">
+              {/* Enhanced card background with subtle animation */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
+                              <CardHeader className="pb-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white flex items-center text-xl font-semibold">
                     <CalendarIcon className="w-5 h-5 mr-3 text-emerald-400" />
@@ -336,7 +412,7 @@ export default function TimetablePage() {
                 </div>
               </CardHeader>
               
-              <CardContent>
+              <CardContent className="relative z-10">
                 {/* Mobile Day Selector */}
                 <div className="lg:hidden mb-4">
                   <div className="flex overflow-x-auto gap-2 pb-2">
@@ -409,31 +485,33 @@ export default function TimetablePage() {
                     filteredClasses.map((lesson) => (
                       <div
                         key={lesson.id}
-                        className="group p-4 rounded-lg bg-white/10 backdrop-blur-xl hover:bg-white/15 transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/30"
-                        onClick={() => window.location.href = `/lesson/${lesson.id}`}
+                        className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl hover:shadow-blue-500/10 relative overflow-hidden hover:scale-[1.01]"
                       >
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                          <div className="flex-1 space-y-3">
+                          {/* Subtle hover gradient effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-4 relative z-10">
+                            <div className="flex-1 space-y-2.5">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                               <h3 className="font-semibold text-white text-lg leading-tight">
                                 {lesson.title}
                               </h3>
-                              <div className="flex items-center gap-2">
-                                <Badge className={`bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2 py-1 text-xs font-medium border`}>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200`}>
                                   {lesson.subject}
-                                </Badge>
+                                </span>
                                 {(() => {
                                   const lessonStatus = getLessonStatus(lesson)
                                   if (lessonStatus.status === 'live') {
                                     return (
-                                      <Badge className="bg-gradient-to-r from-red-500/30 to-red-600/30 border-red-400/50 text-red-200 flex items-center gap-1 px-2 py-1 text-xs font-medium animate-pulse border">
-                                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                                      <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold animate-pulse border shadow-lg rounded-full backdrop-blur-sm">
+                                        <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
                                         LIVE
                                       </Badge>
                                     )
                                   } else if (lessonStatus.status === 'future') {
                                     return (
-                                      <Badge className="bg-gradient-to-r from-orange-500/30 to-orange-600/30 border-orange-400/50 text-orange-200 flex items-center gap-1 px-2 py-1 text-xs font-medium border">
+                                      <Badge className="bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-400/50 text-amber-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border shadow-sm rounded-full backdrop-blur-sm">
                                         <Clock className="w-3 h-3" />
                                         Upcoming
                                       </Badge>
@@ -442,48 +520,52 @@ export default function TimetablePage() {
                                   return null
                                 })()}
                                 {lesson.videoUrl && (
-                                  <Badge className="bg-gradient-to-r from-purple-500/30 to-purple-600/30 border-purple-400/50 text-purple-200 flex items-center gap-1 px-2 py-1 text-xs font-medium border">
+                                  <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1 px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
                                     <Video className="w-3 h-3" />
                                     Video
-                                  </Badge>
+                                  </span>
                                 )}
                               </div>
                             </div>
 
                             {lesson.subtopic && (
-                              <p className="text-gray-300 text-sm">Topic: {lesson.subtopic}</p>
+                              <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2 py-1 text-xs font-medium rounded-md">
+                                <Target className="w-3 h-3 mr-1" />
+                                {lesson.subtopic}
+                              </div>
                             )}
 
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1.5 text-amber-400" />
-                                {lesson.duration}
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              <div className="flex items-center bg-amber-500/15 px-2 py-1 rounded-md border border-amber-400/25">
+                                <Clock className="w-3 h-3 mr-1 text-amber-400" />
+                                <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
                               </div>
-                              <div className="flex items-center">
-                                <User className="w-4 h-4 mr-1.5 text-blue-400" />
-                                <span className="truncate">{lesson.instructor}</span>
+                              <div className="flex items-center bg-blue-500/15 px-2 py-1 rounded-md border border-blue-400/25">
+                                <User className="w-3 h-3 mr-1 text-blue-400" />
+                                <span className="text-blue-200 font-medium text-xs truncate max-w-[100px]">{lesson.instructor}</span>
                               </div>
                               {lesson.grade && (
-                                <div className="flex items-center">
-                                  <GraduationCap className="w-4 h-4 mr-1.5 text-green-400" />
-                                  Grade {lesson.grade}
+                                <div className="flex items-center bg-emerald-500/15 px-2 py-1 rounded-md border border-emerald-400/25">
+                                  <GraduationCap className="w-3 h-3 mr-1 text-emerald-400" />
+                                  <span className="text-emerald-200 font-medium text-xs">Grade {lesson.grade}</span>
                                 </div>
                               )}
                             </div>
 
-                            {lesson.scheduledDate && (() => {
+                                                        {lesson.scheduledDate && (() => {
                               const date = new Date(lesson.scheduledDate)
                               if (!isNaN(date.getTime())) {
                                 return (
-                                  <div className="flex items-center text-sm text-gray-400">
-                                    <CalendarIcon className="w-4 h-4 mr-1.5" />
-                                    {date.toLocaleDateString('en-US', { 
-                                      weekday: 'short',
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
+                                  <div className="inline-flex items-center bg-slate-500/15 px-2 py-1 rounded-md border border-slate-400/25 text-xs">
+                                    <CalendarIcon className="w-3 h-3 mr-1 text-slate-400" />
+                                    <span className="text-slate-300 font-medium">
+                                      {date.toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
                                   </div>
                                 )
                               }
@@ -498,16 +580,17 @@ export default function TimetablePage() {
                               
                               return (
                                 <Button 
-                                  className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-6 py-2 text-sm font-medium ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                  className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-300 px-6 py-2.5 text-sm font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm border border-white/10 ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                                   disabled={isDisabled}
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    if (!isDisabled) {
+                                    // Only redirect for Watch Replay, Join Live, and Watch Now buttons
+                                    if (!isDisabled && (lessonStatus.status === 'past' || lessonStatus.status === 'live' || lessonStatus.status === 'available')) {
                                       window.location.href = `/lesson/${lesson.id}`
                                     }
                                   }}
                                 >
-                                  {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-1.5" />}
+                                  {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
                                   {lessonStatus.buttonText}
                                 </Button>
                               )
@@ -522,10 +605,10 @@ export default function TimetablePage() {
                         <CalendarIcon className="w-8 h-8 text-gray-400" />
                       </div>
                       <h3 className="text-lg font-medium text-white mb-2">
-                        {searchQuery ? 'No matching classes found' : `No classes scheduled for ${selectedDay}`}
+                        No classes scheduled for {selectedDay}
                       </h3>
                       <p className="text-gray-400">
-                        {searchQuery ? 'Try adjusting your search terms' : 'Your schedule is free for this day'}
+                        Your schedule is free for this day
                       </p>
                     </div>
                   )}
@@ -538,9 +621,11 @@ export default function TimetablePage() {
 
       {/* Enhanced Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-sm bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+        <DialogContent className="max-w-sm bg-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden relative">
+          {/* Enhanced gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
           
           <div className="relative z-10">
             <DialogHeader className="pb-4 border-b border-white/20">
@@ -556,7 +641,9 @@ export default function TimetablePage() {
             </DialogHeader>
             
             <div className="p-4">
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
+              <div className="bg-white/8 backdrop-blur-2xl border border-white/15 rounded-xl p-4 shadow-inner relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
+                <div className="relative z-10">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -585,6 +672,7 @@ export default function TimetablePage() {
                     day_hidden: "invisible",
                   }}
                 />
+                </div>
               </div>
             </div>
           </div>
