@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Play, Clock, Star, Search, Zap, Users, Calendar, Filter, Sparkles } from "lucide-react"
+import { BookOpen, Play, Clock, Star, Search, Zap, Users, Calendar, Sparkles } from "lucide-react"
 
 // Enhanced Particle Background Component
 const ParticleBackground = () => {
@@ -313,103 +313,69 @@ export default function LessonsPage() {
         <ResponsiveContainer padding="lg" animated>
           {/* Compact Hero Section */}
           <div className="relative mb-8 animate-fade-in">
-            <div className="relative bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl overflow-hidden h-16">
+            <div className="relative bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-xl border border-white/20 shadow-xl overflow-hidden h-14">
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
               
               {/* Content */}
-              <div className="relative flex items-center justify-between h-full px-6">
-                <div className="flex items-center gap-4">
+              <div className="relative flex items-center h-full px-6">
+                <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-xl backdrop-blur-xl border border-white/30 flex items-center justify-center">
+                    <div className="w-7 h-7 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-lg backdrop-blur-xl border border-white/30 flex items-center justify-center">
                       <BookOpen className="w-4 h-4 text-white" />
                     </div>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-white via-blue-200 to-purple-400 bg-clip-text">
+                    <h1 className="text-xl font-bold text-transparent bg-gradient-to-r from-white via-blue-200 to-purple-400 bg-clip-text">
                       Lessons Library
                     </h1>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-green-400 uppercase tracking-wider">Live Lessons Available</span>
-                  </div>
-                </div>
-                
-                {/* Action buttons */}
-                <div className="flex gap-3">
-                  <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-xl px-4 py-2 text-sm font-semibold">
-                    <Play className="w-4 h-4 mr-2" />
-                    Start Learning
-                  </Button>
-                  <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 border border-white/30 text-white rounded-xl px-4 py-2 text-sm font-medium backdrop-blur-xl">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Browse Filters
-                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
-
-
-          {/* Enhanced Filters */}
-          <div className="mb-12 animate-fade-in" style={{ animationDelay: "400ms" }}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 rounded-3xl blur-3xl"></div>
-              <div className="relative bg-gradient-to-br from-white/8 via-white/15 to-white/8 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 lg:p-8 overflow-hidden">
-                {/* Glass edge highlights */}
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                <div className="absolute left-0 top-0 w-px h-full bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
+          {/* Redesigned Filters Section */}
+          <div className="mb-8 animate-fade-in" style={{ animationDelay: "400ms" }}>
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              {/* Search Input */}
+              <div className="flex-1 relative group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
+                <Input
+                  placeholder="Search lessons..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-500/50 focus:bg-slate-800/70 transition-all duration-200 text-sm"
+                />
+              </div>
+              
+              {/* Filter Dropdowns */}
+              <div className="flex gap-3">
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-32 sm:w-36 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white text-sm py-2.5 hover:bg-slate-800/70 transition-all duration-200">
+                    <SelectValue placeholder="Subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {subject === "all" ? "All Subjects" : subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                <div className="relative flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl blur-sm group-hover:blur-lg transition-all duration-300"></div>
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 z-10" />
-                        <Input
-                          placeholder="Search lessons, topics, or instructors..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-12 pr-4 py-3 bg-white/10 backdrop-blur-xl border border-white/30 rounded-xl text-white placeholder:text-slate-400 focus:border-blue-500/50 focus:bg-white/15 transition-all duration-300 shadow-lg"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl blur-sm group-hover:blur-lg transition-all duration-300"></div>
-                      <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                        <SelectTrigger className="relative w-40 bg-white/10 backdrop-blur-xl border border-white/30 rounded-xl text-white shadow-lg hover:bg-white/15 transition-all duration-300">
-                          <SelectValue placeholder="Subject" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {subjects.map((subject) => (
-                            <SelectItem key={subject} value={subject}>
-                              {subject === "all" ? "All Subjects" : subject}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl blur-sm group-hover:blur-lg transition-all duration-300"></div>
-                      <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                        <SelectTrigger className="relative w-40 bg-white/10 backdrop-blur-xl border border-white/30 rounded-xl text-white shadow-lg hover:bg-white/15 transition-all duration-300">
-                          <SelectValue placeholder="Difficulty" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {difficulties.map((difficulty) => (
-                            <SelectItem key={difficulty} value={difficulty}>
-                              {difficulty === "all" ? "All Levels" : difficulty}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
+                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                  <SelectTrigger className="w-32 sm:w-36 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg text-white text-sm py-2.5 hover:bg-slate-800/70 transition-all duration-200">
+                    <SelectValue placeholder="Level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {difficulties.map((difficulty) => (
+                      <SelectItem key={difficulty} value={difficulty}>
+                        {difficulty === "all" ? "All Levels" : difficulty}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
