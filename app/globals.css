@@ -178,6 +178,28 @@
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
   }
+
+  /* Fix for Select dropdown z-index in dialogs */
+  [data-radix-select-content] {
+    z-index: 10000 !important;
+  }
+
+  /* Ensure Select items are properly styled and clickable */
+  [data-radix-select-item] {
+    cursor: pointer !important;
+  }
+
+  /* Fix Select trigger styling in dialogs */
+  [data-radix-select-trigger] {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Ensure Select viewport is properly positioned */
+  [data-radix-select-viewport] {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 @layer components {

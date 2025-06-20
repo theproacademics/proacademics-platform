@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
@@ -9,7 +9,7 @@ import { ResponsiveContainer } from "@/components/ui/responsive-container"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, Video, User, Clock, Calendar, ArrowLeft, MessageSquare, Lock, Unlock, Play, Trophy, CheckCircle, Award, Target, GraduationCap } from "lucide-react"
+import { BookOpen, Video, User, Clock, Calendar, ArrowLeft, MessageSquare, Lock, Unlock, Play, Trophy, CheckCircle, Award, Target, GraduationCap, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import Particles from "@/components/ui/particles"
 
@@ -23,6 +23,7 @@ interface Lesson {
   program?: string
   duration?: string
   videoUrl?: string
+  zoomLink?: string
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -54,6 +55,7 @@ const getYouTubeVideoId = (url: string): string | null => {
 
 export default function LessonPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dataReady, setDataReady] = useState(false)
@@ -62,6 +64,33 @@ export default function LessonPage() {
   const [isFinished, setIsFinished] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
   const [videoWatched, setVideoWatched] = useState(false)
+
+  // Determine where user came from for dynamic back button
+  const getBackButtonConfig = () => {
+    const from = searchParams.get('from')
+    const referrer = typeof window !== 'undefined' ? document.referrer : ''
+    
+    if (from === 'lessons' || referrer.includes('/lessons')) {
+      return {
+        text: 'Back to Lessons',
+        href: '/lessons',
+        icon: '📚'
+      }
+    } else if (from === 'timetable' || referrer.includes('/timetable')) {
+      return {
+        text: 'Back to Timetable',
+        href: '/timetable',
+        icon: '📅'
+      }
+    } else {
+      // Default to timetable if unclear
+      return {
+        text: 'Back to Timetable',
+        href: '/timetable',
+        icon: '📅'
+      }
+    }
+  }
 
   const { showPreloader, mounted: preloaderMounted } = usePreloader({ 
     delay: 1200,
@@ -91,19 +120,63 @@ export default function LessonPage() {
     return scheduledDate > today
   }
 
-  // Get lesson status
+  // Get lesson status with dual button support
   const getLessonStatus = () => {
-    if (!lesson?.scheduledDate) return { type: 'available', label: 'Watch Lesson' }
+    const hasVideo = !!lesson?.videoUrl
+    const hasZoom = !!lesson?.zoomLink
     
-    if (isDatePassed(lesson.scheduledDate)) {
-      return { type: 'past', label: 'Watch Lesson' }
-    } else if (isLiveToday(lesson.scheduledDate)) {
-      return { type: 'live', label: 'Join Lesson' }
-    } else if (isFutureLesson(lesson.scheduledDate)) {
-      return { type: 'future', label: 'Join Lesson' }
+    if (!lesson?.scheduledDate) {
+      if (hasVideo && hasZoom) {
+        return {
+          type: 'available',
+          showBothButtons: true,
+          videoLabel: 'Watch Video',
+          zoomLabel: 'Join Meeting',
+          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
+          zoomClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+        }
+      } else if (hasZoom) {
+        return { type: 'available', label: 'Join Meeting', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
+      } else {
+        return { type: 'available', label: 'Watch Video', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
+      }
     }
     
-    return { type: 'available', label: 'Watch Lesson' }
+    if (isDatePassed(lesson.scheduledDate)) {
+      if (hasVideo && hasZoom) {
+        return {
+          type: 'past',
+          showBothButtons: true,
+          videoLabel: 'Watch Replay',
+          zoomLabel: 'Join Live',
+          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
+          zoomClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+        }
+      } else if (hasZoom && !hasVideo) {
+        return { type: 'past', label: 'Join Live', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
+      } else {
+        return { type: 'past', label: 'Watch Replay', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
+      }
+    } else if (isLiveToday(lesson.scheduledDate)) {
+      if (hasVideo && hasZoom) {
+        return {
+          type: 'live',
+          showBothButtons: true,
+          videoLabel: 'Watch Video',
+          zoomLabel: 'Join Live',
+          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
+          zoomClass: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'
+        }
+      } else if (hasZoom) {
+        return { type: 'live', label: 'Join Live', class: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 animate-pulse' }
+      } else {
+        return { type: 'live', label: 'Watch Live', class: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 animate-pulse' }
+      }
+    } else if (isFutureLesson(lesson.scheduledDate)) {
+      return { type: 'future', label: 'Coming Soon', class: 'bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60 cursor-not-allowed', disabled: true }
+    }
+    
+    return { type: 'available', label: 'Watch Lesson', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
   }
 
   // Track video view
@@ -242,10 +315,10 @@ export default function LessonPage() {
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-white mb-4">Lesson Not Found</h1>
               <p className="text-gray-400 mb-8">The lesson you're looking for doesn't exist or has been removed.</p>
-              <Link href="/timetable">
+              <Link href={getBackButtonConfig().href}>
                 <Button className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Timetable
+                  {getBackButtonConfig().text}
                 </Button>
               </Link>
             </div>
@@ -333,10 +406,13 @@ export default function LessonPage() {
             <Button 
               variant="ghost" 
                 className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
-              onClick={() => window.location.href = '/timetable'}
+              onClick={() => {
+                const backConfig = getBackButtonConfig()
+                window.location.href = backConfig.href
+              }}
             >
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                <span className="font-medium">Back to Timetable</span>
+                <span className="font-medium">{getBackButtonConfig().text}</span>
             </Button>
 
               <div className="flex items-center gap-3">
@@ -402,6 +478,20 @@ export default function LessonPage() {
                     <div className="flex items-center bg-green-500/15 px-2 py-1 rounded-md border border-green-400/25">
                       <Calendar className="w-3 h-3 mr-1 text-green-400" />
                       <span className="text-green-200 font-medium text-xs">Week {lesson.week}</span>
+                    </div>
+                  )}
+
+                  {lesson.videoUrl && (
+                    <div className="flex items-center bg-purple-500/15 px-2 py-1 rounded-md border border-purple-400/25">
+                      <Video className="w-3 h-3 mr-1 text-purple-400" />
+                      <span className="text-purple-200 font-medium text-xs">Video</span>
+                    </div>
+                  )}
+
+                  {lesson.zoomLink && (
+                    <div className="flex items-center bg-green-500/15 px-2 py-1 rounded-md border border-green-400/25">
+                      <ExternalLink className="w-3 h-3 mr-1 text-green-400" />
+                      <span className="text-green-200 font-medium text-xs">Zoom</span>
                     </div>
                   )}
 
@@ -535,80 +625,140 @@ export default function LessonPage() {
                         
                         return (
                           <>
-                            {/* Primary Action Button */}
-                            {status.type === 'past' && !isVideoUnlocked ? (
-                              <Button 
-                                onClick={handleUnlockVideo}
-                                disabled={isUnlocking}
-                                  className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 border border-purple-400/30 relative overflow-hidden group"
-                              >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                {isUnlocking ? (
-                                  <>
-                                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                      Unlocking Premium...
-                                  </>
-                                ) : (
-                                  <>
-                                      <Play className="w-5 h-5 mr-2" />
-                                      Start Premium Lesson
-                                  </>
-                                )}
-                              </Button>
-                            ) : status.type === 'live' ? (
-                                <Button className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-red-500/30 animate-pulse border border-red-400/40 relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
-                                  <div className="w-3 h-3 bg-white rounded-full mr-2 animate-ping shadow-lg"></div>
-                                  Join Live Session
-                              </Button>
-                            ) : status.type === 'future' ? (
-                              <Button 
-                                disabled
-                                  className="w-full bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60 font-bold py-4 rounded-full cursor-not-allowed border border-slate-500/30 shadow-lg relative overflow-hidden"
-                              >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 to-slate-600/10"></div>
-                                  <Calendar className="w-5 h-5 mr-2" />
-                                  Coming Soon
-                              </Button>
-                            ) : isVideoUnlocked ? (
-                                <div className="w-full bg-gradient-to-r from-emerald-500/30 to-green-500/30 border-2 border-emerald-400/50 rounded-2xl p-6 text-center shadow-2xl shadow-emerald-500/25 relative overflow-hidden">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 animate-pulse"></div>
-                                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"></div>
-                                  <div className="relative z-10 space-y-3">
-                                    <div className="flex items-center justify-center gap-3">
-                                      <div className="relative">
-                                        <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-lg animate-pulse"></div>
-                                        <div className="w-5 h-5 bg-emerald-400 rounded-full animate-pulse shadow-xl shadow-emerald-400/60 relative flex items-center justify-center">
-                                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                                        </div>
-                                      </div>
-                                      <span className="text-emerald-100 font-bold text-lg">Premium Access</span>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2">
-                                      <CheckCircle className="w-4 h-4 text-green-300" />
-                                      <span className="text-green-200 font-semibold text-sm">Full Content Unlocked</span>
-                                    </div>
-                                </div>
+                            {/* Primary Action Buttons */}
+                            {status.showBothButtons ? (
+                              <div className="space-y-3">
+                                {/* Video Button */}
+                                <Button 
+                                  onClick={() => {
+                                    if (lesson?.videoUrl) {
+                                      if (status.type === 'past' && !isVideoUnlocked) {
+                                        handleUnlockVideo()
+                                      } else if (status.type === 'available' || status.type === 'live') {
+                                        handleUnlockVideo()
+                                      }
+                                    }
+                                  }}
+                                  disabled={isUnlocking}
+                                  className={`w-full ${status.videoClass} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
+                                >
+                                  {isUnlocking ? (
+                                    <>
+                                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                      Unlocking...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Video className="w-4 h-4 mr-2" />
+                                      {status.videoLabel}
+                                    </>
+                                  )}
+                                </Button>
+                                
+                                {/* Zoom Button */}
+                                <Button 
+                                  onClick={() => {
+                                    if (lesson?.zoomLink) {
+                                      window.open(lesson.zoomLink, '_blank')
+                                    }
+                                  }}
+                                  className={`w-full ${status.zoomClass} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30 relative`}
+                                >
+                                  {status.type === 'live' && status.zoomLabel === 'Join Live' && (
+                                    <div className="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"></div>
+                                  )}
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  {status.zoomLabel}
+                                </Button>
                               </div>
                             ) : (
-                              <Button 
-                                onClick={handleUnlockVideo}
-                                disabled={isUnlocking}
-                                  className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-bold py-4 rounded-full shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 border border-purple-400/30 relative overflow-hidden group"
-                              >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                {isUnlocking ? (
-                                  <>
-                                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                      Unlocking Premium...
-                                  </>
+                              <>
+                                {/* Single Button Logic */}
+                                {status.type === 'past' && !isVideoUnlocked ? (
+                                  <Button 
+                                    onClick={handleUnlockVideo}
+                                    disabled={isUnlocking}
+                                    className={`w-full ${status.class || 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
+                                  >
+                                    {isUnlocking ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                        Unlocking Premium...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Play className="w-4 h-4 mr-2" />
+                                        Start Premium Lesson
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : status.type === 'live' ? (
+                                  <Button 
+                                    onClick={() => {
+                                      if (lesson?.zoomLink) {
+                                        window.open(lesson.zoomLink, '_blank')
+                                      }
+                                    }}
+                                    className={`w-full ${status.class || 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-red-400/40`}
+                                  >
+                                    <div className="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"></div>
+                                    {lesson?.zoomLink ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                                    {status.label}
+                                  </Button>
+                                ) : status.type === 'future' ? (
+                                  <Button 
+                                    disabled
+                                    className={`w-full ${status.class || 'bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60'} font-bold py-4 rounded-full cursor-not-allowed border border-slate-500/30 shadow-lg`}
+                                  >
+                                    <Calendar className="w-4 h-4 mr-2" />
+                                    {status.label}
+                                  </Button>
+                                ) : isVideoUnlocked ? (
+                                  <div className="w-full bg-gradient-to-r from-emerald-500/30 to-green-500/30 border-2 border-emerald-400/50 rounded-2xl p-6 text-center shadow-2xl shadow-emerald-500/25 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 animate-pulse"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"></div>
+                                    <div className="relative z-10 space-y-3">
+                                      <div className="flex items-center justify-center gap-3">
+                                        <div className="relative">
+                                          <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-lg animate-pulse"></div>
+                                          <div className="w-5 h-5 bg-emerald-400 rounded-full animate-pulse shadow-xl shadow-emerald-400/60 relative flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                                          </div>
+                                        </div>
+                                        <span className="text-emerald-100 font-bold text-lg">Premium Access</span>
+                                      </div>
+                                      <div className="flex items-center justify-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-green-300" />
+                                        <span className="text-green-200 font-semibold text-sm">Full Content Unlocked</span>
+                                      </div>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <>
-                                      <Play className="w-5 h-5 mr-2" />
-                                      Start Premium Lesson
-                                  </>
+                                  <Button 
+                                    onClick={() => {
+                                      if (status.label === 'Join Meeting' && lesson?.zoomLink) {
+                                        window.open(lesson.zoomLink, '_blank')
+                                      } else {
+                                        handleUnlockVideo()
+                                      }
+                                    }}
+                                    disabled={isUnlocking || status.disabled}
+                                    className={`w-full ${status.class || 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
+                                  >
+                                    {isUnlocking ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                        Unlocking Premium...
+                                      </>
+                                    ) : (
+                                      <>
+                                        {status.label === 'Join Meeting' ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                                        {status.label}
+                                      </>
+                                    )}
+                                  </Button>
                                 )}
-                              </Button>
+                              </>
                             )}
 
                             {/* Mark as Finished Button */}
@@ -616,18 +766,17 @@ export default function LessonPage() {
                               <Button 
                                 onClick={handleMarkAsFinished}
                                 disabled={isFinishing}
-                                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-full shadow-2xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300 border border-amber-400/30 relative overflow-hidden group"
+                                className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
                               >
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                                 {isFinishing ? (
                                   <>
-                                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                      Earning Premium XP...
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                    Earning Premium XP...
                                   </>
                                 ) : (
                                   <>
-                                      <Trophy className="w-5 h-5 mr-2" />
-                                      Complete & Earn XP
+                                    <Trophy className="w-4 h-4 mr-2" />
+                                    Complete & Earn XP
                                   </>
                                 )}
                               </Button>
@@ -654,9 +803,8 @@ export default function LessonPage() {
                             )}
 
                             {/* Secondary Actions */}
-                              <Button className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/40 text-blue-200 hover:from-blue-500/30 hover:to-indigo-600/30 hover:border-blue-300/50 transition-all duration-300 rounded-full py-3 font-semibold shadow-lg hover:shadow-blue-500/20 relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                <MessageSquare className="w-5 h-5 mr-2" />
+                              <Button className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/40 text-blue-200 hover:from-blue-500/30 hover:to-indigo-600/30 hover:border-blue-300/50 transition-all duration-200 rounded-full py-3 font-semibold shadow-lg hover:shadow-blue-500/20">
+                                <MessageSquare className="w-4 h-4 mr-2" />
                                 Ask AI Tutor
                             </Button>
                           </>

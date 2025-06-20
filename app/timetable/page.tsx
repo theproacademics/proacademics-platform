@@ -25,7 +25,8 @@ import {
   Target,
   Play,
   GraduationCap,
-  X
+  X,
+  ExternalLink
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -39,6 +40,7 @@ interface TimetableLesson {
   instructor: string;
   duration: string;
   videoUrl?: string;
+  zoomLink?: string;
   scheduledDate?: string;
   week?: string;
   grade?: string;
@@ -93,6 +95,7 @@ export default function TimetablePage() {
           instructor: lesson.instructor || 'ProAcademics Team',
           duration: lesson.duration || '90 min',
           videoUrl: lesson.videoUrl,
+          zoomLink: lesson.zoomLink,
           scheduledDate: lesson.scheduledDate,
           week: lesson.week,
           grade: lesson.grade
@@ -179,11 +182,31 @@ export default function TimetablePage() {
   }
 
   const getLessonStatus = (lesson: TimetableLesson) => {
+    const hasVideo = !!lesson.videoUrl
+    const hasZoom = !!lesson.zoomLink
+    
     if (!lesson.scheduledDate) {
-      return {
-        status: 'available',
-        buttonText: 'Watch Now',
-        buttonClass: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+      if (hasVideo && hasZoom) {
+        return {
+          status: 'available',
+          showBothButtons: true,
+          videoButtonText: 'Watch Video',
+          zoomButtonText: 'Join Meeting',
+          videoButtonClass: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white',
+          zoomButtonClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+        }
+      } else if (hasZoom) {
+        return {
+          status: 'available',
+          buttonText: 'Join Meeting',
+          buttonClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+        }
+      } else {
+        return {
+          status: 'available',
+          buttonText: 'Watch Video',
+          buttonClass: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+        }
       }
     }
 
@@ -193,8 +216,10 @@ export default function TimetablePage() {
     if (isNaN(lessonDate.getTime())) {
       return {
         status: 'available',
-        buttonText: 'Watch Now',
-        buttonClass: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+        buttonText: hasZoom ? 'Join Meeting' : 'Watch Video',
+        buttonClass: hasZoom 
+          ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+          : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
       }
     }
     
@@ -210,10 +235,28 @@ export default function TimetablePage() {
     const tenMinutesBefore = new Date(lessonDate.getTime() - 10 * 60000)
     
     if (now >= tenMinutesBefore && now <= lessonEndTime) {
-      return {
-        status: 'live',
-        buttonText: 'Join Live',
-        buttonClass: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white animate-pulse'
+      // Live lesson - prioritize Zoom if available
+      if (hasVideo && hasZoom) {
+        return {
+          status: 'live',
+          showBothButtons: true,
+          videoButtonText: 'Watch Video',
+          zoomButtonText: 'Join Live',
+          videoButtonClass: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white',
+          zoomButtonClass: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white animate-pulse'
+        }
+      } else if (hasZoom) {
+        return {
+          status: 'live',
+          buttonText: 'Join Live',
+          buttonClass: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white animate-pulse'
+        }
+      } else {
+        return {
+          status: 'live',
+          buttonText: 'Watch Live',
+          buttonClass: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white animate-pulse'
+        }
       }
     } else if (now < tenMinutesBefore) {
       return {
@@ -222,10 +265,28 @@ export default function TimetablePage() {
         buttonClass: 'bg-gray-500/50 text-gray-300 cursor-not-allowed'
       }
     } else {
-      return {
-        status: 'past',
-        buttonText: 'Watch Replay',
-        buttonClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+      // Past lesson
+      if (hasVideo && hasZoom) {
+        return {
+          status: 'past',
+          showBothButtons: true,
+          videoButtonText: 'Watch Replay',
+          zoomButtonText: 'Meeting Ended',
+          videoButtonClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white',
+          zoomButtonClass: 'bg-gray-500/50 text-gray-300 cursor-not-allowed'
+        }
+      } else if (hasZoom && !hasVideo) {
+        return {
+          status: 'past',
+          buttonText: 'Meeting Ended',
+          buttonClass: 'bg-gray-500/50 text-gray-300 cursor-not-allowed'
+        }
+      } else {
+        return {
+          status: 'past',
+          buttonText: 'Watch Replay',
+          buttonClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+        }
       }
     }
   }
@@ -525,6 +586,12 @@ export default function TimetablePage() {
                                     Video
                                   </span>
                                 )}
+                                {lesson.zoomLink && (
+                                  <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-emerald-500/25 border-green-400/40 text-green-100 gap-1 px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm hover:from-green-500/35 hover:to-emerald-500/35 transition-all duration-200">
+                                    <ExternalLink className="w-3 h-3" />
+                                    Zoom
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -578,22 +645,67 @@ export default function TimetablePage() {
                               const lessonStatus = getLessonStatus(lesson)
                               const isDisabled = lessonStatus.status === 'future'
                               
-                              return (
-                                <Button 
-                                  className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-300 px-6 py-2.5 text-sm font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm border border-white/10 ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                  disabled={isDisabled}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    // Only redirect for Watch Replay, Join Live, and Watch Now buttons
-                                    if (!isDisabled && (lessonStatus.status === 'past' || lessonStatus.status === 'live' || lessonStatus.status === 'available')) {
-                                      window.location.href = `/lesson/${lesson.id}`
-                                    }
-                                  }}
-                                >
-                                  {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
-                                  {lessonStatus.buttonText}
-                                </Button>
-                              )
+                              if (lessonStatus.showBothButtons) {
+                                return (
+                                  <div className="flex flex-col lg:flex-row gap-2 w-full lg:w-auto">
+                                    {/* Video Button */}
+                                    <Button 
+                                      className={`flex-1 lg:flex-none ${lessonStatus.videoButtonClass} transition-all duration-300 px-4 py-2.5 text-sm font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm border border-white/10`}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (lesson.videoUrl) {
+                                          window.location.href = `/lesson/${lesson.id}?from=timetable`
+                                        }
+                                      }}
+                                    >
+                                      <Video className="w-4 h-4 mr-2" />
+                                      {lessonStatus.videoButtonText}
+                                    </Button>
+                                    
+                                    {/* Zoom Button */}
+                                    <Button 
+                                      className={`flex-1 lg:flex-none ${lessonStatus.zoomButtonClass} transition-all duration-300 px-4 py-2.5 text-sm font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm border border-white/10 ${lessonStatus.status === 'past' && lessonStatus.zoomButtonText === 'Meeting Ended' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                      disabled={lessonStatus.status === 'past' && lessonStatus.zoomButtonText === 'Meeting Ended'}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (lesson.zoomLink && lessonStatus.zoomButtonText !== 'Meeting Ended') {
+                                          window.open(lesson.zoomLink, '_blank')
+                                        }
+                                      }}
+                                    >
+                                      {lessonStatus.status === 'live' && lessonStatus.zoomButtonText === 'Join Live' && <Play className="w-4 h-4 mr-2" />}
+                                      {lessonStatus.zoomButtonText === 'Meeting Ended' ? <X className="w-4 h-4 mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
+                                      {lessonStatus.zoomButtonText}
+                                    </Button>
+                                  </div>
+                                )
+                              } else {
+                                return (
+                                  <Button 
+                                    className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-300 px-6 py-2.5 text-sm font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm border border-white/10 ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    disabled={isDisabled}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      // Handle different button types
+                                      if (!isDisabled) {
+                                        if (lessonStatus.buttonText === 'Join Meeting' || lessonStatus.buttonText === 'Join Live') {
+                                          // Open Zoom link
+                                          if (lesson.zoomLink) {
+                                            window.open(lesson.zoomLink, '_blank')
+                                          }
+                                        } else if (lessonStatus.buttonText === 'Watch Video' || lessonStatus.buttonText === 'Watch Replay' || lessonStatus.buttonText === 'Watch Live') {
+                                          // Navigate to lesson page
+                                          window.location.href = `/lesson/${lesson.id}?from=timetable`
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
+                                    {lessonStatus.buttonText === 'Join Meeting' || lessonStatus.buttonText === 'Join Live' ? <ExternalLink className="w-4 h-4 mr-2" /> : null}
+                                    {lessonStatus.buttonText}
+                                  </Button>
+                                )
+                              }
                             })()}
                           </div>
                         </div>

@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, teacher, program, duration, videoUrl, week, scheduledDate, grade, status } = body
+    const { title, subject, subtopic, teacher, program, duration, videoUrl, zoomLink, week, scheduledDate, grade, status } = body
 
     const updateData = {
       title,
@@ -31,6 +31,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       program: program || '',
       duration: duration || '',
       videoUrl: videoUrl || '',
+      zoomLink: zoomLink || '',
       week: week || '',
       scheduledDate: scheduledDate || '',
       grade: grade || '',

@@ -71,6 +71,7 @@ interface Lesson {
   liveDate?: string;
   description: string;
   videoUrl?: string;
+  zoomLink?: string;
   scheduledDate?: string;
 }
 
@@ -137,6 +138,7 @@ export default function LessonsPage() {
           liveDate: lesson.scheduledDate,
           description: lesson.description || 'Join us for this exciting lesson!',
           videoUrl: lesson.videoUrl,
+          zoomLink: lesson.zoomLink,
           scheduledDate: lesson.scheduledDate,
         }))
         
@@ -169,7 +171,7 @@ export default function LessonsPage() {
   })
 
   const handleLessonClick = (lessonId: string) => {
-    window.location.href = `/lesson/${lessonId}`
+    window.location.href = `/lesson/${lessonId}?from=lessons`
   }
 
   // Get featured lessons (first 3 lessons)

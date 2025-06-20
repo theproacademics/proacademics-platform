@@ -36,6 +36,7 @@ export interface Lesson {
   duration?: string // Made optional
   description?: string
   videoUrl?: string
+  zoomLink?: string // Zoom meeting link
   status: 'draft' | 'active' // Status field
   createdAt: Date
   updatedAt: Date

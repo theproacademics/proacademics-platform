@@ -40,7 +40,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, teacher, program, duration, videoUrl, week, scheduledDate, grade, status } = body
+    const { title, subject, subtopic, teacher, program, duration, videoUrl, zoomLink, week, scheduledDate, grade, status } = body
 
     if (!title || !subject) {
       return NextResponse.json({ error: "Missing required fields: title, subject" }, { status: 400 })
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
       program: program || "",
       duration: duration || "",
       videoUrl: videoUrl || "",
+      zoomLink: zoomLink || "",
       status: status || 'draft',
       createdAt: new Date(),
       updatedAt: new Date(),
