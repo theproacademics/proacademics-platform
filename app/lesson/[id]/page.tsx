@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
@@ -120,8 +120,8 @@ export default function LessonPage() {
     return scheduledDate > today
   }
 
-  // Get lesson status with dual button support
-  const getLessonStatus = () => {
+  // Get lesson status with dual button support - memoized to prevent flickering
+  const getLessonStatus = useMemo(() => {
     const hasVideo = !!lesson?.videoUrl
     const hasZoom = !!lesson?.zoomLink
     
@@ -131,33 +131,28 @@ export default function LessonPage() {
           type: 'available',
           showBothButtons: true,
           videoLabel: 'Watch Video',
-          zoomLabel: 'Join Meeting',
+          zoomLabel: 'Join Live',
           videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
           zoomClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
         }
       } else if (hasZoom) {
-        return { type: 'available', label: 'Join Meeting', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
+        return { type: 'available', label: 'Join Live', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
       } else {
         return { type: 'available', label: 'Watch Video', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
       }
     }
     
-    if (isDatePassed(lesson.scheduledDate)) {
-      if (hasVideo && hasZoom) {
-        return {
-          type: 'past',
-          showBothButtons: true,
-          videoLabel: 'Watch Replay',
-          zoomLabel: 'Join Live',
-          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
-          zoomClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
-        }
-      } else if (hasZoom && !hasVideo) {
-        return { type: 'past', label: 'Join Live', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
-      } else {
-        return { type: 'past', label: 'Watch Replay', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
-      }
-    } else if (isLiveToday(lesson.scheduledDate)) {
+    const now = new Date()
+    const lessonDate = new Date(lesson.scheduledDate)
+    
+    // Use more stable timing calculations
+    const tenMinutesBefore = new Date(lessonDate.getTime() - 10 * 60000)
+    const lessonEndTime = new Date(lessonDate.getTime() + 60 * 60000)
+    const extendedLiveStart = new Date(lessonDate.getTime() - 30 * 60000)
+    const extendedLiveEnd = new Date(lessonDate.getTime() + 120 * 60000)
+    
+    if (now >= tenMinutesBefore && now <= lessonEndTime) {
+      // Currently live - use pulse animation only during actual lesson time
       if (hasVideo && hasZoom) {
         return {
           type: 'live',
@@ -172,12 +167,48 @@ export default function LessonPage() {
       } else {
         return { type: 'live', label: 'Watch Live', class: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 animate-pulse' }
       }
-    } else if (isFutureLesson(lesson.scheduledDate)) {
+    } else if (now >= extendedLiveStart && now <= extendedLiveEnd) {
+      // Extended live window - no pulse to reduce flickering
+      if (hasVideo && hasZoom) {
+        return {
+          type: 'live',
+          showBothButtons: true,
+          videoLabel: 'Watch Video',
+          zoomLabel: 'Join Live',
+          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
+          zoomClass: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'
+        }
+      } else if (hasZoom) {
+        return { type: 'live', label: 'Join Live', class: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700' }
+      } else {
+        return { type: 'live', label: 'Watch Live', class: 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700' }
+      }
+    } else if (now < extendedLiveStart) {
+      // Future lesson - but still show Join Live if zoom is available
+      if (hasZoom) {
+        return { type: 'future', label: 'Join Live (Scheduled)', class: 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white' }
+      }
       return { type: 'future', label: 'Coming Soon', class: 'bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60 cursor-not-allowed', disabled: true }
+    } else {
+      // Past lesson - always allow access to zoom if available  
+      if (hasVideo && hasZoom) {
+        return {
+          type: 'past',
+          showBothButtons: true,
+          videoLabel: 'Watch Replay',
+          zoomLabel: 'Join Live',
+          videoClass: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700',
+          zoomClass: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+        }
+      } else if (hasZoom && !hasVideo) {
+        return { type: 'past', label: 'Join Live', class: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' }
+      } else {
+        return { type: 'past', label: 'Watch Replay', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
+      }
     }
     
     return { type: 'available', label: 'Watch Lesson', class: 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700' }
-  }
+  }, [lesson?.videoUrl, lesson?.zoomLink, lesson?.scheduledDate])
 
   // Track video view
   const trackVideoView = async () => {
@@ -579,7 +610,7 @@ export default function LessonPage() {
                                   <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent">Premium Lesson</h3>
                                   <p className="text-slate-200 text-base leading-relaxed">
                                 {(() => {
-                                  const status = getLessonStatus()
+                                  const status = getLessonStatus
                                   if (status.type === 'past') {
                                         return 'Unlock this premium lesson content'
                                   } else if (status.type === 'live') {
@@ -621,7 +652,7 @@ export default function LessonPage() {
                       <h3 className="text-white font-semibold mb-3 text-lg">Actions</h3>
                       <div className="space-y-3">
                       {(() => {
-                        const status = getLessonStatus()
+                        const status = getLessonStatus
                         
                         return (
                           <>
@@ -736,7 +767,7 @@ export default function LessonPage() {
                                 ) : (
                                   <Button 
                                     onClick={() => {
-                                      if (status.label === 'Join Meeting' && lesson?.zoomLink) {
+                                      if ((status.label === 'Join Live' || status.label === 'Join Live (Scheduled)') && lesson?.zoomLink) {
                                         window.open(lesson.zoomLink, '_blank')
                                       } else {
                                         handleUnlockVideo()
@@ -752,7 +783,7 @@ export default function LessonPage() {
                                       </>
                                     ) : (
                                       <>
-                                        {status.label === 'Join Meeting' ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                                        {status.label === 'Join Live' || status.label === 'Join Live (Scheduled)' ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
                                         {status.label}
                                       </>
                                     )}
