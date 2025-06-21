@@ -1427,7 +1427,7 @@ export default function LessonsPage() {
 
       {/* Enhanced Create Lesson Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogContent className="max-w-3xl bg-slate-900/80 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden [&>button]:!hidden">
+               <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] bg-slate-900/80 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-y-auto [&>button]:!hidden">
                 <style jsx global>{`
                   [data-radix-select-content] {
                     z-index: 999999 !important;
@@ -1541,31 +1541,32 @@ export default function LessonsPage() {
                 `}</style>
                 
                 {/* Header */}
-                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 -m-4 sm:-m-6 mb-0 border-b border-white/10">
                   <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
-                        <Plus className="w-5 h-5 text-white" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                        <DialogTitle className="text-xl font-semibold text-white">Create New Lesson</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl font-semibold text-white">Create New Lesson</DialogTitle>
                       </div>
                     </div>
-                                        <div className="flex items-center space-x-3">
+                                        <div className="flex items-center space-x-2 sm:space-x-3">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setFormData(createEmptyFormData())}
-                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-7 sm:h-8 px-2 sm:px-3 text-xs transition-all duration-200"
                       >
                         <RotateCcw className="w-3 h-3 mr-1" />
-                        Clear All
+                        <span className="hidden sm:inline">Clear All</span>
+                        <span className="sm:hidden">Clear</span>
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsCreateDialogOpen(false)}
-                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-7 w-7 sm:h-8 sm:w-8 p-0 transition-all duration-200"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1574,11 +1575,11 @@ export default function LessonsPage() {
               </DialogHeader>
 
                 {/* Content */}
-                <div className="px-6 py-5 space-y-5">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
                   {/* Basic Information */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
                         <BookOpen className="w-3 h-3 text-blue-400" />
                       </div>
                       <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
@@ -1593,13 +1594,13 @@ export default function LessonsPage() {
                         placeholder="Enter lesson name" 
                         value={formData.lessonName}
                         onChange={(e) => setFormData({...formData, lessonName: e.target.value})}
-                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                        className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                       />
                     </div>
 
                     {/* Topic and Subject */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Topic
@@ -1653,7 +1654,7 @@ export default function LessonsPage() {
                 </div>
 
                     {/* Program and Type */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Program
@@ -1712,16 +1713,16 @@ export default function LessonsPage() {
                 </div>
 
                   {/* Schedule Information */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
                         <Calendar className="w-3 h-3 text-green-400" />
                   </div>
                       <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
                   </div>
                     
                     {/* Date and Time */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Date
@@ -1750,7 +1751,7 @@ export default function LessonsPage() {
             </div>
 
                     {/* Duration and Teacher */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Duration (minutes)
@@ -1765,7 +1766,7 @@ export default function LessonsPage() {
                       const minutes = e.target.value
                       setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
                     }}
-                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                         />
                 </div>
@@ -1778,7 +1779,7 @@ export default function LessonsPage() {
                           placeholder="Enter teacher name" 
                           value={formData.teacher}
                           onChange={(e) => setFormData({...formData, teacher: e.target.value})}
-                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                         />
                   </div>
@@ -1786,15 +1787,15 @@ export default function LessonsPage() {
                   </div>
 
                   {/* Additional Options */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
                         <Settings className="w-3 h-3 text-orange-400" />
                       </div>
                       <h3 className="text-sm font-medium text-white/90">Additional Options</h3>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Status
@@ -1829,7 +1830,7 @@ export default function LessonsPage() {
                           placeholder="https://youtube.com/watch?v=..." 
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
                 </div>
@@ -1844,7 +1845,7 @@ export default function LessonsPage() {
                   placeholder="https://zoom.us/j/123456789" 
                   value={formData.zoomLink}
                   onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
-                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                        className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                       />
                 </div>
@@ -1852,7 +1853,7 @@ export default function LessonsPage() {
             </div>
 
                 {/* Footer */}
-                <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
+                <div className="bg-slate-900/50 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 -m-4 sm:-m-6 mt-0 border-t border-white/10 flex flex-col sm:flex-row gap-3 sm:justify-end">
               <Button 
                 variant="outline" 
                 onClick={() => setIsCreateDialogOpen(false)} 
@@ -1878,7 +1879,7 @@ export default function LessonsPage() {
 
       {/* Enhanced Edit Lesson Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+        <DialogContent className="w-[95vw] max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
           <style jsx global>{`
             [data-radix-select-content] {
               z-index: 999999 !important;
@@ -2346,9 +2347,9 @@ export default function LessonsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Enhanced View Lesson Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+              {/* Enhanced View Lesson Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="w-[95vw] max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
           <style jsx global>{`
             /* COMPLETELY HIDE DEFAULT DIALOG CLOSE BUTTON - NUCLEAR APPROACH */
             
