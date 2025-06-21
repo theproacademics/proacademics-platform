@@ -9,22 +9,67 @@ import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, Video } from "lucide-react"
+import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, Video, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
 // Constants
 const ITEMS_PER_PAGE = 10
 
+// Subject-Program mapping
+const SUBJECT_PROGRAMS = {
+  "Maths": [
+    "GCSE - Yr 10",
+    "GCSE - Yr 11",
+    "A-Level - Yr 12",
+    "A-Level - Yr 13",
+    "GCSE - Level 10",
+    "High Achievers Vault"
+  ],
+  "Maths Easter Club": [
+    "GCSE - Yr 10",
+    "GCSE - Yr 11",
+    "A-Level - Yr 12",
+    "A-Level - Yr 13"
+  ],
+  "1% Club": [],
+  "Biology": [
+    "GCSE - Yr 10",
+    "GCSE - Yr 11",
+    "GCSE - Level 10",
+    "High Achievers Vault",
+    "A-Level - Yr 12",
+    "A-Level - Yr 13"
+  ],
+  "Chemistry": [
+    "GCSE - Yr 10",
+    "GCSE - Yr 11",
+    "GCSE - Level 10",
+    "High Achievers Vault",
+    "A-Level - Yr 12",
+    "A-Level - Yr 13"
+  ],
+  "Physics": [
+    "GCSE - Yr 10",
+    "GCSE - Yr 11",
+    "GCSE - Level 10",
+    "High Achievers Vault",
+    "A-Level - Yr 12",
+    "A-Level - Yr 13"
+  ]
+};
+
+
 // Types
 interface Lesson {
   _id?: string
   id: string
+  lessonName?: string
   title: string
   subject: string
-  subtopic?: string
   teacher?: string
   program?: string
+  type?: 'Lesson' | 'Tutorial' | 'Workshop'
   duration?: string
   videoUrl?: string
   zoomLink?: string
@@ -32,8 +77,7 @@ interface Lesson {
   createdAt: string
   updatedAt: string
   scheduledDate?: string
-  week?: string
-  grade?: string
+  time?: string
 }
 
 
@@ -47,33 +91,33 @@ interface PaginatedLessons {
 }
 
 interface LessonFormData {
+  lessonName: string
   title: string
   subject: string
-  subtopic: string
   teacher: string
   program: string
+  type: 'Lesson' | 'Tutorial' | 'Workshop'
   duration: string
   videoUrl: string
   zoomLink: string
-  week: string
   scheduledDate: string
-  grade: string
+  time: string
   status: 'draft' | 'active'
 }
 
 // Utility functions
 const createEmptyFormData = (): LessonFormData => ({
+  lessonName: "",
   title: "",
   subject: "",
-  subtopic: "",
   teacher: "",
   program: "",
+  type: "Lesson",
   duration: "",
   videoUrl: "",
   zoomLink: "",
-  week: "",
   scheduledDate: "",
-  grade: "",
+  time: "",
   status: "draft"
 })
 
@@ -96,17 +140,17 @@ const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toS
 
 const exportToCSV = (lessons: Lesson[], filename: string): void => {
   const csvContent = [
-    ['Topic', 'Subject', 'Subtopic', 'Teacher', 'Program', 'Status', 'Week', 'Grade', 'Scheduled Date', 'Duration', 'Created', 'Video URL', 'Zoom Link'],
+    ['Lesson Name', 'Topic', 'Subject', 'Teacher', 'Program', 'Type', 'Status', 'Date', 'Time', 'Duration', 'Created', 'Video URL', 'Zoom Link'],
     ...lessons.map(lesson => [
+      lesson.lessonName || '',
       lesson.title,
       lesson.subject,
-      lesson.subtopic || '',
       lesson.teacher || '',
       lesson.program || '',
+      lesson.type || '',
       lesson.status || 'draft',
-      lesson.week || '',
-      lesson.grade || '',
       lesson.scheduledDate || '',
+      lesson.time || '',
       lesson.duration || '',
       new Date(lesson.createdAt).toLocaleDateString(),
       lesson.videoUrl || '',
@@ -240,9 +284,7 @@ export default function LessonsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          week: formData.week || '',
           scheduledDate: formData.scheduledDate || '',
-          grade: formData.grade || '',
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
         })
@@ -274,9 +316,7 @@ export default function LessonsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          week: formData.week || '',
           scheduledDate: formData.scheduledDate || '',
-          grade: formData.grade || '',
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
         })
@@ -363,17 +403,17 @@ export default function LessonsPage() {
   const handleEditLesson = useCallback((lesson: Lesson) => {
     setSelectedLesson(lesson)
     setFormData({
+      lessonName: lesson.lessonName || "",
       title: lesson.title || "",
       subject: lesson.subject || "",
-      subtopic: lesson.subtopic || "",
       teacher: lesson.teacher || "",
       program: lesson.program || "",
+      type: lesson.type || "Lesson",
       duration: lesson.duration || "",
       videoUrl: lesson.videoUrl || "",
       zoomLink: lesson.zoomLink || "",
-      week: lesson.week || "",
       scheduledDate: lesson.scheduledDate || "",
-      grade: lesson.grade || "",
+      time: lesson.time || "",
       status: lesson.status || "draft"
     })
     setIsEditDialogOpen(true)
@@ -567,7 +607,7 @@ export default function LessonsPage() {
               <div className="relative group">
                 <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5 group-hover:text-purple-400 transition-colors duration-200 z-10" />
                 <Input
-                  placeholder="Search by title, subject, subtopic, teacher, or program..."
+                  placeholder="Search by lesson name, topic, subject, teacher, or program..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 bg-white/[0.03] border-2 border-white/20 rounded-xl sm:rounded-2xl text-white placeholder:text-slate-400 
@@ -604,7 +644,7 @@ export default function LessonsPage() {
                                            h-11">
                       <SelectValue placeholder="All Subjects" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[9999]">
+                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[999999]">
                       <SelectItem value="all" className="hover:bg-white/10 text-white cursor-pointer">All Subjects</SelectItem>
                       {subjects.filter(subject => 
                         subject && 
@@ -630,7 +670,7 @@ export default function LessonsPage() {
                                            h-11">
                       <SelectValue placeholder="All Teachers" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[9999]">
+                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[999999]">
                       <SelectItem value="all" className="hover:bg-white/10 text-white cursor-pointer">All Teachers</SelectItem>
                       {teachers.filter(teacher =>
                         teacher &&
@@ -656,7 +696,7 @@ export default function LessonsPage() {
                                            h-11">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[9999]">
+                    <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[999999]">
                       <SelectItem value="all" className="hover:bg-white/10 text-white cursor-pointer">All Status</SelectItem>
                       <SelectItem value="active" className="hover:bg-white/10 text-white cursor-pointer">
                         <div className="flex items-center gap-2">
@@ -948,16 +988,15 @@ export default function LessonsPage() {
                     )}
                   </Button>
                 </TableHead>
+                                          <TableHead>Lesson Name</TableHead>
                                           <TableHead>Topic</TableHead>
                 <TableHead>Subject</TableHead>
-                <TableHead>Subtopic</TableHead>
-                  <TableHead>Teacher</TableHead>
                   <TableHead>Program</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Teacher</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Week</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>Time</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -999,12 +1038,19 @@ export default function LessonsPage() {
                       </Button>
                     </TableCell>
                       <TableCell className="font-medium max-w-[200px] truncate">
+                        {lesson.lessonName || '-'}
+                    </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
                         {lesson.title}
                     </TableCell>
                       <TableCell>{lesson.subject}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{lesson.subtopic || '-'}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{lesson.teacher || '-'}</TableCell>
                       <TableCell className="max-w-[120px] truncate">{lesson.program || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {lesson.type || 'Lesson'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[150px] truncate">{lesson.teacher || '-'}</TableCell>
                     <TableCell>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${
@@ -1013,13 +1059,11 @@ export default function LessonsPage() {
                           <span className="capitalize text-sm">{lesson.status}</span>
                         </div>
                     </TableCell>
-                      <TableCell>{lesson.week || '-'}</TableCell>
                       <TableCell className="text-sm">
                         {lesson.scheduledDate ? new Date(lesson.scheduledDate).toLocaleDateString() : '-'}
                     </TableCell>
-                      <TableCell>{lesson.grade || '-'}</TableCell>
                       <TableCell className="text-sm">
-                        {new Date(lesson.createdAt).toLocaleDateString()}
+                        {lesson.time || '-'}
                     </TableCell>
                     <TableCell>
                         <div className="flex items-center gap-1">
@@ -1137,27 +1181,20 @@ export default function LessonsPage() {
                           <div className="space-y-1">
                             <span className="text-slate-400 font-medium">Subject</span>
                             <p className="text-white font-medium truncate bg-white/5 px-2 py-1 rounded-lg">{lesson.subject}</p>
-                      </div>
-                          <div className="space-y-1">
-                            <span className="text-slate-400 font-medium">Teacher</span>
-                            <p className="text-white font-medium truncate bg-white/5 px-2 py-1 rounded-lg">{lesson.teacher || '-'}</p>
                           </div>
                           <div className="space-y-1">
                             <span className="text-slate-400 font-medium">Program</span>
                             <p className="text-white font-medium truncate bg-white/5 px-2 py-1 rounded-lg">{lesson.program || '-'}</p>
                           </div>
                           <div className="space-y-1">
-                            <span className="text-slate-400 font-medium">Grade</span>
-                            <p className="text-white font-medium bg-white/5 px-2 py-1 rounded-lg text-center">{lesson.grade || '-'}</p>
+                            <span className="text-slate-400 font-medium">Teacher</span>
+                            <p className="text-white font-medium truncate bg-white/5 px-2 py-1 rounded-lg">{lesson.teacher || '-'}</p>
                           </div>
+                          <div className="space-y-1">
+                            <span className="text-slate-400 font-medium">Type</span>
+                            <p className="text-white font-medium bg-white/5 px-2 py-1 rounded-lg text-center">{lesson.type || 'Lesson'}</p>
                         </div>
-
-                        {lesson.subtopic && (
-                          <div className="mb-4">
-                            <span className="text-xs text-slate-400 font-medium">Subtopic</span>
-                            <p className="text-sm text-white mt-1 bg-white/5 px-2 py-1 rounded-lg">{lesson.subtopic}</p>
                           </div>
-                        )}
 
                         <div className="flex items-center justify-between pt-3 border-t border-white/10">
                           <div className="text-xs text-slate-400 flex items-center gap-1">
@@ -1268,140 +1305,334 @@ export default function LessonsPage() {
 
       {/* Enhanced Create Lesson Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10 rounded-3xl"></div>
-          <div className="relative">
-            <DialogHeader className="pb-6 border-b border-white/10">
+              <DialogContent className="max-w-3xl bg-slate-900/80 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden [&>button]:!hidden">
+                <style jsx global>{`
+                  [data-radix-select-content] {
+                    z-index: 999999 !important;
+                  }
+                  .glass-input:focus {
+                    outline: none !important;
+                    border-color: rgba(255, 255, 255, 0.4) !important;
+                    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+                  }
+                  .glass-select-trigger:focus {
+                    outline: none !important;
+                    border-color: rgba(255, 255, 255, 0.4) !important;
+                    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+                  }
+                  input[type="date"]::-webkit-calendar-picker-indicator {
+                    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") center/contain no-repeat;
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    padding: 8px;
+                    transition: all 0.2s ease;
+                    width: 20px;
+                    height: 20px;
+                  }
+                  input[type="time"]::-webkit-calendar-picker-indicator {
+                    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12,6 12,12 16,14'/%3E%3C/svg%3E") center/contain no-repeat;
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    padding: 8px;
+                    transition: all 0.2s ease;
+                    width: 20px;
+                    height: 20px;
+                  }
+                  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+                  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+                    background-color: rgba(255, 255, 255, 0.2);
+                    transform: scale(1.05);
+                  }
+                  input[type="date"],
+                  input[type="time"] {
+                    color-scheme: dark;
+                  }
+                  
+                  /* COMPREHENSIVE DIALOG CLOSE BUTTON HIDING - Multiple targeting approaches */
+                  
+                  /* Hide by Radix UI data attributes */
+                  [data-radix-dialog-close] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by aria-label */
+                  button[aria-label="Close"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by role and type */
+                  button[role="button"][type="button"]:has(svg):not([class*="bg-"]):not([class*="border-"]) {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by absolute positioning in top-right corner */
+                  [data-radix-dialog-content] > button.absolute {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by position and z-index patterns */
+                  [data-radix-dialog-content] button[style*="position: absolute"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by common close button class patterns */
+                  button[class*="close"]:not([class*="Clear"]):not([class*="clear"]) {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Hide by X icon content */
+                  button:has(svg):not([class*="bg-white"]):not([class*="Clear"]):not([class*="clear"]):not([class*="hover:bg-white"]) {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+                  
+                  /* Fallback: Hide any button in dialog that doesn't have our custom classes */
+                  [data-radix-dialog-content] > button:not([class*="bg-white"]):not([class*="gradient"]):not([class*="Clear"]):not([class*="clear"]):not([class*="border-white"]) {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                  }
+
+                `}</style>
+                
+                {/* Header */}
+                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+                  <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-purple-400" />
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                        <Plus className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold text-white">Create New Lesson</DialogTitle>
-                  <p className="text-sm text-slate-400 mt-1">Design and configure your educational content</p>
+                        <DialogTitle className="text-xl font-semibold text-white">Create New Lesson</DialogTitle>
+                      </div>
+                    </div>
+                                        <div className="flex items-center space-x-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormData(createEmptyFormData())}
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        Clear All
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsCreateDialogOpen(false)}
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                 </div>
               </div>
               </DialogHeader>
-          <div className="space-y-8 p-6">
-            {/* Primary Information */}
+
+                {/* Content */}
+                <div className="px-6 py-5 space-y-5">
+                  {/* Basic Information */}
               <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-purple-400" />
-                Lesson Details
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <BookOpen className="w-3 h-3 text-blue-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
+                    </div>
+                    
+                    {/* Lesson Name */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    Topic <span className="text-red-400">*</span>
+                      <label className="text-xs font-medium text-white/80 block">
+                        Lesson Name
+                      </label>
+                      <Input 
+                        placeholder="Enter lesson name" 
+                        value={formData.lessonName}
+                        onChange={(e) => setFormData({...formData, lessonName: e.target.value})}
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                      />
+                    </div>
+
+                    {/* Topic and Subject */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Topic
                   </label>
                 <Input 
                     placeholder="Enter lesson topic" 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
                   </div>
+                      
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    Subject <span className="text-red-400">*</span>
+                        <label className="text-xs font-medium text-white/80 block">
+                          Subject
                   </label>
-                <Input 
-                    placeholder="Enter subject" 
+                        <Select 
                   value={formData.subject}
-                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                />
-                  </div>
-                </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Subtopic</label>
-                <Input 
-                  placeholder="Enter subtopic (optional)" 
-                  value={formData.subtopic}
-                  onChange={(e) => setFormData({...formData, subtopic: e.target.value})}
-                  className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                />
+                          onValueChange={(value) => {
+                            setFormData({
+                              ...formData, 
+                              subject: value,
+                              program: ""
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select subject" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="Maths" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Maths
+                            </SelectItem>
+                            <SelectItem value="Biology" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Biology
+                            </SelectItem>
+                            <SelectItem value="Chemistry" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Chemistry
+                            </SelectItem>
+                            <SelectItem value="Physics" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Physics
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                   </div>
                 </div>
 
-            {/* Educational Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-400" />
-                Educational Info
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Teacher</label>
-                <Input 
-                    placeholder="Teacher name" 
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({...formData, teacher: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                />
-                  </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Week</label>
-                    <Input 
-                      type="number"
-                    placeholder="1-52" 
-                      min="1"
-                      max="52"
-                      value={formData.week}
-                      onChange={(e) => setFormData({...formData, week: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                    />
-                  </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Grade</label>
-                    <Input 
-                      type="number"
-                    placeholder="1-12" 
-                      min="1"
-                      max="12"
-                      value={formData.grade}
-                      onChange={(e) => setFormData({...formData, grade: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                    />
+                    {/* Program and Type */}
+                    <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Program
+                        </label>
+                        <Select 
+                          value={formData.program} 
+                          onValueChange={(value) => setFormData({...formData, program: value})}
+                          disabled={!formData.subject}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 disabled:opacity-50">
+                            <SelectValue placeholder={formData.subject ? "Select program" : "Select subject first"} />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            {formData.subject && SUBJECT_PROGRAMS[formData.subject as keyof typeof SUBJECT_PROGRAMS]?.map((program) => (
+                              <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                                {program}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Type
+                        </label>
+                        <Select 
+                          value={formData.type} 
+                          onValueChange={(value) => setFormData({...formData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="Lesson" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Lesson
+                            </SelectItem>
+                            <SelectItem value="Tutorial" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Tutorial
+                            </SelectItem>
+                            <SelectItem value="Workshop" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Workshop
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                   </div>
                 </div>
+
+                  {/* Schedule Information */}
+            <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-3 h-3 text-green-400" />
+                  </div>
+                      <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
+                  </div>
+                    
+                    {/* Date and Time */}
+                    <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Date
+                        </label>
+                    <Input 
+                          type="date"
+                          value={formData.scheduledDate}
+                          onChange={(e) => setFormData({...formData, scheduledDate: e.target.value})}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
+                    />
+                  </div>
+                      
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Program</label>
+                        <label className="text-xs font-medium text-white/80 block">
+                          Time
+                        </label>
                 <Input 
-                  placeholder="Program name"
-                  value={formData.program}
-                  onChange={(e) => setFormData({...formData, program: e.target.value})}
-                  className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
+                          type="time"
+                          value={formData.time}
+                          onChange={(e) => setFormData({...formData, time: e.target.value})}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
                 />
               </div>
             </div>
 
-            {/* Schedule & Media */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-green-400" />
-                Schedule & Media
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Duration and Teacher */}
+                    <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Status</label>
-                    <div className="relative">
-                      <select 
-                        value={formData.status} 
-                        onChange={(e) => {
-                          console.log('Status changed to:', e.target.value);
-                          setFormData({...formData, status: e.target.value as 'draft' | 'active'});
-                        }}
-                        className="w-full h-10 px-3 py-2 text-white bg-white/[0.03] border border-white/20 rounded-xl hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200 appearance-none cursor-pointer"
-                      >
-                        <option value="draft" className="bg-slate-800 text-white">📝 Draft</option>
-                        <option value="active" className="bg-slate-800 text-white">✅ Active</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none" />
-                    </div>
-                  </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Duration (minutes)</label>
+                        <label className="text-xs font-medium text-white/80 block">
+                          Duration (minutes)
+                        </label>
                   <Input 
                     type="number"
                     placeholder="60" 
@@ -1412,331 +1643,639 @@ export default function LessonsPage() {
                       const minutes = e.target.value
                       setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
                     }}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                  />
-                  {formData.duration && (
-                    <p className="text-xs text-blue-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formData.duration}
-                    </p>
-                  )}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                        />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Scheduled Date</label>
+                        <label className="text-xs font-medium text-white/80 block">
+                          Teacher
+                        </label>
                     <Input 
-                      type="date"
-                      value={formData.scheduledDate ? (() => {
-                        try {
-                          // Always expect ISO format (YYYY-MM-DD)
-                          const dateStr = formData.scheduledDate
-                          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                            return dateStr
-                          }
-                          // Try to parse other formats
-                          const parsed = new Date(dateStr)
-                          if (!isNaN(parsed.getTime())) {
-                            return parsed.toISOString().split('T')[0]
-                          }
-                          return ''
-                        } catch {
-                          return ''
-                        }
-                      })() : ''}
-                      onChange={(e) => {
-                        setFormData({...formData, scheduledDate: e.target.value})
-                      }}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                    />
-                    {formData.scheduledDate && (
-                    <p className="text-xs text-green-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {(() => {
-                        const d = new Date(formData.scheduledDate)
-                        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) : formData.scheduledDate
-                      })()}
-                      </p>
-                    )}
+                          placeholder="Enter teacher name" 
+                          value={formData.teacher}
+                          onChange={(e) => setFormData({...formData, teacher: e.target.value})}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                        />
                   </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Options */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <Settings className="w-3 h-3 text-orange-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Additional Options</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Video URL (Optional)</label>
+                        <label className="text-xs font-medium text-white/80 block">
+                          Status
+                        </label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value) => setFormData({...formData, status: value as 'draft' | 'active'})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Draft
+                            </SelectItem>
+                            <SelectItem value="active" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Active
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Video URL
+                        </label>
                 <Input 
-                  placeholder="YouTube/Vimeo URL" 
+                          placeholder="https://youtube.com/watch?v=..." 
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                    {/* Zoom Link */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Zoom Meeting Link (Optional)</label>
+                      <label className="text-xs font-medium text-white/80 block">
+                        Zoom Meeting Link
+                      </label>
                 <Input 
                   placeholder="https://zoom.us/j/123456789" 
                   value={formData.zoomLink}
                   onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
-                    className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                />
-                  {formData.zoomLink && (
-                    <p className="text-xs text-blue-400 flex items-center gap-1">
-                      <Video className="w-3 h-3" />
-                      Live meeting configured
-                    </p>
-                  )}
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                      />
                 </div>
-                <div className="space-y-2">
-                  {/* Empty space for layout balance */}
-                </div>
-                
-
                 </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/10">
+                {/* Footer */}
+                <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
               <Button 
                 variant="outline" 
                 onClick={() => setIsCreateDialogOpen(false)} 
-                className="flex-1 sm:flex-none bg-white/5 border border-white/20 text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                    className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                             h-9 px-4 rounded-lg text-sm transition-all duration-200"
               >
-                <X className="w-4 h-4 mr-2" />
+                    <X className="w-3 h-3 mr-1" />
                     Cancel
                   </Button>
               <Button 
-                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
+                             text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
+                             transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={handleCreateLesson}
-                disabled={!formData.title || !formData.subject}
+                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !formData.duration || !formData.teacher}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-3 h-3 mr-1" />
                 Create Lesson
               </Button>
-            </div>
-                </div>
               </div>
             </DialogContent>
           </Dialog>
 
       {/* Enhanced Edit Lesson Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+          <style jsx global>{`
+            [data-radix-select-content] {
+              z-index: 999999 !important;
+            }
+            .glass-input:focus {
+              outline: none !important;
+              border-color: rgba(255, 255, 255, 0.4) !important;
+              box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+            }
+            .glass-select-trigger:focus {
+              outline: none !important;
+              border-color: rgba(255, 255, 255, 0.4) !important;
+              box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+            }
+            input[type="date"]::-webkit-calendar-picker-indicator {
+              background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") center/contain no-repeat;
+              background-color: rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              cursor: pointer;
+              padding: 8px;
+              transition: all 0.2s ease;
+              width: 20px;
+              height: 20px;
+            }
+            input[type="time"]::-webkit-calendar-picker-indicator {
+              background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12,6 12,12 16,14'/%3E%3C/svg%3E") center/contain no-repeat;
+              background-color: rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              cursor: pointer;
+              padding: 8px;
+              transition: all 0.2s ease;
+              width: 20px;
+              height: 20px;
+            }
+            input[type="date"]::-webkit-calendar-picker-indicator:hover,
+            input[type="time"]::-webkit-calendar-picker-indicator:hover {
+              background-color: rgba(255, 255, 255, 0.2);
+              transform: scale(1.05);
+            }
+            input[type="date"],
+            input[type="time"] {
+              color-scheme: dark;
+            }
+            
+            /* COMPREHENSIVE DIALOG CLOSE BUTTON HIDING - Edit Dialog */
+            
+            /* Hide by Radix UI data attributes */
+            [data-radix-dialog-close] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by aria-label */
+            button[aria-label="Close"] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by role and type */
+            button[role="button"][type="button"]:has(svg):not([class*="bg-"]):not([class*="border-"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by absolute positioning in top-right corner */
+            [data-radix-dialog-content] > button.absolute {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by position and z-index patterns */
+            [data-radix-dialog-content] button[style*="position: absolute"] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by common close button class patterns */
+            button[class*="close"]:not([class*="Clear"]):not([class*="clear"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Hide by X icon content */
+            button:has(svg):not([class*="bg-"]):not([class*="Clear"]):not([class*="clear"]):not([class*="hover:bg-"]):not([class*="gradient"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+            
+            /* Fallback: Hide any button in dialog that doesn't have our custom classes */
+            [data-radix-dialog-content] > button:not([class*="bg-"]):not([class*="gradient"]):not([class*="Clear"]):not([class*="clear"]):not([class*="border-"]):not([class*="outline"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+          `}</style>
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-yellow-500/10 rounded-3xl"></div>
           <div className="relative">
-            <DialogHeader className="pb-6 border-b border-white/10">
+                {/* Header */}
+                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+                  <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 rounded-xl flex items-center justify-center">
-                  <Edit className="w-5 h-5 text-orange-400" />
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                        <Edit className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold text-white">Edit Lesson</DialogTitle>
-                  <p className="text-sm text-slate-400 mt-1">Update and modify lesson content</p>
+                        <DialogTitle className="text-xl font-semibold text-white">Edit Lesson</DialogTitle>
+                      </div>
+                    </div>
+                                        <div className="flex items-center space-x-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormData(createEmptyFormData())}
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        Clear All
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditDialogOpen(false)}
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                 </div>
               </div>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Topic</label>
+              </DialogHeader>
+
+                {/* Content */}
+                <div className="px-6 py-5 space-y-5">
+                  {/* Basic Information */}
+              <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <BookOpen className="w-3 h-3 text-blue-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
+                    </div>
+                    
+                    {/* Lesson Name */}
+                <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">
+                        Lesson Name
+                      </label>
+                      <Input 
+                        placeholder="Enter lesson name" 
+                        value={formData.lessonName}
+                        onChange={(e) => setFormData({...formData, lessonName: e.target.value})}
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                      />
+                    </div>
+
+                    {/* Topic and Subject */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Topic
+                  </label>
                 <Input 
-                  placeholder="Topic" 
+                    placeholder="Enter lesson topic" 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="glass-card border-white/20" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
-        </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Subject</label>
-                <Input 
-                  placeholder="Subject" 
+                  </div>
+                      
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Subject
+                  </label>
+                        <Select 
                   value={formData.subject}
-                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-      </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Subtopic</label>
-                <Input 
-                  placeholder="Subtopic (optional)" 
-                  value={formData.subtopic}
-                  onChange={(e) => setFormData({...formData, subtopic: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Teacher</label>
-                <Input 
-                  placeholder="Teacher name" 
-                  value={formData.teacher}
-                  onChange={(e) => setFormData({...formData, teacher: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Week</label>
-                <Input 
-                  type="number"
-                  placeholder="1" 
-                  min="1"
-                  max="52"
-                  value={formData.week}
-                  onChange={(e) => setFormData({...formData, week: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Grade</label>
-                <Input 
-                  type="number"
-                  placeholder="10" 
-                  min="1"
-                  max="12"
-                  value={formData.grade}
-                  onChange={(e) => setFormData({...formData, grade: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <div className="relative">
-                  <select 
-                    value={formData.status} 
-                    onChange={(e) => {
-                      console.log('Status changed to:', e.target.value);
-                      setFormData({...formData, status: e.target.value as 'draft' | 'active'});
-                    }}
-                    className="glass-card border-white/20 w-full h-10 px-3 py-2 text-white bg-white/[0.03] border border-white/20 rounded-xl hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200 appearance-none cursor-pointer"
-                  >
-                    <option value="draft" className="bg-slate-800 text-white">📝 Draft</option>
-                    <option value="active" className="bg-slate-800 text-white">✅ Active</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none" />
+                          onValueChange={(value) => {
+                            setFormData({
+                              ...formData, 
+                              subject: value,
+                              program: ""
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select subject" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="Maths" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Maths
+                            </SelectItem>
+                            <SelectItem value="Biology" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Biology
+                            </SelectItem>
+                            <SelectItem value="Chemistry" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Chemistry
+                            </SelectItem>
+                            <SelectItem value="Physics" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Physics
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Scheduled Date</label>
+
+                    {/* Program and Type */}
+                    <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Program
+                        </label>
+                        <Select 
+                          value={formData.program} 
+                          onValueChange={(value) => setFormData({...formData, program: value})}
+                          disabled={!formData.subject}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 disabled:opacity-50">
+                            <SelectValue placeholder={formData.subject ? "Select program" : "Select subject first"} />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            {formData.subject && SUBJECT_PROGRAMS[formData.subject as keyof typeof SUBJECT_PROGRAMS]?.map((program) => (
+                              <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                                {program}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Type
+                        </label>
+                        <Select 
+                          value={formData.type} 
+                          onValueChange={(value) => setFormData({...formData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="Lesson" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Lesson
+                            </SelectItem>
+                            <SelectItem value="Tutorial" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Tutorial
+                            </SelectItem>
+                            <SelectItem value="Workshop" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Workshop
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                  </div>
+                </div>
+
+                  {/* Schedule Information */}
+            <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-3 h-3 text-green-400" />
+                  </div>
+                      <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
+                  </div>
+                    
+                    {/* Date and Time */}
+                    <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Date
+                        </label>
+                    <Input 
+                          type="date"
+                          value={formData.scheduledDate ? (() => {
+                            try {
+                              // Always expect ISO format (YYYY-MM-DD)
+                              const dateStr = formData.scheduledDate
+                              if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                                return dateStr
+                              }
+                              // Try to parse other formats
+                              const parsed = new Date(dateStr)
+                              if (!isNaN(parsed.getTime())) {
+                                return parsed.toISOString().split('T')[0]
+                              }
+                              return ''
+                            } catch {
+                              return ''
+                            }
+                          })() : ''}
+                          onChange={(e) => {
+                            setFormData({...formData, scheduledDate: e.target.value})
+                          }}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
+                    />
+                  </div>
+                      
+              <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Time
+                        </label>
                 <Input 
-                  type="date"
-                  value={formData.scheduledDate ? (() => {
-                    try {
-                      // Always expect ISO format (YYYY-MM-DD)
-                      const dateStr = formData.scheduledDate
-                      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                        return dateStr
-                      }
-                      // Try to parse other formats
-                      const parsed = new Date(dateStr)
-                      if (!isNaN(parsed.getTime())) {
-                        return parsed.toISOString().split('T')[0]
-                      }
-                      return ''
-                    } catch {
-                      return ''
-                    }
-                  })() : ''}
-                  onChange={(e) => {
-                    setFormData({...formData, scheduledDate: e.target.value})
-                  }}
-                  className="bg-white/[0.03] border border-white/20 rounded-xl text-white hover:bg-white/[0.05] focus:border-purple-400/50 transition-all duration-200" 
-                  />
-                  {formData.scheduledDate && (
-                    <p className="text-xs text-green-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {(() => {
-                        const d = new Date(formData.scheduledDate)
-                        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) : formData.scheduledDate
-                      })()}
-                      </p>
-                    )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Duration (minutes)</label>
-                <Input 
-                  type="number"
-                  placeholder="minutes" 
-                  min="1"
-                  max="300"
-                  value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
-                  onChange={(e) => {
-                    const minutes = e.target.value
-                    setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
-                  }}
-                  className="glass-card border-white/20" 
+                          type="time"
+                          value={formData.time || ''}
+                          onChange={(e) => setFormData({...formData, time: e.target.value})}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
                 />
-                {formData.duration && (
-                  <p className="text-xs text-blue-400 mt-1">
-                    ⏱️ {formData.duration}
-                  </p>
-                )}
               </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Video URL (Optional)</label>
+            </div>
+
+                    {/* Duration and Teacher */}
+                    <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Duration (minutes)
+                        </label>
+                  <Input 
+                    type="number"
+                    placeholder="60" 
+                    min="1"
+                    max="300"
+                    value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
+                    onChange={(e) => {
+                      const minutes = e.target.value
+                      setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
+                    }}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                        />
+                </div>
+                      
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Teacher
+                        </label>
+                    <Input 
+                          placeholder="Enter teacher name" 
+                          value={formData.teacher}
+                          onChange={(e) => setFormData({...formData, teacher: e.target.value})}
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                        />
+                  </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Options */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <Settings className="w-3 h-3 text-orange-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Additional Options</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Status
+                        </label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value) => setFormData({...formData, status: value as 'draft' | 'active'})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                            style={{ zIndex: 999999 }}
+                          >
+                            <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Draft
+                            </SelectItem>
+                            <SelectItem value="active" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              Active
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Video URL
+                        </label>
                 <Input 
-                  placeholder="YouTube/Vimeo URL" 
+                          placeholder="https://youtube.com/watch?v=..." 
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                  className="glass-card border-white/20" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Zoom Meeting Link (Optional)</label>
+
+                    {/* Zoom Link */}
+                <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">
+                        Zoom Meeting Link
+                      </label>
                 <Input 
                   placeholder="https://zoom.us/j/123456789" 
                   value={formData.zoomLink}
                   onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-                {formData.zoomLink && (
-                  <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
-                    <Video className="w-3 h-3" />
-                    Live meeting configured
-                  </p>
-                )}
-              </div>
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                      />
+                </div>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Program</label>
-                <Input 
-                  placeholder="Program name"
-                  value={formData.program}
-                  onChange={(e) => setFormData({...formData, program: e.target.value})}
-                  className="glass-card border-white/20" 
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
+                {/* Footer */}
+                <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
               <Button 
-                className="bg-gradient-to-r from-green-500 to-green-600"
-                onClick={handleUpdateLesson}
-                disabled={!formData.title || !formData.subject}
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)} 
+                    className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                             h-9 px-4 rounded-lg text-sm transition-all duration-200"
               >
+                    <X className="w-3 h-3 mr-1" />
+                    Cancel
+                  </Button>
+              <Button 
+                    className="bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 
+                             text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
+                             transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
+                onClick={handleUpdateLesson}
+                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !formData.duration || !formData.teacher}
+              >
+                    <Edit className="w-3 h-3 mr-1" />
                 Update Lesson
               </Button>
-            </div>
-            </div>
+              </div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Enhanced View Lesson Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+          <style jsx global>{`
+            /* COMPLETELY HIDE DEFAULT DIALOG CLOSE BUTTON - NUCLEAR APPROACH */
+            
+            /* Primary targeting: Hide any button that is auto-generated by Dialog without our classes */
+            [data-radix-dialog-content] > button:not([class*="bg-"]):not([class*="border-"]):not([class*="outline"]):not([class*="variant"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              left: -9999px !important;
+              top: -9999px !important;
+            }
+            
+            /* Secondary targeting: Hide by common attributes */
+            button[aria-label="Close"],
+            button[data-radix-dialog-close],
+            [data-dialog-close] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              left: -9999px !important;
+              top: -9999px !important;
+            }
+            
+            /* Tertiary targeting: Hide by structure and position */
+            [data-radix-dialog-content] button.absolute:not([class*="bg-white"]):not([class*="bg-gradient"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              left: -9999px !important;
+              top: -9999px !important;
+            }
+            
+            /* Nuclear option: Hide any button with X icon that's not one of ours */
+            button[type="button"]:not([class*="Clear"]):not([class*="bg-white"]):not([class*="bg-gradient"]):not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-orange"]) {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              left: -9999px !important;
+              top: -9999px !important;
+            }
+          `}</style>
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-green-500/10 rounded-3xl"></div>
           <div className="relative">
             <DialogHeader className="pb-6 border-b border-white/10">
@@ -1765,16 +2304,18 @@ export default function LessonsPage() {
                     </Badge>
                   </div>
 
-                  {selectedLesson.subtopic && (
+                  {selectedLesson.lessonName && (
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Subtopic</h3>
-                      <p className="text-sm">{selectedLesson.subtopic}</p>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Lesson Name</h3>
+                      <p className="text-sm">{selectedLesson.lessonName}</p>
                     </div>
                   )}
-                  {selectedLesson.grade && (
+                  {selectedLesson.type && (
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Grade</h3>
-                      <p className="text-sm">Grade {selectedLesson.grade}</p>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Type</h3>
+                      <Badge variant="outline">
+                        {selectedLesson.type}
+                      </Badge>
                     </div>
                   )}
                 </div>
