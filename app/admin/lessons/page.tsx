@@ -36,13 +36,7 @@ interface Lesson {
   grade?: string
 }
 
-interface LessonStats {
-  totalLessons: number
-  activeLessons: number
-  draftLessons: number
-  totalTeachers: number
-  subjectBreakdown: { subject: string; count: number }[]
-}
+
 
 interface PaginatedLessons {
   lessons: Lesson[]
@@ -137,7 +131,6 @@ export default function LessonsPage() {
   // Core data states
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<LessonStats | null>(null)
   const [subjects, setSubjects] = useState<string[]>([])
   const [teachers, setTeachers] = useState<string[]>([])
   
@@ -226,18 +219,7 @@ export default function LessonsPage() {
     }
   }
 
-  // Fetch stats
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/admin/lessons/stats')
-      if (response.ok) {
-        const data = await response.json()
-        setStats(data)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    }
-  }
+
 
 
 
@@ -248,7 +230,6 @@ export default function LessonsPage() {
 
   useEffect(() => {
     fetchFilterOptions()
-    fetchStats()
   }, [])
 
   // CRUD Operations with optimized error handling
@@ -276,7 +257,6 @@ export default function LessonsPage() {
       // Refresh data and filters
       await Promise.all([
         fetchLessons(),
-        fetchStats(),
         fetchFilterOptions()
       ])
     } catch (error) {
@@ -312,7 +292,6 @@ export default function LessonsPage() {
       // Refresh data and filters
       await Promise.all([
         fetchLessons(),
-        fetchStats(),
         fetchFilterOptions()
       ])
     } catch (error) {
@@ -336,7 +315,6 @@ export default function LessonsPage() {
       // Refresh data and filters
       await Promise.all([
         fetchLessons(),
-        fetchStats(),
         fetchFilterOptions()
       ])
     } catch (error) {
@@ -448,7 +426,6 @@ export default function LessonsPage() {
       // Refresh data and filters
       await Promise.all([
         fetchLessons(),
-        fetchStats(),
         fetchFilterOptions()
       ])
     } catch (error) {
@@ -502,7 +479,6 @@ export default function LessonsPage() {
       // Refresh data and filters
       await Promise.all([
         fetchLessons(),
-        fetchStats(),
         fetchFilterOptions()
       ])
     } catch (error) {
@@ -578,85 +554,6 @@ export default function LessonsPage() {
           </p>
           <div className="mt-4 h-1 w-32 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mx-auto animate-pulse"></div>
         </div>
-
-              {/* Enhanced Stats with Hover Effects */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-12">
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-blue-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                  <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Total Lessons</p>
-                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalLessons || 0}</p>
-                  <div className="text-xs text-blue-400 mt-1 flex items-center gap-1">
-                    <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
-                    All content
-              </div>
-            </div>
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <BookOpen className="w-5 h-5 lg:w-7 lg:h-7 text-blue-400" />
-                </div>
-              </div>
-        </Card>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-green-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                  <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Active</p>
-                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.activeLessons || 0}</p>
-                  <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                    Published
-              </div>
-            </div>
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Play className="w-5 h-5 lg:w-7 lg:h-7 text-green-400" />
-                </div>
-              </div>
-        </Card>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-yellow-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                  <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Draft</p>
-                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.draftLessons || 0}</p>
-                  <div className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
-                    <div className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></div>
-                    In progress
-              </div>
-            </div>
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="w-5 h-5 lg:w-7 lg:h-7 text-yellow-400" />
-                </div>
-              </div>
-        </Card>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-            <Card className="relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-3 lg:p-6 hover:bg-white/[0.05] transition-all duration-300 hover:scale-105 hover:border-purple-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                  <p className="text-xs lg:text-sm text-slate-400 font-medium mb-1">Teachers</p>
-                  <p className="text-xl lg:text-3xl font-bold text-white counter-animation">{stats?.totalTeachers || 0}</p>
-                  <div className="text-xs text-purple-400 mt-1 flex items-center gap-1">
-                    <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
-                    Educators
-              </div>
-            </div>
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-5 h-5 lg:w-7 lg:h-7 text-purple-400" />
-                </div>
-              </div>
-        </Card>
-          </div>
-      </div>
 
 
 
@@ -879,6 +776,34 @@ export default function LessonsPage() {
 
             {/* Action Buttons - Mobile Optimized */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
+                             hover:bg-purple-500/20 hover:border-purple-400/50 
+                             focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
+                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                  >
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span>Create</span>
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+              
+              <Link href="/admin/lessons/import" className="block">
+                <Button 
+                  variant="outline" 
+                  className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
+                           hover:bg-green-500/20 hover:border-green-400/50 
+                           focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
+                           rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                >
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span>Import</span>
+                </Button>
+              </Link>
+              
               <Button 
                 variant="outline" 
                 onClick={handleExportLessons}
@@ -908,34 +833,6 @@ export default function LessonsPage() {
                 )}
                 <span>Delete</span>
               </Button>
-              
-              <Link href="/admin/lessons/import" className="block">
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
-                           hover:bg-green-500/20 hover:border-green-400/50 
-                           focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
-                           rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
-                >
-                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span>Import</span>
-                </Button>
-              </Link>
-              
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
-                             hover:bg-purple-500/20 hover:border-purple-400/50 
-                             focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
-                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    <span>Create</span>
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
             </div>
 
 
