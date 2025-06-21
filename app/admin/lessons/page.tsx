@@ -1541,32 +1541,31 @@ export default function LessonsPage() {
                 `}</style>
                 
                 {/* Header */}
-                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 -m-4 sm:-m-6 mb-0 border-b border-white/10">
+                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
                   <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                        <Plus className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                        <DialogTitle className="text-lg sm:text-xl font-semibold text-white">Create New Lesson</DialogTitle>
+                        <DialogTitle className="text-xl font-semibold text-white">Create New Lesson</DialogTitle>
                       </div>
                     </div>
-                                        <div className="flex items-center space-x-2 sm:space-x-3">
+                                        <div className="flex items-center space-x-3">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setFormData(createEmptyFormData())}
-                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-7 sm:h-8 px-2 sm:px-3 text-xs transition-all duration-200"
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
                       >
                         <RotateCcw className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Clear All</span>
-                        <span className="sm:hidden">Clear</span>
+                        Clear All
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsCreateDialogOpen(false)}
-                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-7 w-7 sm:h-8 sm:w-8 p-0 transition-all duration-200"
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1575,11 +1574,11 @@ export default function LessonsPage() {
               </DialogHeader>
 
                 {/* Content */}
-                <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
+                <div className="px-6 py-5 space-y-5">
                   {/* Basic Information */}
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
                         <BookOpen className="w-3 h-3 text-blue-400" />
                       </div>
                       <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
@@ -1594,13 +1593,13 @@ export default function LessonsPage() {
                         placeholder="Enter lesson name" 
                         value={formData.lessonName}
                         onChange={(e) => setFormData({...formData, lessonName: e.target.value})}
-                        className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                       />
                     </div>
 
                     {/* Topic and Subject */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Topic
@@ -1654,7 +1653,7 @@ export default function LessonsPage() {
                 </div>
 
                     {/* Program and Type */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Program
@@ -1713,16 +1712,16 @@ export default function LessonsPage() {
                 </div>
 
                   {/* Schedule Information */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
                         <Calendar className="w-3 h-3 text-green-400" />
                   </div>
                       <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
                   </div>
                     
                     {/* Date and Time */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Date
@@ -1751,7 +1750,7 @@ export default function LessonsPage() {
             </div>
 
                     {/* Duration and Teacher */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Duration (minutes)
@@ -1766,7 +1765,7 @@ export default function LessonsPage() {
                       const minutes = e.target.value
                       setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
                     }}
-                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                         />
                 </div>
@@ -1779,7 +1778,7 @@ export default function LessonsPage() {
                           placeholder="Enter teacher name" 
                           value={formData.teacher}
                           onChange={(e) => setFormData({...formData, teacher: e.target.value})}
-                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                         />
                   </div>
@@ -1787,15 +1786,15 @@ export default function LessonsPage() {
                   </div>
 
                   {/* Additional Options */}
-                  <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
                         <Settings className="w-3 h-3 text-orange-400" />
                       </div>
                       <h3 className="text-sm font-medium text-white/90">Additional Options</h3>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Status
@@ -1830,7 +1829,7 @@ export default function LessonsPage() {
                           placeholder="https://youtube.com/watch?v=..." 
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                          className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
                 </div>
@@ -1845,7 +1844,7 @@ export default function LessonsPage() {
                   placeholder="https://zoom.us/j/123456789" 
                   value={formData.zoomLink}
                   onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
-                        className="glass-input h-9 sm:h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                        className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                       />
                 </div>
@@ -1853,7 +1852,7 @@ export default function LessonsPage() {
             </div>
 
                 {/* Footer */}
-                <div className="bg-slate-900/50 backdrop-blur-xl px-4 sm:px-6 py-3 sm:py-4 -m-4 sm:-m-6 mt-0 border-t border-white/10 flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
               <Button 
                 variant="outline" 
                 onClick={() => setIsCreateDialogOpen(false)} 
@@ -2440,25 +2439,25 @@ export default function LessonsPage() {
 
                     {/* Lesson Name - Full Width */}
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/60 block">Lesson Name</label>
-                      <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                        <p className="text-sm text-white font-medium">{selectedLesson.lessonName || 'Not specified'}</p>
+                      <label className="text-xs font-medium text-white/80 block">Lesson Name</label>
+                      <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                        {selectedLesson.lessonName || 'Not specified'}
                     </div>
                     </div>
 
                     {/* Topic and Subject - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Topic</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white font-medium">{selectedLesson.topic}</p>
+                        <label className="text-xs font-medium text-white/80 block">Topic</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          {selectedLesson.topic}
                 </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Subject</label>
-                        <div className="p-3 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 rounded-lg">
-                          <p className="text-sm text-blue-300 font-medium">{selectedLesson.subject}</p>
+                        <label className="text-xs font-medium text-white/80 block">Subject</label>
+                        <div className="glass-input h-9 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 text-blue-300 rounded-lg text-sm transition-all duration-200 flex items-center px-3 font-medium">
+                          {selectedLesson.subject}
                         </div>
                       </div>
                     </div>
@@ -2466,16 +2465,16 @@ export default function LessonsPage() {
                     {/* Program and Type - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Program</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white">{selectedLesson.program || 'Not specified'}</p>
+                        <label className="text-xs font-medium text-white/80 block">Program</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          {selectedLesson.program || 'Not specified'}
                         </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Type</label>
-                        <div className="p-3 bg-purple-500/10 backdrop-blur-sm border border-purple-400/30 rounded-lg">
-                          <p className="text-sm text-purple-300 font-medium">{selectedLesson.type || 'Lesson'}</p>
+                        <label className="text-xs font-medium text-white/80 block">Type</label>
+                        <div className="glass-input h-9 bg-purple-500/10 backdrop-blur-sm border border-purple-400/30 text-purple-300 rounded-lg text-sm transition-all duration-200 flex items-center px-3 font-medium">
+                          {selectedLesson.type || 'Lesson'}
                         </div>
                       </div>
                     </div>
@@ -2493,20 +2492,18 @@ export default function LessonsPage() {
                     {/* Date and Time - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Date</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                        <label className="text-xs font-medium text-white/80 block">Date</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3 gap-2">
                           <Calendar className="w-3 h-3 text-green-400" />
-                          <p className="text-sm text-white">
-                            {selectedLesson.scheduledDate ? new Date(selectedLesson.scheduledDate).toLocaleDateString() : 'Not scheduled'}
-                          </p>
+                          {selectedLesson.scheduledDate ? new Date(selectedLesson.scheduledDate).toLocaleDateString() : 'Not scheduled'}
                     </div>
                   </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Time</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                        <label className="text-xs font-medium text-white/80 block">Time</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3 gap-2">
                           <Clock className="w-3 h-3 text-green-400" />
-                          <p className="text-sm text-white">{selectedLesson.time || 'Not specified'}</p>
+                          {selectedLesson.time || 'Not specified'}
                     </div>
                       </div>
                     </div>
@@ -2514,17 +2511,17 @@ export default function LessonsPage() {
                     {/* Duration and Teacher - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Duration (minutes)</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                        <label className="text-xs font-medium text-white/80 block">Duration (minutes)</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3 gap-2">
                           <Clock className="w-3 h-3 text-purple-400" />
-                          <p className="text-sm text-white">{selectedLesson.duration || 'Not specified'}</p>
+                          {selectedLesson.duration || 'Not specified'}
                         </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Teacher</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white">{selectedLesson.teacher || 'Not assigned'}</p>
+                        <label className="text-xs font-medium text-white/80 block">Teacher</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          {selectedLesson.teacher || 'Not assigned'}
                         </div>
                       </div>
                     </div>
@@ -2542,33 +2539,29 @@ export default function LessonsPage() {
                     {/* Status and Video URL - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Status</label>
-                        <div className={`p-3 backdrop-blur-sm border rounded-lg flex items-center gap-2 ${
+                        <label className="text-xs font-medium text-white/80 block">Status</label>
+                        <div className={`glass-input h-9 backdrop-blur-sm border rounded-lg text-sm transition-all duration-200 flex items-center px-3 gap-2 font-medium ${
                         selectedLesson.status === 'active' 
-                            ? 'bg-green-500/10 border-green-400/30' 
-                            : 'bg-yellow-500/10 border-yellow-400/30'
+                            ? 'bg-green-500/10 border-green-400/30 text-green-300' 
+                            : 'bg-yellow-500/10 border-yellow-400/30 text-yellow-300'
                         }`}>
                       <div className={`w-2 h-2 rounded-full ${
                         selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
                       }`}></div>
-                          <p className={`text-sm font-medium ${
-                            selectedLesson.status === 'active' ? 'text-green-300' : 'text-yellow-300'
-                          }`}>
                       {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
-                          </p>
                         </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Video URL</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                        <label className="text-xs font-medium text-white/80 block">Video URL</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
                           {selectedLesson.videoUrl ? (
-                            <div className="flex items-center gap-2">
-                              <Play className="w-3 h-3 text-purple-400" />
-                              <p className="text-sm text-white truncate">{selectedLesson.videoUrl}</p>
+                            <div className="flex items-center gap-2 w-full">
+                              <Play className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                              <span className="truncate">{selectedLesson.videoUrl}</span>
                             </div>
                           ) : (
-                            <p className="text-sm text-white/60">No video URL provided</p>
+                            'No video URL provided'
                           )}
                   </div>
                 </div>
@@ -2576,22 +2569,22 @@ export default function LessonsPage() {
               
                     {/* Zoom Meeting Link - Full Width */}
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/60 block">Zoom Meeting Link</label>
+                      <label className="text-xs font-medium text-white/80 block">Zoom Meeting Link</label>
                       {selectedLesson.zoomLink ? (
-                        <div className="p-3 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 rounded-lg flex items-center gap-2">
-                          <Video className="w-3 h-3 text-blue-400" />
-                          <span className="text-sm text-blue-300 flex-1">Zoom Meeting Available</span>
+                        <div className="glass-input h-9 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 text-blue-300 rounded-lg text-sm transition-all duration-200 flex items-center px-3 gap-2">
+                          <Video className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                          <span className="flex-1 truncate">Zoom Meeting Available</span>
                           <Button 
                             size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-3 text-xs"
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-3 text-xs ml-2"
                             onClick={() => window.open(selectedLesson.zoomLink, '_blank')}
                           >
                             Join Meeting
                           </Button>
                         </div>
                       ) : (
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white/60">No Zoom meeting link provided</p>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white/60 rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          No Zoom meeting link provided
                         </div>
                       )}
                     </div>
@@ -2608,7 +2601,7 @@ export default function LessonsPage() {
                     </div>
                   
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/60 block">Video Content</label>
+                      <label className="text-xs font-medium text-white/80 block">Video Content</label>
                       <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/20">
                           <iframe
                             src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
@@ -2633,10 +2626,9 @@ export default function LessonsPage() {
                     
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Created</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white">
-                            {new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
+                        <label className="text-xs font-medium text-white/80 block">Created</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          {new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: '2-digit', 
                     year: 'numeric' 
@@ -2645,15 +2637,13 @@ export default function LessonsPage() {
                     minute: '2-digit', 
                     hour12: true 
                             })}
-                          </p>
                 </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-white/60 block">Last Updated</label>
-                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white">
-                            {new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
+                        <label className="text-xs font-medium text-white/80 block">Last Updated</label>
+                        <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                          {new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: '2-digit', 
                     year: 'numeric' 
@@ -2662,7 +2652,6 @@ export default function LessonsPage() {
                     minute: '2-digit', 
                     hour12: true 
                             })}
-                          </p>
                         </div>
                       </div>
                     </div>
