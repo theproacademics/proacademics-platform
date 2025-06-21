@@ -109,6 +109,12 @@ interface LessonFormData {
   status: 'draft' | 'active'
 }
 
+// Time validation utility function
+const isValidTimeFormat = (time: string): boolean => {
+  const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*(AM|PM)$/i;
+  return timeRegex.test(time);
+};
+
 // Utility functions
 const createEmptyFormData = (): LessonFormData => ({
   lessonName: "",
@@ -436,6 +442,7 @@ export default function LessonsPage() {
       time: lesson.time || "",
       status: lesson.status || "draft"
     })
+
     setIsEditDialogOpen(true)
   }, [])
 
@@ -950,9 +957,16 @@ export default function LessonsPage() {
                 >
                   <div className="flex items-center gap-2">
                     <Trash2 className="w-4 h-4 text-red-400" />
-                    <span className="font-medium">
-                      {totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
+                      </span>
+                      {totalLessons > 0 && (
+                        <span className="text-xs text-red-300/80 mt-1">
+                          ⚠️ This action cannot be undone
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -1459,25 +1473,9 @@ export default function LessonsPage() {
                     width: 20px;
                     height: 20px;
                   }
-                  input[type="time"]::-webkit-calendar-picker-indicator {
-                    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12,6 12,12 16,14'/%3E%3C/svg%3E") center/contain no-repeat;
-                    background-color: rgba(255, 255, 255, 0.1);
-                    border-radius: 6px;
-                    cursor: pointer;
-                    padding: 8px;
-                    transition: all 0.2s ease;
-                    width: 20px;
-                    height: 20px;
-                  }
-                  input[type="date"]::-webkit-calendar-picker-indicator:hover,
-                  input[type="time"]::-webkit-calendar-picker-indicator:hover {
-                    background-color: rgba(255, 255, 255, 0.2);
-                    transform: scale(1.05);
-                  }
-                  input[type="date"],
-                  input[type="time"] {
-                    color-scheme: dark;
-                  }
+                              input[type="date"] {
+              color-scheme: dark;
+            }
                   
                   /* COMPREHENSIVE DIALOG CLOSE BUTTON HIDING - Multiple targeting approaches */
                   
@@ -1660,7 +1658,7 @@ export default function LessonsPage() {
                 </div>
 
                     {/* Description */}
-                    <div className="space-y-2">
+              <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">
                         Description
                       </label>
@@ -1672,11 +1670,11 @@ export default function LessonsPage() {
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
                         rows={3}
                       />
-                    </div>
+                </div>
 
                     {/* Program and Type */}
                     <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+                <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Program
                         </label>
@@ -1700,9 +1698,9 @@ export default function LessonsPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
+                  </div>
                       
-                      <div className="space-y-2">
+                <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Type
                         </label>
@@ -1729,7 +1727,7 @@ export default function LessonsPage() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
+                  </div>
                   </div>
                 </div>
 
@@ -1762,11 +1760,12 @@ export default function LessonsPage() {
                           Time
                         </label>
                 <Input 
-                          type="time"
+                          type="text"
+                          placeholder="e.g., 2:30 PM"
                           value={formData.time}
                           onChange={(e) => setFormData({...formData, time: e.target.value})}
-                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
-                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
               </div>
             </div>
@@ -1889,7 +1888,7 @@ export default function LessonsPage() {
                              text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                              transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={handleCreateLesson}
-                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !formData.duration || !formData.teacher}
+                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !isValidTimeFormat(formData.time) || !formData.duration || !formData.teacher}
               >
                     <Plus className="w-3 h-3 mr-1" />
                 Create Lesson
@@ -1925,23 +1924,7 @@ export default function LessonsPage() {
               width: 20px;
               height: 20px;
             }
-            input[type="time"]::-webkit-calendar-picker-indicator {
-              background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12,6 12,12 16,14'/%3E%3C/svg%3E") center/contain no-repeat;
-              background-color: rgba(255, 255, 255, 0.1);
-              border-radius: 6px;
-              cursor: pointer;
-              padding: 8px;
-              transition: all 0.2s ease;
-              width: 20px;
-              height: 20px;
-            }
-            input[type="date"]::-webkit-calendar-picker-indicator:hover,
-            input[type="time"]::-webkit-calendar-picker-indicator:hover {
-              background-color: rgba(255, 255, 255, 0.2);
-              transform: scale(1.05);
-            }
-            input[type="date"],
-            input[type="time"] {
+            input[type="date"] {
               color-scheme: dark;
             }
             
@@ -2069,7 +2052,7 @@ export default function LessonsPage() {
                         className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
-              </div>
+      </div>
 
                     {/* Topic and Subject */}
                     <div className="grid grid-cols-2 gap-4">
@@ -2122,7 +2105,7 @@ export default function LessonsPage() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-              </div>
+            </div>
               </div>
 
                     {/* Description */}
@@ -2137,8 +2120,8 @@ export default function LessonsPage() {
                         className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
                         rows={3}
-                      />
-                    </div>
+                />
+              </div>
 
                     {/* Program and Type */}
                     <div className="grid grid-cols-2 gap-4">
@@ -2166,7 +2149,7 @@ export default function LessonsPage() {
                             ))}
                           </SelectContent>
                         </Select>
-            </div>
+              </div>
                       
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
@@ -2246,11 +2229,12 @@ export default function LessonsPage() {
                           Time
                         </label>
                 <Input 
-                          type="time"
+                          type="text"
+                          placeholder="e.g., 2:30 PM"
                           value={formData.time || ''}
                           onChange={(e) => setFormData({...formData, time: e.target.value})}
-                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
-                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
+                          className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
             </div>
             </div>
@@ -2373,7 +2357,7 @@ export default function LessonsPage() {
                              text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                              transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={handleUpdateLesson}
-                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !formData.duration || !formData.teacher}
+                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !isValidTimeFormat(formData.time) || !formData.duration || !formData.teacher}
               >
                     <Edit className="w-3 h-3 mr-1" />
                 Update Lesson
@@ -2383,8 +2367,8 @@ export default function LessonsPage() {
         </DialogContent>
       </Dialog>
 
-              {/* Enhanced View Lesson Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      {/* Enhanced View Lesson Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="w-[95vw] max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
           <style jsx global>{`
             /* COMPLETELY HIDE DEFAULT DIALOG CLOSE BUTTON - NUCLEAR APPROACH */
@@ -2494,17 +2478,17 @@ export default function LessonsPage() {
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">Subject</label>
                         <div className="glass-input h-9 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 text-blue-300 rounded-lg text-sm transition-all duration-200 flex items-center px-3 font-medium">
-                          {selectedLesson.subject}
+                      {selectedLesson.subject}
                         </div>
                       </div>
-                    </div>
+                  </div>
 
                     {/* Description - Full Width */}
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">Description</label>
                       <div className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 p-3">
                         {selectedLesson.description || 'No description provided'}
-                      </div>
+                    </div>
                     </div>
 
                     {/* Program and Type - 2 Column */}
@@ -2513,7 +2497,7 @@ export default function LessonsPage() {
                         <label className="text-xs font-medium text-white/80 block">Program</label>
                         <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
                           {selectedLesson.program || 'Not specified'}
-                        </div>
+                </div>
                       </div>
                       
                       <div className="space-y-2">
