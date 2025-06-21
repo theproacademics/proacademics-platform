@@ -51,17 +51,22 @@ export interface Question {
 }
 
 export interface Lesson {
+  _id?: string
   id: string
-  title: string
-  description: string
+  lessonName?: string
+  topic: string // Actual topic field
   subject: string
-  difficulty: "easy" | "medium" | "hard"
-  duration: number
-  xpReward: number
-  completed: boolean
-  progress: number
+  program?: string
+  type?: 'Lesson' | 'Tutorial' | 'Workshop'
+  scheduledDate?: string
+  time?: string
+  duration?: string
+  teacher?: string
+  status: 'draft' | 'active'
   videoUrl?: string
-  materials: string[]
+  zoomLink?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Assignment {

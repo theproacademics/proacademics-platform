@@ -28,22 +28,20 @@ if (process.env.NODE_ENV === "development") {
 export interface Lesson {
   _id?: ObjectId
   id: string
-  title: string
+  lessonName?: string
+  topic: string // Actual topic field
   subject: string
-  subtopic?: string
-  teacher?: string // Made optional
-  program?: string // New field
-  duration?: string // Made optional
-  description?: string
+  program?: string
+  type?: 'Lesson' | 'Tutorial' | 'Workshop'
+  scheduledDate?: string
+  time?: string
+  duration?: string
+  teacher?: string
+  status: 'draft' | 'active'
   videoUrl?: string
-  zoomLink?: string // Zoom meeting link
-  status: 'draft' | 'active' // Status field
+  zoomLink?: string
   createdAt: Date
   updatedAt: Date
-  // CSV import specific fields
-  scheduledDate?: string
-  week?: string
-  grade?: string
 }
 
 export interface LessonQuery {
@@ -123,9 +121,10 @@ class LessonService {
     
     if (search) {
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
+        { lessonName: { $regex: search, $options: 'i', $exists: true } },
+        { topic: { $regex: search, $options: 'i' } },
         { subject: { $regex: search, $options: 'i' } },
-        { subtopic: { $regex: search, $options: 'i', $exists: true } },
+        { type: { $regex: search, $options: 'i', $exists: true } },
         { teacher: { $regex: search, $options: 'i', $exists: true } },
         { program: { $regex: search, $options: 'i', $exists: true } }
       ]

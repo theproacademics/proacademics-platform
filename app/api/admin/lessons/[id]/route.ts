@@ -21,20 +21,33 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, teacher, program, duration, videoUrl, zoomLink, week, scheduledDate, grade, status } = body
+    const { 
+      lessonName, 
+      title, // Frontend sends "title" but we map it to "topic" in database
+      subject, 
+      type, 
+      teacher, 
+      program, 
+      duration, 
+      videoUrl, 
+      zoomLink, 
+      scheduledDate, 
+      time, 
+      status 
+    } = body
 
     const updateData = {
-      title,
+      lessonName: lessonName || '',
+      topic: title, // Map "title" from frontend to "topic" in database
       subject,
-      subtopic: subtopic || '',
+      type: type || 'Lesson',
       teacher: teacher || '',
       program: program || '',
       duration: duration || '',
       videoUrl: videoUrl || '',
       zoomLink: zoomLink || '',
-      week: week || '',
       scheduledDate: scheduledDate || '',
-      grade: grade || '',
+      time: time || '',
       status: status || 'draft',
       updatedAt: new Date()
     }

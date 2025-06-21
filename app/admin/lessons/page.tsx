@@ -67,7 +67,7 @@ interface Lesson {
   _id?: string
   id: string
   lessonName?: string
-  title: string
+  topic: string // Database stores as "topic"
   subject: string
   teacher?: string
   program?: string
@@ -145,7 +145,7 @@ const exportToCSV = (lessons: Lesson[], filename: string): void => {
     ['Lesson Name', 'Topic', 'Subject', 'Teacher', 'Program', 'Type', 'Status', 'Date', 'Time', 'Duration', 'Created', 'Video URL', 'Zoom Link'],
     ...lessons.map(lesson => [
       lesson.lessonName || '',
-      lesson.title,
+      lesson.topic,
       lesson.subject,
       lesson.teacher || '',
       lesson.program || '',
@@ -417,7 +417,7 @@ export default function LessonsPage() {
     setSelectedLesson(lesson)
     setFormData({
       lessonName: lesson.lessonName || "",
-      title: lesson.title || "",
+      title: lesson.topic || "", // Map "topic" from database to "title" in form
       subject: lesson.subject || "",
       teacher: lesson.teacher || "",
       program: lesson.program || "",
@@ -893,17 +893,17 @@ export default function LessonsPage() {
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleExportLessons}
-                    className="bg-orange-500/10 border border-orange-400/30 text-orange-400 
-                             hover:bg-orange-500/20 hover:border-orange-400/50 
-                             focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
-                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
-                  >
-                    <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    <span>Export</span>
-                  </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleExportLessons}
+                className="bg-orange-500/10 border border-orange-400/30 text-orange-400 
+                         hover:bg-orange-500/20 hover:border-orange-400/50 
+                         focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
+                         rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+              >
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span>Export</span>
+              </Button>
                 </TooltipTrigger>
                 <TooltipContent 
                   side="top" 
@@ -920,22 +920,22 @@ export default function LessonsPage() {
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleDeleteAllLessons}
-                    disabled={bulkActionLoading || totalLessons === 0}
-                    className="bg-red-500/10 border border-red-400/30 text-red-400 
-                             hover:bg-red-500/20 hover:border-red-400/50 
-                             focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
-                             rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-10 text-xs sm:text-sm"
-                  >
-                    {bulkActionLoading ? (
-                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    )}
-                    <span>Delete</span>
-                  </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleDeleteAllLessons}
+                disabled={bulkActionLoading || totalLessons === 0}
+                className="bg-red-500/10 border border-red-400/30 text-red-400 
+                         hover:bg-red-500/20 hover:border-red-400/50 
+                         focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
+                         rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-10 text-xs sm:text-sm"
+              >
+                {bulkActionLoading ? (
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                )}
+                <span>Delete</span>
+              </Button>
                 </TooltipTrigger>
                 <TooltipContent 
                   side="top" 
@@ -1122,7 +1122,7 @@ export default function LessonsPage() {
                         {lesson.lessonName || '-'}
                     </TableCell>
                       <TableCell className="max-w-[200px] truncate">
-                        {lesson.title}
+                        {lesson.topic}
                     </TableCell>
                       <TableCell>{lesson.subject}</TableCell>
                       <TableCell className="max-w-[120px] truncate">{lesson.program || '-'}</TableCell>
@@ -1150,14 +1150,14 @@ export default function LessonsPage() {
                         <div className="flex items-center gap-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewLesson(lesson)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewLesson(lesson)}
                                 className="h-8 w-8 p-0 hover:bg-blue-500/10 transition-all duration-200"
-                              >
-                                <Eye className="w-4 h-4 text-blue-400" />
-                              </Button>
+                          >
+                            <Eye className="w-4 h-4 text-blue-400" />
+                          </Button>
                             </TooltipTrigger>
                             <TooltipContent 
                               side="top" 
@@ -1172,14 +1172,14 @@ export default function LessonsPage() {
                           
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditLesson(lesson)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditLesson(lesson)}
                                 className="h-8 w-8 p-0 hover:bg-green-500/10 transition-all duration-200"
-                              >
-                                <Edit className="w-4 h-4 text-green-400" />
-                              </Button>
+                          >
+                            <Edit className="w-4 h-4 text-green-400" />
+                          </Button>
                             </TooltipTrigger>
                             <TooltipContent 
                               side="top" 
@@ -1194,14 +1194,14 @@ export default function LessonsPage() {
                           
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                          <Button
+                            variant="ghost"
+                            size="sm"
                                 onClick={() => confirmDeleteLesson(lesson.id)}
                                 className="h-8 w-8 p-0 hover:bg-red-500/10 transition-all duration-200"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                              </Button>
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </Button>
                             </TooltipTrigger>
                             <TooltipContent 
                               side="top" 
@@ -1267,7 +1267,7 @@ export default function LessonsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               <BookOpen className="w-4 h-4 text-purple-400" />
-                              <h3 className="font-semibold text-white text-sm truncate">{lesson.title}</h3>
+                              <h3 className="font-semibold text-white text-sm truncate">{lesson.topic}</h3>
                             </div>
                             <div className="flex items-center gap-2">
                         <Badge 
@@ -2022,32 +2022,32 @@ export default function LessonsPage() {
                       </Button>
                 </div>
               </div>
-              </DialogHeader>
+          </DialogHeader>
 
                 {/* Content */}
                 <div className="px-6 py-5 space-y-5">
                   {/* Basic Information */}
-              <div className="space-y-4">
+          <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
                       <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
                         <BookOpen className="w-3 h-3 text-blue-400" />
-                      </div>
+        </div>
                       <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
-                    </div>
+      </div>
                     
                     {/* Lesson Name */}
                 <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">
                         Lesson Name
                       </label>
-                      <Input 
+                <Input 
                         placeholder="Enter lesson name" 
                         value={formData.lessonName}
                         onChange={(e) => setFormData({...formData, lessonName: e.target.value})}
                         className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                      />
-                    </div>
+                />
+              </div>
 
                     {/* Topic and Subject */}
                     <div className="grid grid-cols-2 gap-4">
@@ -2062,7 +2062,7 @@ export default function LessonsPage() {
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
-                  </div>
+              </div>
                       
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
@@ -2100,8 +2100,8 @@ export default function LessonsPage() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                  </div>
-                </div>
+              </div>
+              </div>
 
                     {/* Program and Type */}
                     <div className="grid grid-cols-2 gap-4">
@@ -2129,7 +2129,7 @@ export default function LessonsPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
+            </div>
                       
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
@@ -2158,9 +2158,9 @@ export default function LessonsPage() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                  </div>
                 </div>
+              </div>
+            </div>
 
                   {/* Schedule Information */}
             <div className="space-y-4">
@@ -2177,32 +2177,32 @@ export default function LessonsPage() {
                         <label className="text-xs font-medium text-white/80 block">
                           Date
                         </label>
-                    <Input 
-                          type="date"
-                          value={formData.scheduledDate ? (() => {
-                            try {
-                              // Always expect ISO format (YYYY-MM-DD)
-                              const dateStr = formData.scheduledDate
-                              if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                                return dateStr
-                              }
-                              // Try to parse other formats
-                              const parsed = new Date(dateStr)
-                              if (!isNaN(parsed.getTime())) {
-                                return parsed.toISOString().split('T')[0]
-                              }
-                              return ''
-                            } catch {
-                              return ''
-                            }
-                          })() : ''}
-                          onChange={(e) => {
-                            setFormData({...formData, scheduledDate: e.target.value})
-                          }}
+                <Input 
+                  type="date"
+                  value={formData.scheduledDate ? (() => {
+                    try {
+                      // Always expect ISO format (YYYY-MM-DD)
+                      const dateStr = formData.scheduledDate
+                      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                        return dateStr
+                      }
+                      // Try to parse other formats
+                      const parsed = new Date(dateStr)
+                      if (!isNaN(parsed.getTime())) {
+                        return parsed.toISOString().split('T')[0]
+                      }
+                      return ''
+                    } catch {
+                      return ''
+                    }
+                  })() : ''}
+                  onChange={(e) => {
+                    setFormData({...formData, scheduledDate: e.target.value})
+                  }}
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
                     />
-                  </div>
+              </div>
                       
               <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
@@ -2215,35 +2215,35 @@ export default function LessonsPage() {
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10 [color-scheme:dark] cursor-pointer" 
                 />
-              </div>
+            </div>
             </div>
 
                     {/* Duration and Teacher */}
-                    <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Duration (minutes)
                         </label>
-                  <Input 
-                    type="number"
+                <Input 
+                  type="number"
                     placeholder="60" 
-                    min="1"
-                    max="300"
-                    value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
-                    onChange={(e) => {
-                      const minutes = e.target.value
-                      setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
-                    }}
+                  min="1"
+                  max="300"
+                  value={formData.duration ? formData.duration.replace(/[^0-9]/g, '') : ''}
+                  onChange={(e) => {
+                    const minutes = e.target.value
+                    setFormData({...formData, duration: minutes ? `${minutes} min` : ''})
+                  }}
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                        />
-                </div>
+                />
+              </div>
                       
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Teacher
                         </label>
-                    <Input 
+                <Input 
                           placeholder="Enter teacher name" 
                           value={formData.teacher}
                           onChange={(e) => setFormData({...formData, teacher: e.target.value})}
@@ -2301,8 +2301,8 @@ export default function LessonsPage() {
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
-                </div>
               </div>
+            </div>
 
                     {/* Zoom Link */}
                 <div className="space-y-2">
@@ -2316,9 +2316,9 @@ export default function LessonsPage() {
                         className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                  rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                       />
-                </div>
-                </div>
+              </div>
             </div>
+              </div>
 
                 {/* Footer */}
                 <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
@@ -2329,8 +2329,8 @@ export default function LessonsPage() {
                              h-9 px-4 rounded-lg text-sm transition-all duration-200"
               >
                     <X className="w-3 h-3 mr-1" />
-                    Cancel
-                  </Button>
+                Cancel
+              </Button>
               <Button 
                     className="bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 
                              text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
@@ -2341,7 +2341,7 @@ export default function LessonsPage() {
                     <Edit className="w-3 h-3 mr-1" />
                 Update Lesson
               </Button>
-              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -2422,10 +2422,10 @@ export default function LessonsPage() {
                       </Button>
                 </div>
               </div>
-              </DialogHeader>
+          </DialogHeader>
 
           {selectedLesson && (
-                <div>
+                  <div>
                 {/* Content */}
                 <div className="px-6 py-5 space-y-5">
                   {/* Basic Information */}
@@ -2433,25 +2433,25 @@ export default function LessonsPage() {
                     <div className="flex items-center space-x-2 pb-2">
                       <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
                         <BookOpen className="w-3 h-3 text-blue-400" />
-                      </div>
+                  </div>
                       <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
-                    </div>
-                    
+                  </div>
+
                     {/* Lesson Name - Full Width */}
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/60 block">Lesson Name</label>
                       <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
                         <p className="text-sm text-white font-medium">{selectedLesson.lessonName || 'Not specified'}</p>
-                      </div>
+                    </div>
                     </div>
 
                     {/* Topic and Subject - 2 Column */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                                            <div className="space-y-2">
                         <label className="text-xs font-medium text-white/60 block">Topic</label>
                         <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
-                          <p className="text-sm text-white font-medium">{selectedLesson.title}</p>
-                        </div>
+                          <p className="text-sm text-white font-medium">{selectedLesson.topic}</p>
+                </div>
                       </div>
                       
                       <div className="space-y-2">
@@ -2481,7 +2481,7 @@ export default function LessonsPage() {
                 </div>
 
                   {/* Schedule Information */}
-            <div className="space-y-4">
+                <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
                       <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
                         <Calendar className="w-3 h-3 text-green-400" />
@@ -2498,15 +2498,15 @@ export default function LessonsPage() {
                           <p className="text-sm text-white">
                             {selectedLesson.scheduledDate ? new Date(selectedLesson.scheduledDate).toLocaleDateString() : 'Not scheduled'}
                           </p>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                       
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/60 block">Time</label>
                         <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
                           <Clock className="w-3 h-3 text-green-400" />
                           <p className="text-sm text-white">{selectedLesson.time || 'Not specified'}</p>
-                        </div>
+                    </div>
                       </div>
                     </div>
 
@@ -2543,17 +2543,17 @@ export default function LessonsPage() {
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-white/60 block">Status</label>
                         <div className={`p-3 backdrop-blur-sm border rounded-lg flex items-center gap-2 ${
-                          selectedLesson.status === 'active' 
+                        selectedLesson.status === 'active' 
                             ? 'bg-green-500/10 border-green-400/30' 
                             : 'bg-yellow-500/10 border-yellow-400/30'
                         }`}>
-                          <div className={`w-2 h-2 rounded-full ${
-                            selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
-                          }`}></div>
+                      <div className={`w-2 h-2 rounded-full ${
+                        selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
+                      }`}></div>
                           <p className={`text-sm font-medium ${
                             selectedLesson.status === 'active' ? 'text-green-300' : 'text-yellow-300'
                           }`}>
-                            {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
+                      {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
                           </p>
                         </div>
                       </div>
@@ -2569,10 +2569,10 @@ export default function LessonsPage() {
                           ) : (
                             <p className="text-sm text-white/60">No video URL provided</p>
                           )}
-                        </div>
-                      </div>
-                    </div>
-
+                  </div>
+                </div>
+              </div>
+              
                     {/* Zoom Meeting Link - Full Width */}
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/60 block">Zoom Meeting Link</label>
@@ -2598,7 +2598,7 @@ export default function LessonsPage() {
 
               {/* Video Content Preview Section - Only show if there's a valid video URL */}
               {selectedLesson.videoUrl && isValidVideoUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) && (
-                  <div className="space-y-4">
+                <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
                       <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
                         <Play className="w-3 h-3 text-purple-400" />
@@ -2609,18 +2609,18 @@ export default function LessonsPage() {
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/60 block">Video Content</label>
                       <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/20">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
-                          title="Lesson Video"
-                          className="w-full h-full"
-                          allowFullScreen
-                          frameBorder="0"
-                        />
-                      </div>
+                          <iframe
+                            src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
+                            title="Lesson Video"
+                            className="w-full h-full"
+                            allowFullScreen
+                            frameBorder="0"
+                          />
+                        </div>
+                        </div>
                     </div>
-                </div>
-              )}
-
+                  )}
+                  
                   {/* Metadata */}
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
@@ -2636,16 +2636,16 @@ export default function LessonsPage() {
                         <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
                           <p className="text-sm text-white">
                             {new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: '2-digit', 
-                              year: 'numeric' 
-                            })} at {new Date(selectedLesson.createdAt).toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit', 
-                              hour12: true 
+                    month: 'short', 
+                    day: '2-digit', 
+                    year: 'numeric' 
+                  })} at {new Date(selectedLesson.createdAt).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: true 
                             })}
                           </p>
-                        </div>
+                </div>
                       </div>
                       
                       <div className="space-y-2">
@@ -2653,21 +2653,21 @@ export default function LessonsPage() {
                         <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
                           <p className="text-sm text-white">
                             {new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: '2-digit', 
-                              year: 'numeric' 
-                            })} at {new Date(selectedLesson.updatedAt).toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit', 
-                              hour12: true 
+                    month: 'short', 
+                    day: '2-digit', 
+                    year: 'numeric' 
+                  })} at {new Date(selectedLesson.updatedAt).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: true 
                             })}
                           </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-            </div>
-
+                </div>
+              </div>
+              
                 {/* Footer */}
                 <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
               <Button 
@@ -2677,21 +2677,21 @@ export default function LessonsPage() {
                              h-9 px-4 rounded-lg text-sm transition-all duration-200"
               >
                     <X className="w-3 h-3 mr-1" />
-                    Close
-                  </Button>
-              <Button 
+                  Close
+                </Button>
+                <Button 
                     className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 
                              text-white h-9 px-6 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
-                onClick={() => {
-                  setIsViewDialogOpen(false)
-                  handleEditLesson(selectedLesson)
-                }}
-              >
+                  onClick={() => {
+                    setIsViewDialogOpen(false)
+                    handleEditLesson(selectedLesson)
+                  }}
+                >
                     <Edit className="w-3 h-3 mr-1" />
-                Edit Lesson
-              </Button>
+                  Edit Lesson
+                </Button>
               </div>
-                </div>
+            </div>
           )}
           </div>
         </DialogContent>
@@ -2709,7 +2709,7 @@ export default function LessonsPage() {
             <AlertDialogHeader className="space-y-3">
               <div className="mx-auto w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-red-400/30">
                 <Trash2 className="w-8 h-8 text-red-400" />
-              </div>
+    </div>
               <div className="text-center">
                 <AlertDialogTitle className="text-xl font-semibold text-white">
                   Delete {selectedLessons.length} Lesson{selectedLessons.length > 1 ? 's' : ''}

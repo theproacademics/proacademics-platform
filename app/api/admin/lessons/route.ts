@@ -40,20 +40,34 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { title, subject, subtopic, teacher, program, duration, videoUrl, zoomLink, week, scheduledDate, grade, status } = body
+    const { 
+      lessonName, 
+      title, // Frontend sends "title" but we map it to "topic" in database
+      subject, 
+      type, 
+      teacher, 
+      program, 
+      duration, 
+      videoUrl, 
+      zoomLink, 
+      scheduledDate, 
+      time, 
+      status 
+    } = body
 
     if (!title || !subject) {
       return NextResponse.json({ error: "Missing required fields: title, subject" }, { status: 400 })
     }
 
     // Generate unique lesson ID
-    const lessonId = `lesson-${Date.now()}`
+    const lessonId = `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
     const lesson: Lesson = {
       id: lessonId,
-      title,
+      lessonName: lessonName || "",
+      topic: title, // Map "title" from frontend to "topic" in database
       subject,
-      subtopic: subtopic || "",
+      type: type || 'Lesson',
       teacher: teacher || "",
       program: program || "",
       duration: duration || "",
@@ -62,10 +76,8 @@ export async function POST(req: Request) {
       status: status || 'draft',
       createdAt: new Date(),
       updatedAt: new Date(),
-      // Optional fields from CSV import
       scheduledDate: scheduledDate || "",
-      week: week || "",
-      grade: grade || ""
+      time: time || ""
     }
 
     const createdLesson = await lessonService.createLesson(lesson)
