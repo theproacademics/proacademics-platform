@@ -68,6 +68,7 @@ interface Lesson {
   id: string
   lessonName?: string
   topic: string // Database stores as "topic"
+  description?: string
   subject: string
   teacher?: string
   program?: string
@@ -95,6 +96,7 @@ interface PaginatedLessons {
 interface LessonFormData {
   lessonName: string
   title: string
+  description: string
   subject: string
   teacher: string
   program: string
@@ -111,6 +113,7 @@ interface LessonFormData {
 const createEmptyFormData = (): LessonFormData => ({
   lessonName: "",
   title: "",
+  description: "",
   subject: "",
   teacher: "",
   program: "",
@@ -142,10 +145,11 @@ const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toS
 
 const exportToCSV = (lessons: Lesson[], filename: string): void => {
   const csvContent = [
-    ['Lesson Name', 'Topic', 'Subject', 'Teacher', 'Program', 'Type', 'Status', 'Date', 'Time', 'Duration', 'Created', 'Video URL', 'Zoom Link'],
+    ['Lesson Name', 'Topic', 'Description', 'Subject', 'Teacher', 'Program', 'Type', 'Status', 'Date', 'Time', 'Duration', 'Created', 'Video URL', 'Zoom Link'],
     ...lessons.map(lesson => [
       lesson.lessonName || '',
       lesson.topic,
+      lesson.description || '',
       lesson.subject,
       lesson.teacher || '',
       lesson.program || '',
@@ -286,6 +290,7 @@ export default function LessonsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          description: formData.description || '',
           scheduledDate: formData.scheduledDate || '',
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
@@ -318,6 +323,7 @@ export default function LessonsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          description: formData.description || '',
           scheduledDate: formData.scheduledDate || '',
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
@@ -418,6 +424,7 @@ export default function LessonsPage() {
     setFormData({
       lessonName: lesson.lessonName || "",
       title: lesson.topic || "", // Map "topic" from database to "title" in form
+      description: lesson.description || "",
       subject: lesson.subject || "",
       teacher: lesson.teacher || "",
       program: lesson.program || "",
@@ -1652,6 +1659,21 @@ export default function LessonsPage() {
                   </div>
                 </div>
 
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">
+                        Description
+                      </label>
+                      <Textarea 
+                        placeholder="Enter lesson description (optional)" 
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
+                        rows={3}
+                      />
+                    </div>
+
                     {/* Program and Type */}
                     <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -2103,6 +2125,21 @@ export default function LessonsPage() {
               </div>
               </div>
 
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">
+                        Description
+                      </label>
+                      <Textarea 
+                        placeholder="Enter lesson description (optional)" 
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                                 rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
+                        rows={3}
+                      />
+                    </div>
+
                     {/* Program and Type */}
                     <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -2459,6 +2496,14 @@ export default function LessonsPage() {
                         <div className="glass-input h-9 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 text-blue-300 rounded-lg text-sm transition-all duration-200 flex items-center px-3 font-medium">
                           {selectedLesson.subject}
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Description - Full Width */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">Description</label>
+                      <div className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 p-3">
+                        {selectedLesson.description || 'No description provided'}
                       </div>
                     </div>
 
