@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, Video, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -340,11 +342,19 @@ export default function LessonsPage() {
     }
   }, [selectedLesson, formData])
 
-  const handleDeleteLesson = useCallback(async (lessonId: string) => {
-    if (!confirm('Are you sure you want to delete this lesson?')) return
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [lessonToDelete, setLessonToDelete] = useState<string | null>(null)
+
+  const confirmDeleteLesson = useCallback((lessonId: string) => {
+    setLessonToDelete(lessonId)
+    setDeleteConfirmOpen(true)
+  }, [])
+
+  const handleDeleteLesson = useCallback(async () => {
+    if (!lessonToDelete) return
     
     try {
-      const response = await fetch(`/api/admin/lessons/${lessonId}`, {
+      const response = await fetch(`/api/admin/lessons/${lessonToDelete}`, {
         method: 'DELETE'
       })
 
@@ -360,8 +370,11 @@ export default function LessonsPage() {
     } catch (error) {
       console.error('Error deleting lesson:', error)
       toast.error('Failed to delete lesson')
+    } finally {
+      setDeleteConfirmOpen(false)
+      setLessonToDelete(null)
     }
-  }, [])
+  }, [lessonToDelete])
 
   // Event handlers with optimization
   const handlePageChange = useCallback((page: number) => {
@@ -441,12 +454,19 @@ export default function LessonsPage() {
     }
   }, [selectedLessons.length, lessons])
 
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
+
+  const confirmBulkDelete = useCallback(() => {
+    if (selectedLessons.length === 0) return
+    setBulkDeleteConfirmOpen(true)
+  }, [selectedLessons.length])
+
   const handleBulkDelete = useCallback(async () => {
     if (selectedLessons.length === 0) return
     
-    if (!confirm(`Are you sure you want to delete ${selectedLessons.length} lesson(s)?`)) return
-    
     setBulkActionLoading(true)
+    setBulkDeleteConfirmOpen(false)
+    
     try {
       const deletePromises = selectedLessons.map(lessonId =>
         fetch(`/api/admin/lessons/${lessonId}`, { method: 'DELETE' })
@@ -546,6 +566,7 @@ export default function LessonsPage() {
   // All import-related functions moved to /admin/lessons/import page
 
   return (
+    <TooltipProvider>
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Animated Background Elements - Covers entire screen including nav area */}
       <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
@@ -817,62 +838,117 @@ export default function LessonsPage() {
             {/* Action Buttons - Mobile Optimized */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
-                             hover:bg-purple-500/20 hover:border-purple-400/50 
-                             focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
-                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full bg-purple-500/10 border border-purple-400/30 text-purple-400 
+                                 hover:bg-purple-500/20 hover:border-purple-400/50 
+                                 focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400/60
+                                 rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <span>Create</span>
+                      </Button>
+                    </DialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="top" 
+                    className="bg-slate-900/95 backdrop-blur-xl border border-purple-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
                   >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    <span>Create</span>
-                  </Button>
-                </DialogTrigger>
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-3 h-3 text-purple-400" />
+                      <span className="text-sm font-medium">Create a new lesson</span>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </Dialog>
               
-              <Link href="/admin/lessons/import" className="block">
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
-                           hover:bg-green-500/20 hover:border-green-400/50 
-                           focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
-                           rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/admin/lessons/import" className="block">
+                    <Button 
+                      variant="outline" 
+                      className="w-full bg-green-500/10 border border-green-400/30 text-green-400 
+                               hover:bg-green-500/20 hover:border-green-400/50 
+                               focus:ring-2 focus:ring-green-400/20 focus:border-green-400/60
+                               rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                    >
+                      <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span>Import</span>
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  className="bg-slate-900/95 backdrop-blur-xl border border-green-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
                 >
-                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span>Import</span>
-                </Button>
-              </Link>
+                  <div className="flex items-center gap-2">
+                    <Upload className="w-3 h-3 text-green-400" />
+                    <span className="text-sm font-medium">Import lessons from CSV file</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
               
-              <Button 
-                variant="outline" 
-                onClick={handleExportLessons}
-                className="bg-orange-500/10 border border-orange-400/30 text-orange-400 
-                         hover:bg-orange-500/20 hover:border-orange-400/50 
-                         focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
-                         rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
-              >
-                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span>Export</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleExportLessons}
+                    className="bg-orange-500/10 border border-orange-400/30 text-orange-400 
+                             hover:bg-orange-500/20 hover:border-orange-400/50 
+                             focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400/60
+                             rounded-xl transition-all duration-200 backdrop-blur-sm h-10 text-xs sm:text-sm"
+                  >
+                    <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span>Export</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  className="bg-slate-900/95 backdrop-blur-xl border border-orange-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Download className="w-3 h-3 text-orange-400" />
+                    <span className="text-sm font-medium">
+                      Export {selectedLessons.length > 0 ? `${selectedLessons.length} selected` : 'all'} lessons to CSV
+                    </span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
               
-              <Button 
-                variant="outline" 
-                onClick={handleDeleteAllLessons}
-                disabled={bulkActionLoading || totalLessons === 0}
-                className="bg-red-500/10 border border-red-400/30 text-red-400 
-                         hover:bg-red-500/20 hover:border-red-400/50 
-                         focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
-                         rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-10 text-xs sm:text-sm"
-                title={totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
-              >
-                {bulkActionLoading ? (
-                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                )}
-                <span>Delete</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDeleteAllLessons}
+                    disabled={bulkActionLoading || totalLessons === 0}
+                    className="bg-red-500/10 border border-red-400/30 text-red-400 
+                             hover:bg-red-500/20 hover:border-red-400/50 
+                             focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
+                             rounded-xl transition-all duration-200 backdrop-blur-sm disabled:opacity-50 h-10 text-xs sm:text-sm"
+                  >
+                    {bulkActionLoading ? (
+                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    )}
+                    <span>Delete</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  className="bg-slate-900/95 backdrop-blur-xl border border-red-400/30 text-white rounded-xl shadow-2xl px-4 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <span className="font-medium">
+                      {totalLessons === 0 ? "No lessons to delete" : `Delete all ${totalLessons} lessons`}
+                    </span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
 
@@ -910,7 +986,7 @@ export default function LessonsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleBulkDelete}
+                  onClick={confirmBulkDelete}
                   disabled={bulkActionLoading}
                       className="bg-red-500/10 border border-red-400/30 text-red-400 hover:bg-red-500/20 hover:border-red-400/50 rounded-xl transition-all duration-200 disabled:opacity-50"
                 >
@@ -922,13 +998,18 @@ export default function LessonsPage() {
                   Delete
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setSelectedLessons([])}
-                      className="text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
+                  className="group bg-white/5 backdrop-blur-sm border border-white/20 text-white/80 
+                           hover:bg-white/10 hover:border-white/30 hover:text-white
+                           focus:ring-2 focus:ring-white/20 focus:border-white/40
+                           rounded-xl transition-all duration-300 ease-in-out
+                           shadow-lg hover:shadow-xl hover:shadow-white/10
+                           active:scale-95 transform font-medium"
                 >
-                      <X className="w-4 h-4 mr-2" />
-                      Clear
+                  <X className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-180" />
+                  Clear Selection
                 </Button>
               </div>
             </div>
@@ -1067,30 +1148,71 @@ export default function LessonsPage() {
                     </TableCell>
                     <TableCell>
                         <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewLesson(lesson)}
-                            className="h-8 w-8 p-0 hover:bg-blue-500/10"
-                          >
-                            <Eye className="w-4 h-4 text-blue-400" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditLesson(lesson)}
-                            className="h-8 w-8 p-0 hover:bg-green-500/10"
-                          >
-                            <Edit className="w-4 h-4 text-green-400" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteLesson(lesson.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-500/10"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewLesson(lesson)}
+                                className="h-8 w-8 p-0 hover:bg-blue-500/10 transition-all duration-200"
+                              >
+                                <Eye className="w-4 h-4 text-blue-400" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="top" 
+                              className="bg-slate-900/95 backdrop-blur-xl border border-blue-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Eye className="w-3 h-3 text-blue-400" />
+                                <span className="text-sm font-medium">View Lesson Details</span>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditLesson(lesson)}
+                                className="h-8 w-8 p-0 hover:bg-green-500/10 transition-all duration-200"
+                              >
+                                <Edit className="w-4 h-4 text-green-400" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="top" 
+                              className="bg-slate-900/95 backdrop-blur-xl border border-green-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Edit className="w-3 h-3 text-green-400" />
+                                <span className="text-sm font-medium">Edit Lesson</span>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => confirmDeleteLesson(lesson.id)}
+                                className="h-8 w-8 p-0 hover:bg-red-500/10 transition-all duration-200"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-400" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="top" 
+                              className="bg-slate-900/95 backdrop-blur-xl border border-red-400/30 text-white rounded-xl shadow-2xl px-3 py-2"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Trash2 className="w-3 h-3 text-red-400" />
+                                <span className="text-sm font-medium">Delete Lesson</span>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1221,7 +1343,7 @@ export default function LessonsPage() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => handleDeleteLesson(lesson.id)}
+                          onClick={() => confirmDeleteLesson(lesson.id)}
                               className="h-8 w-8 p-0 hover:bg-red-500/20 rounded-lg transition-all duration-200 group/btn"
                         >
                               <Trash2 className="w-4 h-4 text-red-400 group-hover/btn:scale-110 transition-transform duration-200" />
@@ -2278,182 +2400,298 @@ export default function LessonsPage() {
           `}</style>
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-green-500/10 rounded-3xl"></div>
           <div className="relative">
-            <DialogHeader className="pb-6 border-b border-white/10">
+                {/* Header */}
+                <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+                  <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-blue-400" />
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-green-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                        <Eye className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold text-white">Lesson Details</DialogTitle>
-                  <p className="text-sm text-slate-400 mt-1">Complete lesson information and content</p>
+                        <DialogTitle className="text-xl font-semibold text-white">Lesson Details</DialogTitle>
+                      </div>
+                    </div>
+                                        <div className="flex items-center space-x-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsViewDialogOpen(false)}
+                        className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                 </div>
               </div>
-          </DialogHeader>
+              </DialogHeader>
+
           {selectedLesson && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Topic</h3>
-                    <p className="text-lg font-semibold">{selectedLesson.title}</p>
+                <div>
+                {/* Content */}
+                <div className="px-6 py-5 space-y-5">
+                  {/* Basic Information */}
+              <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <BookOpen className="w-3 h-3 text-blue-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
+                    </div>
+                    
+                    {/* Lesson Name - Full Width */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/60 block">Lesson Name</label>
+                      <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                        <p className="text-sm text-white font-medium">{selectedLesson.lessonName || 'Not specified'}</p>
+                      </div>
+                    </div>
+
+                    {/* Topic and Subject - 2 Column */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Topic</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white font-medium">{selectedLesson.title}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Subject</label>
+                        <div className="p-3 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 rounded-lg">
+                          <p className="text-sm text-blue-300 font-medium">{selectedLesson.subject}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Program and Type - 2 Column */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Program</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white">{selectedLesson.program || 'Not specified'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Type</label>
+                        <div className="p-3 bg-purple-500/10 backdrop-blur-sm border border-purple-400/30 rounded-lg">
+                          <p className="text-sm text-purple-300 font-medium">{selectedLesson.type || 'Lesson'}</p>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+
+                  {/* Schedule Information */}
+            <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-3 h-3 text-green-400" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Subject</h3>
-                    <Badge variant="outline" className="border-blue-400 text-blue-400">
-                      {selectedLesson.subject}
-                    </Badge>
+                      <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
+                  </div>
+                    
+                    {/* Date and Time - 2 Column */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Date</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                          <Calendar className="w-3 h-3 text-green-400" />
+                          <p className="text-sm text-white">
+                            {selectedLesson.scheduledDate ? new Date(selectedLesson.scheduledDate).toLocaleDateString() : 'Not scheduled'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Time</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-green-400" />
+                          <p className="text-sm text-white">{selectedLesson.time || 'Not specified'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Duration and Teacher - 2 Column */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Duration (minutes)</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-purple-400" />
+                          <p className="text-sm text-white">{selectedLesson.duration || 'Not specified'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Teacher</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white">{selectedLesson.teacher || 'Not assigned'}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {selectedLesson.lessonName && (
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Lesson Name</h3>
-                      <p className="text-sm">{selectedLesson.lessonName}</p>
+                  {/* Additional Options */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <Settings className="w-3 h-3 text-orange-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Additional Options</h3>
                     </div>
-                  )}
-                  {selectedLesson.type && (
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Type</h3>
-                      <Badge variant="outline">
-                        {selectedLesson.type}
-                      </Badge>
+                    
+                    {/* Status and Video URL - 2 Column */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Status</label>
+                        <div className={`p-3 backdrop-blur-sm border rounded-lg flex items-center gap-2 ${
+                          selectedLesson.status === 'active' 
+                            ? 'bg-green-500/10 border-green-400/30' 
+                            : 'bg-yellow-500/10 border-yellow-400/30'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full ${
+                            selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
+                          }`}></div>
+                          <p className={`text-sm font-medium ${
+                            selectedLesson.status === 'active' ? 'text-green-300' : 'text-yellow-300'
+                          }`}>
+                            {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Video URL</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          {selectedLesson.videoUrl ? (
+                            <div className="flex items-center gap-2">
+                              <Play className="w-3 h-3 text-purple-400" />
+                              <p className="text-sm text-white truncate">{selectedLesson.videoUrl}</p>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-white/60">No video URL provided</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Teacher</h3>
-                    <p className="text-sm">{selectedLesson.teacher}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Program</h3>
-                    <p className="text-sm">{selectedLesson.program}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Duration</h3>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm">{selectedLesson.duration}</span>
-                    </div>
-                  </div>
-                  {selectedLesson.scheduledDate && (
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Scheduled Date</h3>
-                      <p className="text-sm">{selectedLesson.scheduledDate}</p>
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        selectedLesson.status === 'active' 
-                          ? 'border-green-400/50 bg-green-400/10 text-green-400' 
-                          : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400'
-                      } text-xs font-medium px-3 py-1 flex items-center gap-2 w-fit`}
-                    >
-                      <div className={`w-2 h-2 rounded-full ${
-                        selectedLesson.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'
-                      }`}></div>
-                      {selectedLesson.status === 'active' ? 'Active' : 'Draft'}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              
 
-              
-              {(selectedLesson.videoUrl || selectedLesson.zoomLink) && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Lesson Content</h3>
-                  
-                  {selectedLesson.videoUrl && (
-                    <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Video Content</h4>
-                      {isValidVideoUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) ? (
-                        <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
-                            title="Lesson Video"
-                            className="w-full h-full"
-                            allowFullScreen
-                            frameBorder="0"
-                          />
+                    {/* Zoom Meeting Link - Full Width */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/60 block">Zoom Meeting Link</label>
+                      {selectedLesson.zoomLink ? (
+                        <div className="p-3 bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 rounded-lg flex items-center gap-2">
+                          <Video className="w-3 h-3 text-blue-400" />
+                          <span className="text-sm text-blue-300 flex-1">Zoom Meeting Available</span>
+                          <Button 
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-3 text-xs"
+                            onClick={() => window.open(selectedLesson.zoomLink, '_blank')}
+                          >
+                            Join Meeting
+                          </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
-                          <Play className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-300">{selectedLesson.videoUrl}</span>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white/60">No Zoom meeting link provided</p>
                         </div>
                       )}
                     </div>
-                  )}
+                  </div>
+
+              {/* Video Content Preview Section - Only show if there's a valid video URL */}
+              {selectedLesson.videoUrl && isValidVideoUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <Play className="w-3 h-3 text-purple-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Video Preview</h3>
+                    </div>
                   
-                  {selectedLesson.zoomLink && (
-                    <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Live Meeting</h4>
-                      <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-400/20">
-                        <Video className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm text-blue-300">Zoom Meeting Available</span>
-                        <Button 
-                          size="sm" 
-                          className="ml-auto bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={() => window.open(selectedLesson.zoomLink, '_blank')}
-                        >
-                          Join Meeting
-                        </Button>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/60 block">Video Content</label>
+                      <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/20">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
+                          title="Lesson Video"
+                          className="w-full h-full"
+                          allowFullScreen
+                          frameBorder="0"
+                        />
                       </div>
                     </div>
-                  )}
                 </div>
               )}
-              
 
-              
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Created</h3>
-                  <p className="text-sm">{new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: '2-digit', 
-                    year: 'numeric' 
-                  })} at {new Date(selectedLesson.createdAt).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    hour12: true 
-                  })}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Last Updated</h3>
-                  <p className="text-sm">{new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: '2-digit', 
-                    year: 'numeric' 
-                  })} at {new Date(selectedLesson.updatedAt).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    hour12: true 
-                  })}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-                  Close
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setIsViewDialogOpen(false)
-                    handleEditLesson(selectedLesson)
-                  }}
-                  className="border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Lesson
-                </Button>
-
-              </div>
+                  {/* Metadata */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 pb-2">
+                      <div className="w-6 h-6 bg-slate-500/20 rounded-lg flex items-center justify-center">
+                        <FileText className="w-3 h-3 text-slate-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-white/90">Metadata</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Created</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white">
+                            {new Date(selectedLesson.createdAt).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: '2-digit', 
+                              year: 'numeric' 
+                            })} at {new Date(selectedLesson.createdAt).toLocaleTimeString('en-US', { 
+                              hour: '2-digit', 
+                              minute: '2-digit', 
+                              hour12: true 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/60 block">Last Updated</label>
+                        <div className="p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg">
+                          <p className="text-sm text-white">
+                            {new Date(selectedLesson.updatedAt).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: '2-digit', 
+                              year: 'numeric' 
+                            })} at {new Date(selectedLesson.updatedAt).toLocaleTimeString('en-US', { 
+                              hour: '2-digit', 
+                              minute: '2-digit', 
+                              hour12: true 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
             </div>
+
+                {/* Footer */}
+                <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsViewDialogOpen(false)} 
+                    className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                             h-9 px-4 rounded-lg text-sm transition-all duration-200"
+              >
+                    <X className="w-3 h-3 mr-1" />
+                    Close
+                  </Button>
+              <Button 
+                    className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 
+                             text-white h-9 px-6 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
+                onClick={() => {
+                  setIsViewDialogOpen(false)
+                  handleEditLesson(selectedLesson)
+                }}
+              >
+                    <Edit className="w-3 h-3 mr-1" />
+                Edit Lesson
+              </Button>
+              </div>
+                </div>
           )}
           </div>
         </DialogContent>
@@ -2462,6 +2700,84 @@ export default function LessonsPage() {
       
       </div>
       </div>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <AlertDialogContent className="max-w-md bg-slate-900/95 backdrop-blur-2xl border border-red-400/30 rounded-2xl shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 rounded-2xl"></div>
+          <div className="relative">
+            <AlertDialogHeader className="space-y-3">
+              <div className="mx-auto w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-red-400/30">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="text-center">
+                <AlertDialogTitle className="text-xl font-semibold text-white">
+                  Delete {selectedLessons.length} Lesson{selectedLessons.length > 1 ? 's' : ''}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-white/70 mt-2">
+                  Are you sure you want to delete {selectedLessons.length > 1 ? 'these' : 'this'} {selectedLessons.length} lesson{selectedLessons.length > 1 ? 's' : ''}? This action cannot be undone and will permanently remove all lesson data.
+                </AlertDialogDescription>
+              </div>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex gap-3 pt-6">
+              <AlertDialogCancel className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                                          h-10 px-6 rounded-xl transition-all duration-200 flex-1">
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleBulkDelete}
+                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 
+                          text-white h-10 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl 
+                          backdrop-blur-sm flex-1"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete {selectedLessons.length > 1 ? 'All' : 'Lesson'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="max-w-md bg-slate-900/95 backdrop-blur-2xl border border-red-400/30 rounded-2xl shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 rounded-2xl"></div>
+          <div className="relative">
+            <AlertDialogHeader className="space-y-3">
+              <div className="mx-auto w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-red-400/30">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="text-center">
+                <AlertDialogTitle className="text-xl font-semibold text-white">
+                  Delete Lesson
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-white/70 mt-2">
+                  Are you sure you want to delete this lesson? This action cannot be undone and will permanently remove the lesson data.
+                </AlertDialogDescription>
+              </div>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex gap-3 pt-6">
+              <AlertDialogCancel className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                                          h-10 px-6 rounded-xl transition-all duration-200 flex-1">
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteLesson}
+                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 
+                          text-white h-10 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl 
+                          backdrop-blur-sm flex-1"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Lesson
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      
     </div>
+    </TooltipProvider>
   )
 }
