@@ -539,13 +539,6 @@ export default function TimetablePage() {
                                         LIVE
                                       </Badge>
                                     )
-                                  } else if (lessonStatus.status === 'future') {
-                                    return (
-                                      <Badge className="bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-400/50 text-amber-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border shadow-sm rounded-full backdrop-blur-sm">
-                                        <Clock className="w-3 h-3" />
-                                        Upcoming
-                                      </Badge>
-                                    )
                                   }
                                   return null
                                 })()}
