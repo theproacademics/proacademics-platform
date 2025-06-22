@@ -26,7 +26,10 @@ import {
   Play,
   GraduationCap,
   X,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  MessageSquare,
+  AlignLeft
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -503,10 +506,10 @@ export default function TimetablePage() {
                 <div className="space-y-3">
                   {filteredClasses.length > 0 ? (
                     filteredClasses.map((lesson) => (
-                      <div
-                        key={lesson.id}
-                        className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl hover:shadow-blue-500/10 relative overflow-hidden hover:scale-[1.01]"
-                      >
+                                              <div
+                          key={lesson.id}
+                          className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
+                        >
                           {/* Subtle hover gradient effect */}
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           
@@ -600,13 +603,16 @@ export default function TimetablePage() {
 
                               {/* Lesson Description */}
                               {lesson.description && (
-                                <div className="mt-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                                  <p className="text-gray-300 text-sm leading-relaxed">
-                                    {lesson.description.length > 150 
-                                      ? lesson.description.substring(0, 150) + '...' 
-                                      : lesson.description
-                                    }
-                                  </p>
+                                <div className="col-span-full mt-2">
+                                  <div className="flex items-center bg-cyan-500/15 px-2.5 py-1.5 rounded-md border border-cyan-400/25">
+                                    <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
+                                    <span className="text-cyan-200 font-medium text-xs truncate">
+                                      {lesson.description.length > 80 
+                                        ? lesson.description.substring(0, 80) + '...' 
+                                        : lesson.description
+                                      }
+                                    </span>
+                                  </div>
                                 </div>
                               )}
                             </div>
