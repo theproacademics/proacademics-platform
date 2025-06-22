@@ -56,17 +56,22 @@ const getYouTubeVideoId = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+// Helper function to get YouTube thumbnail
+const getYouTubeThumbnail = (url: string): string | null => {
+  const videoId = getYouTubeVideoId(url)
+  return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null
+}
+
 export default function LessonPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dataReady, setDataReady] = useState(false)
-  const [isVideoUnlocked, setIsVideoUnlocked] = useState(false)
-  const [isUnlocking, setIsUnlocking] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
   const [videoWatched, setVideoWatched] = useState(false)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
 
   // Determine where user came from for dynamic back button
   const getBackButtonConfig = () => {
@@ -251,19 +256,26 @@ export default function LessonPage() {
     }
   }
 
-  // Handle video unlock
-  const handleUnlockVideo = async () => {
-    setIsUnlocking(true)
+
     
-    // Track the unlock action
+  // Handle watch now button click
+  const handleWatchNow = async () => {
+    // Track the video unlock
     await trackVideoView()
     
-    // Unlock the video after a brief delay
-    setTimeout(() => {
-      setIsVideoUnlocked(true)
-      setIsUnlocking(false)
-    }, 1000)
+    // Show the actual video player
+    setShowVideoPlayer(true)
   }
+
+  // Auto-show video player for live lessons
+  useEffect(() => {
+    if (lesson?.scheduledDate) {
+      const status = getLessonStatus
+      if (status.type === 'live') {
+        setShowVideoPlayer(true)
+      }
+    }
+  }, [lesson?.scheduledDate, getLessonStatus])
 
   // Handle mark as finished
   const handleMarkAsFinished = async () => {
@@ -333,13 +345,13 @@ export default function LessonPage() {
   }, [])
 
   if (showPreloader || !preloaderMounted || isLoading) {
-    return <Preloader isVisible={showPreloader || !preloaderMounted || isLoading} colorScheme="purple" loadingText="Loading your premium lesson" />
+    return <Preloader isVisible={showPreloader || !preloaderMounted || isLoading} colorScheme="purple" loadingText="Loading your lesson" />
   }
 
   if (!lesson) {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        {/* Premium background for not found page */}
+        {/* Background for not found page */}
         <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-tr from-purple-800/30 via-transparent to-blue-800/30 pointer-events-none" />
         
@@ -450,8 +462,8 @@ export default function LessonPage() {
             </Button>
             </div>
 
-            {/* Premium Lesson Card */}
-            <Card className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group">
+            {/* Lesson Card */}
+            <Card className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group">
               {/* Enhanced card background effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
@@ -461,15 +473,17 @@ export default function LessonPage() {
               
               <CardContent className="relative z-10">
                 {/* Video Player Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                   {/* Video Player */}
-                  <div className="lg:col-span-2">
-                <div className="aspect-video w-full bg-black rounded-xl overflow-hidden relative">
+                  <div className="lg:col-span-3">
+                    <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden relative transition-all duration-300">
                   {lesson.videoUrl ? (
                     <>
-                      {/* Video Content */}
-                      {isVideoUnlocked ? (
-                                                  isStreamingUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
+                          {/* Show video player or click-to-play overlay */}
+                          {showVideoPlayer ? (
+                            // Actual Video Player
+                            <>
+                              {isStreamingUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
                               // Handle YouTube URLs
                             <iframe
                                 src={`https://www.youtube.com/embed/${getYouTubeVideoId(lesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
@@ -477,7 +491,8 @@ export default function LessonPage() {
                               className="w-full h-full"
                               allowFullScreen
                               frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  sandbox="allow-same-origin allow-scripts allow-presentation"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                               onLoad={() => {
                                 setTimeout(() => setVideoWatched(true), 30000)
                               }}
@@ -497,50 +512,35 @@ export default function LessonPage() {
                                 }
                               }}
                             />
-                        )
-                      ) : (
-                        /* Locked Video State */
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900/95 via-indigo-900/40 to-slate-900/95 relative overflow-hidden">
-                              {/* Premium animated background */}
-                              <div className="absolute inset-0 opacity-20">
-                            <div className="w-full h-full" style={{
-                                  backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(139,92,246,0.4) 2px, transparent 0)',
-                                  backgroundSize: '40px 40px'
-                            }}></div>
+                              )}
+                            </>
+                          ) : (
+                            // Click-to-Play Overlay
+                            <div className="w-full h-full relative cursor-pointer group" onClick={handleWatchNow}>
+                              {/* Video Thumbnail */}
+                              {isStreamingUrl(lesson.videoUrl) && getYouTubeThumbnail(lesson.videoUrl) ? (
+                                <img 
+                                  src={getYouTubeThumbnail(lesson.videoUrl)!}
+                                  alt={lesson.lessonName || lesson.topic || 'Video Thumbnail'}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center">
+                                  <Video className="w-16 h-16 text-purple-300" />
                           </div>
-                          
-                              {/* Floating orbs */}
-                              <div className="absolute top-10 left-10 w-20 h-20 bg-purple-500/20 rounded-full blur-xl animate-pulse"></div>
-                              <div className="absolute bottom-10 right-10 w-16 h-16 bg-blue-500/20 rounded-full blur-lg animate-pulse delay-1000"></div>
+                              )}
                               
-                              {/* Premium lock overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-blue-900/30 backdrop-blur-md"></div>
+                              {/* Enhanced blur overlay */}
+                              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all duration-300"></div>
                               
-                              {/* Enhanced content */}
-                              <div className="relative text-center space-y-6 p-8 max-w-md">
-                            <div className="relative">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full blur-2xl animate-pulse"></div>
-                                  <div className="relative w-24 h-24 mx-auto bg-gradient-to-br from-purple-500/40 to-blue-500/40 rounded-full flex items-center justify-center backdrop-blur-xl border-2 border-white/40 shadow-2xl">
-                                    <Lock className="w-12 h-12 text-white drop-shadow-lg" />
+                              {/* Watch Now Button */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <button className="bg-white/10 hover:bg-white/20 backdrop-blur-xl text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 hover:border-white/30">
+                                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
                               </div>
-                            </div>
-                            
-                            <div className="space-y-3">
-                                  <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent">Premium Lesson</h3>
-                                  <p className="text-slate-200 text-base leading-relaxed">
-                                {(() => {
-                                  const status = getLessonStatus
-                                  if (status.type === 'past') {
-                                        return 'Unlock this premium lesson content'
-                                  } else if (status.type === 'live') {
-                                        return 'Join the live learning experience'
-                                  } else if (status.type === 'future') {
-                                        return 'Coming soon - scheduled for later'
-                                  }
-                                      return 'Discover premium educational content'
-                                })()}
-                              </p>
-                            </div>
+                                  <span className="text-lg font-bold bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent">Watch Now</span>
+                                </button>
                           </div>
                         </div>
                       )}
@@ -558,66 +558,64 @@ export default function LessonPage() {
                               <div className="absolute inset-0 bg-purple-500/30 rounded-full blur-xl animate-pulse"></div>
                               <Video className="w-16 h-16 text-purple-300 mx-auto mb-4 relative" />
                             </div>
-                            <p className="text-gray-300 text-base font-medium">Premium content loading soon</p>
+                            <p className="text-gray-300 text-base font-medium">Video content available soon</p>
                           </div>
                         </div>
                       )}
-                    </div>
                   </div>
 
-                  {/* Video Details - Moved below video */}
-                  <div className="lg:col-span-2 mt-4">
-                    <div className="space-y-4">
+                    {/* Video Details - Below video */}
+                    <div className="mt-6 space-y-4">
                       {/* Lesson Title */}
-                      <h1 className="text-white text-xl lg:text-2xl font-bold">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
+                      <h1 className="text-white text-2xl lg:text-3xl font-bold">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
                       
                       {/* Lesson Tags */}
                       <div className="flex items-center gap-2.5 flex-wrap">
                         {lesson.topic && (
-                          <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200`}>
+                          <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-3 py-2 text-sm font-bold border rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
                             {lesson.topic}
                           </span>
                         )}
                         {lesson.type && (
-                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
-                            {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
-                            {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
-                            {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-2 px-3 py-2 text-sm font-bold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                            {lesson.type === 'Lesson' && <GraduationCap className="w-4 h-4" />}
+                            {lesson.type === 'Tutorial' && <Video className="w-4 h-4" />}
+                            {lesson.type === 'Workshop' && <ExternalLink className="w-4 h-4" />}
                             {lesson.type}
                           </span>
                         )}
                         {lesson.program && (
-                          <span className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
-                            <Target className="w-3 h-3 mr-1.5" />
+                          <span className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 py-2 text-sm font-medium rounded-lg">
+                            <Target className="w-4 h-4 mr-2" />
                             {lesson.program}
                           </span>
                         )}
                       </div>
 
                       {/* Lesson Info Pills */}
-                      <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
                         {lesson.duration && (
-                          <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
-                            <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
-                            <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
+                          <div className="flex items-center bg-amber-500/15 px-3 py-2 rounded-lg border border-amber-400/25">
+                            <Clock className="w-4 h-4 mr-2 text-amber-400" />
+                            <span className="text-amber-200 font-medium">{lesson.duration}</span>
                           </div>
                         )}
                         {lesson.teacher && (
-                          <div className="flex items-center bg-blue-500/15 px-2.5 py-1.5 rounded-md border border-blue-400/25">
-                            <User className="w-3 h-3 mr-1.5 text-blue-400" />
-                            <span className="text-blue-200 font-medium text-xs truncate max-w-[120px]">{lesson.teacher}</span>
+                          <div className="flex items-center bg-blue-500/15 px-3 py-2 rounded-lg border border-blue-400/25">
+                            <User className="w-4 h-4 mr-2 text-blue-400" />
+                            <span className="text-blue-200 font-medium truncate max-w-[120px]">{lesson.teacher}</span>
                           </div>
                         )}
                         {lesson.subject && (
-                          <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
-                            <BookOpen className="w-3 h-3 mr-1.5 text-emerald-400" />
-                            <span className="text-emerald-200 font-medium text-xs">{lesson.subject}</span>
+                          <div className="flex items-center bg-emerald-500/15 px-3 py-2 rounded-lg border border-emerald-400/25">
+                            <BookOpen className="w-4 h-4 mr-2 text-emerald-400" />
+                            <span className="text-emerald-200 font-medium">{lesson.subject}</span>
                           </div>
                         )}
                         {lesson.time && (
-                          <div className="flex items-center bg-purple-500/15 px-2.5 py-1.5 rounded-md border border-purple-400/25">
-                            <Play className="w-3 h-3 mr-1.5 text-purple-400" />
-                            <span className="text-purple-200 font-medium text-xs">{lesson.time}</span>
+                          <div className="flex items-center bg-purple-500/15 px-3 py-2 rounded-lg border border-purple-400/25">
+                            <Play className="w-4 h-4 mr-2 text-purple-400" />
+                            <span className="text-purple-200 font-medium">{lesson.time}</span>
                           </div>
                         )}
                       </div>
@@ -626,8 +624,8 @@ export default function LessonPage() {
                         const date = new Date(lesson.scheduledDate)
                         if (!isNaN(date.getTime())) {
                           return (
-                            <div className="inline-flex items-center bg-slate-500/15 px-2.5 py-1.5 rounded-md border border-slate-400/25 text-xs">
-                              <Calendar className="w-3 h-3 mr-1.5 text-slate-400" />
+                            <div className="inline-flex items-center bg-slate-500/15 px-3 py-2 rounded-lg border border-slate-400/25 text-sm">
+                              <Calendar className="w-4 h-4 mr-2 text-slate-400" />
                               <span className="text-slate-300 font-medium">
                               {date.toLocaleDateString('en-US', { 
                                 month: 'short', 
@@ -644,166 +642,39 @@ export default function LessonPage() {
                   </div>
 
                   {/* Actions Sidebar */}
-                    <div className="space-y-4">
+                  <div className="lg:col-span-1 space-y-4">
                     <div>
-                      <h3 className="text-white font-semibold mb-3 text-lg">Actions</h3>
-                      <div className="space-y-3">
-                      {(() => {
-                        const status = getLessonStatus
-                        
-                        return (
-                          <>
-                            {/* Primary Action Buttons */}
-                            {status.showBothButtons ? (
-                              <div className="space-y-3">
-                                {/* Video Button */}
-                                <Button 
-                                  onClick={() => {
-                                    if (lesson?.videoUrl) {
-                                      if (status.type === 'past' && !isVideoUnlocked) {
-                                        handleUnlockVideo()
-                                      } else if (status.type === 'available' || status.type === 'live') {
-                                        handleUnlockVideo()
-                                      }
-                                    }
-                                  }}
-                                  disabled={isUnlocking}
-                                  className={`w-full ${status.videoClass} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
-                                >
-                                  {isUnlocking ? (
-                                    <>
-                                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                      Unlocking...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Video className="w-4 h-4 mr-2" />
-                                      {status.videoLabel}
-                                    </>
-                                  )}
-                                </Button>
-                                
-                                {/* Zoom Button */}
+                      <h3 className="text-white font-semibold mb-4 text-xl">Actions</h3>
+                      <div className="space-y-4">
+                        {lesson?.zoomLink && (
                                 <Button 
                                   onClick={() => {
                                     if (lesson?.zoomLink) {
                                       window.open(lesson.zoomLink, '_blank')
                                     }
                                   }}
-                                  className={`w-full ${status.zoomClass} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30 relative`}
-                                >
-                                  {status.type === 'live' && status.zoomLabel === 'Join Live' && (
-                                    <div className="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"></div>
-                                  )}
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  {status.zoomLabel}
-                                </Button>
-                              </div>
-                            ) : (
-                              <>
-                                {/* Single Button Logic */}
-                                {status.type === 'past' && !isVideoUnlocked ? (
-                                  <Button 
-                                    onClick={handleUnlockVideo}
-                                    disabled={isUnlocking}
-                                    className={`w-full ${status.class || 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
-                                  >
-                                    {isUnlocking ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                        Unlocking Premium...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Play className="w-4 h-4 mr-2" />
-                                        Start Premium Lesson
-                                      </>
-                                    )}
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30"
+                          >
+                            <ExternalLink className="w-5 h-5 mr-2" />
+                            Join Live Session
                                   </Button>
-                                ) : status.type === 'live' ? (
-                                  <Button 
-                                    onClick={() => {
-                                      if (lesson?.zoomLink) {
-                                        window.open(lesson.zoomLink, '_blank')
-                                      }
-                                    }}
-                                    className={`w-full ${status.class || 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-red-400/40`}
-                                  >
-                                    <div className="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"></div>
-                                    {lesson?.zoomLink ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                                    {status.label}
-                                  </Button>
-                                ) : status.type === 'future' ? (
-                                  <Button 
-                                    disabled
-                                    className={`w-full ${status.class || 'bg-gradient-to-r from-slate-600/40 to-slate-700/40 text-white/60'} font-bold py-4 rounded-full cursor-not-allowed border border-slate-500/30 shadow-lg`}
-                                  >
-                                    <Calendar className="w-4 h-4 mr-2" />
-                                    {status.label}
-                                  </Button>
-                                ) : isVideoUnlocked ? (
-                                  <div className="w-full bg-gradient-to-r from-emerald-500/30 to-green-500/30 border-2 border-emerald-400/50 rounded-2xl p-6 text-center shadow-2xl shadow-emerald-500/25 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 animate-pulse"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"></div>
-                                    <div className="relative z-10 space-y-3">
-                                      <div className="flex items-center justify-center gap-3">
-                                        <div className="relative">
-                                          <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-lg animate-pulse"></div>
-                                          <div className="w-5 h-5 bg-emerald-400 rounded-full animate-pulse shadow-xl shadow-emerald-400/60 relative flex items-center justify-center">
-                                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                                          </div>
-                                        </div>
-                                        <span className="text-emerald-100 font-bold text-lg">Premium Access</span>
-                                      </div>
-                                      <div className="flex items-center justify-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-300" />
-                                        <span className="text-green-200 font-semibold text-sm">Full Content Unlocked</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <Button 
-                                    onClick={() => {
-                                      if ((status.label === 'Join Live' || status.label === 'Join Live (Scheduled)') && lesson?.zoomLink) {
-                                        window.open(lesson.zoomLink, '_blank')
-                                      } else {
-                                        handleUnlockVideo()
-                                      }
-                                    }}
-                                    disabled={isUnlocking || status.disabled}
-                                    className={`w-full ${status.class || 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700'} text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30`}
-                                  >
-                                    {isUnlocking ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                        Unlocking Premium...
-                                      </>
-                                    ) : (
-                                      <>
-                                        {status.label === 'Join Live' || status.label === 'Join Live (Scheduled)' ? <ExternalLink className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                                        {status.label}
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                              </>
                             )}
 
-                            {/* Mark as Finished Button */}
-                            {isVideoUnlocked && videoWatched && !isFinished && (
+                        {/* Mark as Finished Button - Always visible */}
+                        {!isFinished && (
                               <Button 
                                 onClick={handleMarkAsFinished}
                                 disabled={isFinishing}
-                                className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
+                            className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
                               >
                                 {isFinishing ? (
                                   <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                    Earning Premium XP...
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Completing Lesson...
                                   </>
                                 ) : (
                                   <>
-                                    <Trophy className="w-4 h-4 mr-2" />
+                                <Trophy className="w-5 h-5 mr-2" />
                                     Complete & Earn XP
                                   </>
                                 )}
@@ -820,20 +691,15 @@ export default function LessonPage() {
                                         <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-md animate-pulse"></div>
                                         <CheckCircle className="w-6 h-6 text-emerald-300 relative" />
                                       </div>
-                                      <span className="text-emerald-200 font-bold text-lg">Lesson Mastered!</span>
+                                <span className="text-emerald-200 font-bold text-lg">Lesson Completed!</span>
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
                                       <Trophy className="w-4 h-4 text-yellow-400" />
-                                      <span className="text-yellow-300 font-bold text-base">+50 Premium XP Earned</span>
+                                <span className="text-yellow-300 font-bold text-base">+50 XP Earned</span>
                                     </div>
                                 </div>
                               </div>
                             )}
-
-
-                          </>
-                        )
-                      })()}
                       </div>
                     </div>
 
