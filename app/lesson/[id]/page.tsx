@@ -9,7 +9,7 @@ import { ResponsiveContainer } from "@/components/ui/responsive-container"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, Video, User, Clock, Calendar, ArrowLeft, MessageSquare, Lock, Unlock, Play, Trophy, CheckCircle, Award, Target, GraduationCap, ExternalLink } from "lucide-react"
+import { BookOpen, Video, User, Clock, Calendar, ArrowLeft, MessageSquare, Lock, Unlock, Play, Trophy, CheckCircle, Award, Target, GraduationCap, ExternalLink, AlignLeft } from "lucide-react"
 import Link from "next/link"
 import Particles from "@/components/ui/particles"
 
@@ -636,16 +636,18 @@ export default function LessonPage() {
                         return null
                       })()}
 
-                      {/* Lesson Description - Prominent Section */}
+                      {/* Lesson Description - Same as Timetable */}
                       {lesson.description && (
-                        <div className="mt-6 p-6 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg">
-                          <h4 className="text-white font-semibold mb-3 text-lg flex items-center">
-                            <BookOpen className="w-5 h-5 mr-2 text-purple-400" />
-                            About This Lesson
-                          </h4>
-                          <p className="text-gray-300 text-base leading-relaxed">
-                            {lesson.description}
-                          </p>
+                        <div className="mt-2">
+                          <div className="flex items-center bg-cyan-500/15 px-2.5 py-1.5 rounded-md border border-cyan-400/25">
+                            <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
+                            <span className="text-cyan-200 font-medium text-xs">
+                              {lesson.description.length > 80 
+                                ? lesson.description.substring(0, 80) + '...' 
+                                : lesson.description
+                              }
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -713,18 +715,7 @@ export default function LessonPage() {
                       </div>
                     </div>
 
-                    {/* Quick Info */}
-                    {lesson.description && (
-                      <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <h4 className="text-white font-semibold mb-2 text-sm">About</h4>
-                        <p className="text-gray-300 text-sm leading-relaxed">
-                          {lesson.description.length > 120 
-                            ? lesson.description.substring(0, 120) + '...' 
-                            : lesson.description
-                          }
-                        </p>
-                      </div>
-                    )}
+
                   </div>
                     </div>
                   </CardContent>

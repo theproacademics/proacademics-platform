@@ -80,20 +80,13 @@ export const Preloader = ({
   const colors = colorSchemes[colorScheme]
 
   return (
-    <>
-      {/* Mobile-specific styles */}
-      <style jsx>{`
-        @media (max-width: 640px) {
-          .mobile-safe-area {
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-          }
-        }
-      `}</style>
-      
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 min-h-screen mobile-safe-area">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 min-h-screen"
+         style={{
+           paddingTop: 'env(safe-area-inset-top)',
+           paddingBottom: 'env(safe-area-inset-bottom)', 
+           paddingLeft: 'env(safe-area-inset-left)',
+           paddingRight: 'env(safe-area-inset-right)'
+         }}>
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
@@ -192,6 +185,5 @@ export const Preloader = ({
           </div>
         </div>
       </div>
-    </>
   )
 } 
