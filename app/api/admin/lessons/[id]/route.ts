@@ -33,7 +33,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       zoomLink, 
       scheduledDate, 
       time, 
-      status 
+      status,
+      description // Add description field
     } = body
 
     const updateData = {
@@ -49,6 +50,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       scheduledDate: scheduledDate || '',
       time: time || '',
       status: status || 'draft',
+      description: description || '', // Include description in update
       updatedAt: new Date()
     }
 

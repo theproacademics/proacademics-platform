@@ -46,9 +46,7 @@ interface TimetableLesson {
   status?: 'draft' | 'active';
   videoUrl?: string;
   zoomLink?: string;
-  // Legacy fields for compatibility
-  week?: string;
-  grade?: string;
+  description?: string; // Lesson description
 }
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -111,6 +109,7 @@ export default function TimetablePage() {
           status: lesson.status,
           videoUrl: lesson.videoUrl,
           zoomLink: lesson.zoomLink,
+          description: lesson.description, // Include lesson description
           // Legacy fields for compatibility
           week: lesson.week,
           grade: lesson.grade
@@ -384,7 +383,8 @@ export default function TimetablePage() {
               {/* Enhanced card background with subtle animation */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
-                              <CardHeader className="pb-4 relative z-10">
+              
+              <CardHeader className="pb-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white flex items-center text-xl font-semibold">
                     <CalendarIcon className="w-5 h-5 mr-3 text-emerald-400" />
@@ -510,127 +510,139 @@ export default function TimetablePage() {
                           {/* Subtle hover gradient effect */}
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           
-                                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-4 relative z-10">
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-4 relative z-10">
                             <div className="flex-1 space-y-2.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                              <h3 className="font-semibold text-white text-lg leading-tight">
-                                {lesson.lessonName || lesson.topic || 'Untitled Lesson'}
-                              </h3>
-                              <div className="flex items-center gap-2.5 flex-wrap">
-                                {lesson.topic && (
-                                  <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200`}>
-                                    {lesson.topic}
-                                  </span>
-                                )}
-                                {lesson.type && (
-                                  <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
-                                    {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
-                                    {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
-                                    {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
-                                    {lesson.type}
-                                  </span>
-                                )}
-                                {(() => {
-                                  const lessonStatus = getLessonStatus(lesson)
-                                  if (lessonStatus.status === 'live') {
-                                    return (
-                                      <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold animate-pulse border shadow-lg rounded-full backdrop-blur-sm">
-                                        <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
-                                        LIVE
-                                      </Badge>
-                                    )
-                                  }
-                                  return null
-                                })()}
-                              </div>
-                            </div>
-
-                            {lesson.program && (
-                              <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
-                                <Target className="w-3 h-3 mr-1.5" />
-                                {lesson.program}
-                              </div>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-2.5 text-sm">
-                              {lesson.duration && (
-                                <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
-                                  <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
-                                  <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
-                                </div>
-                              )}
-                              {lesson.teacher && (
-                                <div className="flex items-center bg-blue-500/15 px-2.5 py-1.5 rounded-md border border-blue-400/25">
-                                  <User className="w-3 h-3 mr-1.5 text-blue-400" />
-                                  <span className="text-blue-200 font-medium text-xs truncate max-w-[120px]">{lesson.teacher}</span>
-                                </div>
-                              )}
-                              {lesson.subject && (
-                                <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
-                                  <BookOpen className="w-3 h-3 mr-1.5 text-emerald-400" />
-                                  <span className="text-emerald-200 font-medium text-xs">{lesson.subject}</span>
-                                </div>
-                              )}
-                              {lesson.time && (
-                                <div className="flex items-center bg-purple-500/15 px-2.5 py-1.5 rounded-md border border-purple-400/25">
-                                  <Play className="w-3 h-3 mr-1.5 text-purple-400" />
-                                  <span className="text-purple-200 font-medium text-xs">{lesson.time}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {lesson.scheduledDate && (() => {
-                              const date = new Date(lesson.scheduledDate)
-                              if (!isNaN(date.getTime())) {
-                                return (
-                                  <div className="inline-flex items-center bg-slate-500/15 px-2 py-1 rounded-md border border-slate-400/25 text-xs">
-                                    <CalendarIcon className="w-3 h-3 mr-1 text-slate-400" />
-                                    <span className="text-slate-300 font-medium">
-                                    {date.toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      year: 'numeric'
-                                    })}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <h3 className="font-semibold text-white text-lg leading-tight">
+                                  {lesson.lessonName || lesson.topic || 'Untitled Lesson'}
+                                </h3>
+                                <div className="flex items-center gap-2.5 flex-wrap">
+                                  {lesson.topic && (
+                                    <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200`}>
+                                      {lesson.topic}
                                     </span>
-                                  </div>
-                                )
-                              }
-                              return null
-                            })()}
-                          </div>
-
-                          <div className="flex-shrink-0">
-                            {(() => {
-                              const lessonStatus = getLessonStatus(lesson)
-                              
-                              return (
-                                <Button 
-                                  className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-6 py-2.5 text-sm font-semibold`}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    // Simple logic: Past = watch lesson (video), Live/Future = join lesson (prefer zoom)
-                                    if (lessonStatus.status === 'past') {
-                                      // Past lesson - watch lesson (video)
-                                      window.location.href = `/lesson/${lesson.id}?from=timetable`
-                                    } else {
-                                      // Live/Future lesson - join lesson (prefer zoom if available)
-                                      if (lesson.zoomLink) {
-                                        window.open(lesson.zoomLink, '_blank')
-                                      } else {
-                                        window.location.href = `/lesson/${lesson.id}?from=timetable`
-                                      }
+                                  )}
+                                  {lesson.type && (
+                                    <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                                      {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
+                                      {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
+                                      {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                                      {lesson.type}
+                                    </span>
+                                  )}
+                                  {(() => {
+                                    const lessonStatus = getLessonStatus(lesson)
+                                    if (lessonStatus.status === 'live') {
+                                      return (
+                                        <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold animate-pulse border shadow-lg rounded-full backdrop-blur-sm">
+                                          <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
+                                          LIVE
+                                        </Badge>
+                                      )
                                     }
-                                  }}
-                                >
-                                  {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
-                                  {lessonStatus.buttonText}
-                                </Button>
-                              )
-                            })()}
+                                    return null
+                                  })()}
+                                </div>
+                              </div>
+
+                              {lesson.program && (
+                                <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
+                                  <Target className="w-3 h-3 mr-1.5" />
+                                  {lesson.program}
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                                {lesson.duration && (
+                                  <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
+                                    <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
+                                    <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
+                                  </div>
+                                )}
+                                {lesson.teacher && (
+                                  <div className="flex items-center bg-blue-500/15 px-2.5 py-1.5 rounded-md border border-blue-400/25">
+                                    <User className="w-3 h-3 mr-1.5 text-blue-400" />
+                                    <span className="text-blue-200 font-medium text-xs truncate max-w-[120px]">{lesson.teacher}</span>
+                                  </div>
+                                )}
+                                {lesson.subject && (
+                                  <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
+                                    <BookOpen className="w-3 h-3 mr-1.5 text-emerald-400" />
+                                    <span className="text-emerald-200 font-medium text-xs">{lesson.subject}</span>
+                                  </div>
+                                )}
+                                {lesson.time && (
+                                  <div className="flex items-center bg-purple-500/15 px-2.5 py-1.5 rounded-md border border-purple-400/25">
+                                    <Play className="w-3 h-3 mr-1.5 text-purple-400" />
+                                    <span className="text-purple-200 font-medium text-xs">{lesson.time}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {lesson.scheduledDate && (() => {
+                                const date = new Date(lesson.scheduledDate)
+                                if (!isNaN(date.getTime())) {
+                                  return (
+                                    <div className="inline-flex items-center bg-slate-500/15 px-2 py-1 rounded-md border border-slate-400/25 text-xs">
+                                      <CalendarIcon className="w-3 h-3 mr-1 text-slate-400" />
+                                      <span className="text-slate-300 font-medium">
+                                      {date.toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      })}
+                                      </span>
+                                    </div>
+                                  )
+                                }
+                                return null
+                              })()}
+
+                              {/* Lesson Description */}
+                              {lesson.description && (
+                                <div className="mt-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                                  <p className="text-gray-300 text-sm leading-relaxed">
+                                    {lesson.description.length > 150 
+                                      ? lesson.description.substring(0, 150) + '...' 
+                                      : lesson.description
+                                    }
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-shrink-0">
+                              {(() => {
+                                const lessonStatus = getLessonStatus(lesson)
+                                
+                                return (
+                                  <Button 
+                                    className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-6 py-2.5 text-sm font-semibold`}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      // Simple logic: Past = watch lesson (video), Live/Future = join lesson (prefer zoom)
+                                      if (lessonStatus.status === 'past') {
+                                        // Past lesson - watch lesson (video)
+                                        window.location.href = `/lesson/${lesson.id}?from=timetable`
+                                      } else {
+                                        // Live/Future lesson - join lesson (prefer zoom if available)
+                                        if (lesson.zoomLink) {
+                                          window.open(lesson.zoomLink, '_blank')
+                                        } else {
+                                          window.location.href = `/lesson/${lesson.id}?from=timetable`
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
+                                    {lessonStatus.buttonText}
+                                  </Button>
+                                )
+                              })()}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
                     <div className="text-center py-8">
                       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">

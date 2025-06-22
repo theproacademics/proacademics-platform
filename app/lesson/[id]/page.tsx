@@ -30,9 +30,6 @@ interface Lesson {
   zoomLink?: string
   createdAt: string
   updatedAt: string
-  // Legacy fields for compatibility
-  week?: string
-  grade?: string
   description?: string
 }
 
@@ -638,6 +635,19 @@ export default function LessonPage() {
                         }
                         return null
                       })()}
+
+                      {/* Lesson Description - Prominent Section */}
+                      {lesson.description && (
+                        <div className="mt-6 p-6 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg">
+                          <h4 className="text-white font-semibold mb-3 text-lg flex items-center">
+                            <BookOpen className="w-5 h-5 mr-2 text-purple-400" />
+                            About This Lesson
+                          </h4>
+                          <p className="text-gray-300 text-base leading-relaxed">
+                            {lesson.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
