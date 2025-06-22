@@ -512,32 +512,37 @@ export default function LessonPage() {
                               )}
                             </>
                           ) : (
-                            // Click-to-Play Overlay
+                            // Click-to-Play Overlay with Lock
                             <div className="w-full h-full relative cursor-pointer group" onClick={handleWatchNow}>
-                              {/* Video Thumbnail */}
+                              {/* Video Thumbnail with Heavy Blur */}
                               {isStreamingUrl(lesson.videoUrl) && getYouTubeThumbnail(lesson.videoUrl) ? (
                                 <img 
                                   src={getYouTubeThumbnail(lesson.videoUrl)!}
                                   alt={lesson.lessonName || lesson.topic || 'Video Thumbnail'}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover blur-lg group-hover:blur-md transition-all duration-500"
                                 />
                               ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center">
+                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500">
                                   <Video className="w-16 h-16 text-purple-300" />
                           </div>
                               )}
                               
-                              {/* Enhanced blur overlay */}
-                              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all duration-300"></div>
+                              {/* Heavy dark overlay */}
+                              <div className="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition-all duration-500"></div>
                               
-                              {/* Watch Now Button */}
+                              {/* Centered Lock Icon */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <button className="bg-white/10 hover:bg-white/20 backdrop-blur-xl text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 hover:border-white/30">
-                                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
-                              </div>
-                                  <span className="text-lg font-bold bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent">Watch Now</span>
-                                </button>
+                                <div className="flex flex-col items-center gap-6">
+                                  <div className="bg-white/10 border border-white/30 rounded-full p-4 shadow-2xl group-hover:bg-white/20 transition-all duration-300">
+                                    <Lock className="w-8 h-8 text-white" />
+                                  </div>
+                                  
+                                  {/* Watch Now Button - Badge Style */}
+                                  <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-blue-400/30 hover:border-blue-400/50 flex items-center gap-2 text-sm">
+                                    <Play className="w-4 h-4 text-white" fill="currentColor" />
+                                    <span>Watch Now</span>
+                                  </button>
+                                </div>
                           </div>
                         </div>
                       )}
@@ -636,18 +641,16 @@ export default function LessonPage() {
                         return null
                       })()}
 
-                      {/* Lesson Description - Same as Timetable */}
+                      {/* Lesson Description - Matching Other Badges */}
                       {lesson.description && (
-                        <div className="mt-2">
-                          <div className="flex items-center bg-cyan-500/15 px-2.5 py-1.5 rounded-md border border-cyan-400/25">
-                            <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
-                            <span className="text-cyan-200 font-medium text-xs">
-                              {lesson.description.length > 80 
-                                ? lesson.description.substring(0, 80) + '...' 
-                                : lesson.description
-                              }
-                            </span>
-                          </div>
+                        <div className="flex items-center bg-cyan-500/15 px-3 py-2 rounded-lg border border-cyan-400/25">
+                          <AlignLeft className="w-4 h-4 mr-2 text-cyan-400" />
+                          <span className="text-cyan-200 font-medium">
+                            {lesson.description.length > 80 
+                              ? lesson.description.substring(0, 80) + '...' 
+                              : lesson.description
+                            }
+                          </span>
                         </div>
                       )}
                     </div>

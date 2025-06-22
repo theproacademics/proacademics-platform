@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Play, Clock, Star, Search, Zap, Users, Calendar, ArrowRight, User, Video, Award, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookOpen, Play, Clock, Star, Search, Users, ArrowRight, User, Video, Award, ChevronLeft, ChevronRight, GraduationCap, ExternalLink } from "lucide-react"
 
 // Helper function to get YouTube video ID
 const getYouTubeVideoId = (url: string): string | null => {
@@ -60,12 +60,11 @@ const difficultyColors: Record<string, string> = {
 // Define the lesson type for the frontend component
 interface Lesson {
   id: string;
-  title: string;
-  subject: string;
+  subject?: string;
   topic: string;
+  program?: string;
+  type?: string;
   duration: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  xp: number;
   instructor: string;
   isLive: boolean;
   liveDate?: string;
@@ -75,38 +74,14 @@ interface Lesson {
   scheduledDate?: string;
 }
 
-// Helper functions for date logic
-const isLiveToday = (scheduledDate?: string) => {
-  if (!scheduledDate) return false
-  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-  return scheduledDate === today
-}
 
-const isDatePassed = (scheduledDate?: string) => {
-  if (!scheduledDate) return false
-  const today = new Date().toISOString().split('T')[0]
-  return scheduledDate < today
-}
-
-const getLessonStatus = (lesson: Lesson) => {
-  const hasRegularVideo = !!(lesson.videoUrl)
-  const isLive = isLiveToday(lesson.scheduledDate)
-  const isPast = isDatePassed(lesson.scheduledDate)
-  
-  return {
-    isLiveNow: lesson.isLive && isLive,
-    hasVideo: hasRegularVideo,
-    isPastLesson: isPast,
-    isUpcoming: lesson.scheduledDate && !isLive && !isPast
-  }
-}
 
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
-  const [selectedDifficulty, setSelectedDifficulty] = useState("all")
+
   const [dataReady, setDataReady] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   
@@ -127,12 +102,11 @@ export default function LessonsPage() {
         const apiLessons = apiResult.lessons || []
         const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({
           id: lesson.id,
-          title: lesson.title,
           subject: lesson.subject,
           topic: lesson.subtopic || lesson.topic || 'General Topic',
+          program: lesson.program || lesson.course,
+          type: lesson.type || lesson.lessonType || 'Regular',
           duration: lesson.duration || '30 min',
-          difficulty: lesson.difficulty || 'Intermediate',
-          xp: lesson.xp || 50,
           instructor: lesson.teacher || lesson.instructor || 'ProAcademics Team',
           isLive: lesson.status === 'active',
           liveDate: lesson.scheduledDate,
@@ -157,17 +131,15 @@ export default function LessonsPage() {
   }, [])
 
   // Get unique subjects from lessons data
-  const subjects = ["all", ...Array.from(new Set(lessons.map(l => l.subject)))]
-  const difficulties = ["all", "Beginner", "Intermediate", "Advanced"]
+  const subjects = ["all", ...Array.from(new Set(lessons.map(l => l.subject).filter(Boolean)))]
 
   const filteredLessons = lessons.filter((lesson) => {
-    const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lesson.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lesson.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (lesson.topic || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (lesson.instructor || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (lesson.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSubject = selectedSubject === "all" || lesson.subject === selectedSubject
-    const matchesDifficulty = selectedDifficulty === "all" || lesson.difficulty === selectedDifficulty
 
-    return matchesSearch && matchesSubject && matchesDifficulty
+    return matchesSearch && matchesSubject
   })
 
   const handleLessonClick = (lessonId: string) => {
@@ -304,19 +276,18 @@ export default function LessonsPage() {
                     {featuredLessons.map((lesson, index) => (
                       <div
                         key={lesson.id}
-                        className="w-full flex-shrink-0 cursor-pointer"
-                        onClick={() => handleLessonClick(lesson.id)}
+                        className="w-full flex-shrink-0"
                       >
                         {/* Full-width YouTube Thumbnail */}
-                        <div className="aspect-[21/9] relative overflow-hidden">
+                        <div className="aspect-[16/7] relative overflow-hidden">
                           {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
                             <img 
                               src={getVideoThumbnail(lesson.videoUrl)!}
-                              alt={lesson.title}
-                              className="w-full h-full object-cover"
+                              alt={lesson.topic}
+                              className="w-full h-full object-cover object-center"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement
-                                const youtubeId = getYouTubeVideoId(lesson.videoUrl)
+                                const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
                                 if (youtubeId && !target.src.includes('mqdefault')) {
                                   target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
                                 }
@@ -328,37 +299,51 @@ export default function LessonsPage() {
                             </div>
                           )}
                           
-                          {/* Dark overlay for better text readability */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
+                          {/* Enhanced dark overlay for better text readability */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                           
                           {/* Content overlaid on thumbnail */}
                           <div className="absolute inset-0 p-6 lg:p-8 flex items-center">
                             <div className="max-w-2xl space-y-4">
-                              {/* Featured Badge */}
+                              {/* Recommended Badge */}
                               <div className="flex items-start gap-4">
-                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-                                  <Star className="w-3 h-3 mr-1 fill-current" />
-                                  Featured
+                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-4 py-2 text-sm font-bold">
+                                  <Star className="w-4 h-4 mr-2 fill-current" />
+                                  Recommended
                                 </Badge>
                               </div>
                               
-                              {/* Badges Row */}
+                              {/* Comprehensive Info Badges */}
                               <div className="flex flex-wrap items-center gap-2">
-                                <Badge className="bg-white/20 backdrop-blur-sm text-white border-0">
-                                  {lesson.subject}
-                                </Badge>
-                                <Badge variant="outline" className="border-white/40 text-white bg-white/10 backdrop-blur-sm">
-                                  <Clock className="w-3 h-3 mr-1" />
+                                {lesson.subject && (
+                                  <span className="inline-flex items-center bg-gradient-to-r from-blue-500/25 to-blue-600/25 border-blue-400/40 text-blue-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                                    {lesson.subject}
+                                  </span>
+                                )}
+                                {lesson.program && (
+                                  <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                                    {lesson.program}
+                                  </span>
+                                )}
+                                {lesson.type && (
+                                  <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-green-600/25 border-green-400/40 text-green-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                                    {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
+                                    {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
+                                    {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                                    {!['Lesson', 'Tutorial', 'Workshop'].includes(lesson.type) && <Video className="w-3 h-3" />}
+                                    {lesson.type}
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-amber-600/25 border-amber-400/40 text-amber-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                                  <Clock className="w-3 h-3" />
                                   {lesson.duration}
-                                </Badge>
-                                <Badge className="bg-white/20 backdrop-blur-sm text-white border-0">
-                                  {lesson.difficulty}
-                                </Badge>
+                                </span>
                               </div>
                               
-                              {/* Title */}
+                              {/* Topic */}
                               <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
-                                {lesson.title}
+                                {lesson.topic}
                               </h2>
                               
                               {/* Description */}
@@ -366,21 +351,23 @@ export default function LessonsPage() {
                                 {lesson.description}
                               </p>
                               
-                              {/* Instructor and XP */}
+                              {/* Teacher */}
                               <div className="flex items-center gap-6 text-white/80">
                                 <div className="flex items-center gap-2">
                                   <User className="w-4 h-4" />
                                   <span className="font-medium">{lesson.instructor}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <Zap className="w-4 h-4 text-yellow-400" />
-                                  <span className="text-yellow-400 font-semibold">{lesson.xp} XP</span>
-                    </div>
                   </div>
                               
                               {/* Watch Now Button */}
                               <div className="pt-2">
-                                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-3 text-lg font-semibold group-hover:scale-105 transition-all duration-300">
+                                <Button 
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleLessonClick(lesson.id)
+                                  }}
+                                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-3 text-lg font-semibold group-hover:scale-105 transition-all duration-300"
+                                >
                                   <Play className="w-5 h-5 mr-2" />
                                   Watch Now
                                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -465,25 +452,19 @@ export default function LessonsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {subjects.map((subject) => (
-                            <SelectItem key={subject} value={subject}>
+                            <SelectItem key={subject} value={subject || ''}>
                               {subject === "all" ? "All Subjects" : subject}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                
-                      <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                  <SelectTrigger className="w-36 bg-white/5 border-white/10 text-white">
-                    <SelectValue placeholder="Level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {difficulties.map((difficulty) => (
-                            <SelectItem key={difficulty} value={difficulty}>
-                              {difficulty === "all" ? "All Levels" : difficulty}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+
+                      <Button
+                        variant="outline"
+                        className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 px-4 py-2 whitespace-nowrap"
+                      >
+                        Sort by Recent
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -495,126 +476,117 @@ export default function LessonsPage() {
             </p>
           </div>
 
-          {/* Lessons Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Lessons List */}
+          <div className="space-y-4">
             {filteredLessons.map((lesson) => (
-                <div 
-                  key={lesson.id} 
-                className="group"
+              <div
+                key={lesson.id}
+                className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
               >
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 hover:scale-[1.02] transition-all duration-300">
-                  {/* Full-width Thumbnail Background */}
-                  <div className="aspect-video relative overflow-hidden">
-                    {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
-                      <img 
-                        src={getVideoThumbnail(lesson.videoUrl)!}
-                        alt={lesson.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          const youtubeId = getYouTubeVideoId(lesson.videoUrl)
-                          if (youtubeId && !target.src.includes('mqdefault')) {
-                            target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                        <Video className="w-16 h-16 text-slate-400" />
-                      </div>
-                    )}
-                    
-                    {/* Dark overlay for better text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-                    
-                    {/* Content overlaid on thumbnail */}
-                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                      {/* Top badges */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex flex-col gap-2">
-                          {(() => {
-                            const status = getLessonStatus(lesson)
-                            return (
-                              <>
-                                {status.isLiveNow && (
-                                  <Badge className="bg-red-500/90 text-white border-0 w-fit">
-                                    <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
-                                    LIVE
-                                  </Badge>
-                                )}
-                                {status.hasVideo && !status.isLiveNow && (
-                                  <Badge className="bg-green-500/90 text-white border-0 w-fit">
-                                    <Play className="w-3 h-3 mr-1" />
-                                    Available
-                                  </Badge>
-                                )}
-                                {status.isUpcoming && (
-                                  <Badge className="bg-blue-500/90 text-white border-0 w-fit">
-                                    <Calendar className="w-3 h-3 mr-1" />
-                                    Upcoming
-                                  </Badge>
-                                )}
-                              </>
-                            )
-                          })()}
+                {/* Subtle hover gradient effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 relative z-10">
+                  {/* Left side - Thumbnail */}
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative">
+                      {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
+                        <img 
+                          src={getVideoThumbnail(lesson.videoUrl)!}
+                          alt={lesson.topic}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
+                            if (youtubeId && !target.src.includes('mqdefault')) {
+                              target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Video className="w-8 h-8 text-slate-400" />
                         </div>
-                        
-                        {/* XP Badge */}
-                        <Badge className="bg-yellow-500/90 text-white border-0">
-                          <Zap className="w-3 h-3 mr-1" />
-                          {lesson.xp} XP
-                        </Badge>
-                      </div>
-
-                      {/* Bottom content */}
-                      <div className="space-y-3">
-                        {/* Title - Move to top */}
-                        <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight">
-                            {lesson.title}
-                          </h3>
-                        
-                        {/* Subject and difficulty badges */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 text-xs">
-                            {lesson.subject}
-                          </Badge>
-                          <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 text-xs">
-                            {lesson.difficulty}
-                          </Badge>
-                          <Badge variant="outline" className="border-white/40 text-white text-xs bg-white/10 backdrop-blur-sm">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {lesson.duration}
-                          </Badge>
-                        </div>
-
-                        {/* Instructor and Watch Now button */}
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 text-white/80 text-sm min-w-0 flex-1">
-                            <User className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{lesson.instructor}</span>
-                        </div>
-
-                          {/* Watch Now Button */}
-                          <Button 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleLessonClick(lesson.id)
-                            }}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border-0 rounded-full px-4 py-2 text-xs font-semibold group-hover:scale-105 transition-all duration-300 flex-shrink-0"
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            Watch Now
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-
+                      )}
+                      
+                      {/* Small overlay for consistency */}
+                      <div className="absolute inset-0 bg-black/20" />
                     </div>
                   </div>
+
+                  {/* Main content */}
+                  <div className="flex-1 space-y-3">
+                    {/* Title and main badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-white text-lg leading-tight">
+                          {lesson.topic}
+                        </h3>
+                        
+                        {/* Main info badges */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {lesson.subject && (
+                            <span className="inline-flex items-center bg-gradient-to-r from-blue-500/25 to-blue-600/25 border-blue-400/40 text-blue-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                              {lesson.subject}
+                            </span>
+                          )}
+                          {lesson.program && (
+                            <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                              {lesson.program}
+                            </span>
+                          )}
+                          {lesson.type && (
+                            <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-green-600/25 border-green-400/40 text-green-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                              <Video className="w-3 h-3" />
+                              {lesson.type}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Secondary info */}
+                    <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                      {lesson.duration && (
+                        <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
+                          <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
+                          <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
+                        </div>
+                      )}
+                      {lesson.instructor && (
+                        <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
+                          <User className="w-3 h-3 mr-1.5 text-emerald-400" />
+                          <span className="text-emerald-200 font-medium text-xs truncate max-w-[120px]">{lesson.instructor}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {lesson.description && (
+                      <div className="bg-slate-500/15 px-2.5 py-2 rounded-md border border-slate-400/25">
+                        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2">
+                          {lesson.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right side - Action button */}
+                  <div className="flex-shrink-0 flex sm:justify-end">
+                    <Button 
+                      className="bg-gradient-to-r from-violet-500/80 to-purple-600/80 hover:from-violet-500 hover:to-purple-600 text-white border border-violet-400/50 hover:border-violet-400/70 transition-all duration-200 px-6 py-2.5 text-sm font-semibold rounded-lg shadow-lg hover:shadow-xl backdrop-blur-sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleLessonClick(lesson.id)
+                      }}
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Watch Now
+                    </Button>
+                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
 
           {/* Empty State */}
@@ -630,7 +602,6 @@ export default function LessonsPage() {
                 onClick={() => {
                   setSearchTerm("")
                   setSelectedSubject("all")
-                  setSelectedDifficulty("all")
                 }}
                 className="border-white/20 text-white hover:bg-white/10"
               >
