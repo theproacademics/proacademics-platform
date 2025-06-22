@@ -16,18 +16,21 @@ import Particles from "@/components/ui/particles"
 interface Lesson {
   _id?: string
   id: string
-  title: string
-  subject: string
-  subtopic?: string
-  teacher?: string
+  lessonName?: string  // Lesson name
+  topic?: string       // Topic/title of the lesson
+  subject?: string
   program?: string
+  type?: 'Lesson' | 'Tutorial' | 'Workshop'
+  scheduledDate?: string
+  time?: string
   duration?: string
+  teacher?: string     // Teacher name
+  status: 'draft' | 'active'
   videoUrl?: string
   zoomLink?: string
-  status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
-  scheduledDate?: string
+  // Legacy fields for compatibility
   week?: string
   grade?: string
   description?: string
@@ -445,20 +448,6 @@ export default function LessonPage() {
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                 <span className="font-medium">{getBackButtonConfig().text}</span>
             </Button>
-
-              <div className="flex items-center gap-3">
-                <div className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-4 py-2 text-sm font-bold border rounded-full shadow-lg backdrop-blur-xl`}>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  {lesson.subject}
-                </div>
-                {lesson.status === 'active' && (
-                  <div className="inline-flex items-center bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-400/50 text-green-100 px-4 py-2 text-sm font-bold rounded-full shadow-lg backdrop-blur-xl relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 animate-pulse rounded-full"></div>
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse shadow-lg shadow-green-400/50 relative z-10"></div>
-                    <span className="relative z-10">Active</span>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Premium Lesson Card */}
@@ -468,79 +457,9 @@ export default function LessonPage() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
               
               <CardHeader className="pb-4 relative z-10">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="space-y-2">
-                    <CardTitle className="text-white text-xl lg:text-2xl font-bold">{lesson.title}</CardTitle>
-                    {lesson.subtopic && (
-                      <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2 py-1 text-xs font-medium rounded-md">
-                        <Target className="w-3 h-3 mr-1" />
-                        {lesson.subtopic}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </CardHeader>
               
               <CardContent className="relative z-10">
-                {/* Compact Details */}
-                <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
-                  {lesson.teacher && (
-                    <div className="flex items-center bg-blue-500/15 px-2 py-1 rounded-md border border-blue-400/25">
-                      <User className="w-3 h-3 mr-1 text-blue-400" />
-                      <span className="text-blue-200 font-medium text-xs truncate">{lesson.teacher}</span>
-                    </div>
-                  )}
-                  
-                  {lesson.duration && (
-                    <div className="flex items-center bg-amber-500/15 px-2 py-1 rounded-md border border-amber-400/25">
-                      <Clock className="w-3 h-3 mr-1 text-amber-400" />
-                      <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
-                    </div>
-                  )}
-
-                  {lesson.grade && (
-                    <div className="flex items-center bg-purple-500/15 px-2 py-1 rounded-md border border-purple-400/25">
-                      <GraduationCap className="w-3 h-3 mr-1 text-purple-400" />
-                      <span className="text-purple-200 font-medium text-xs">Grade {lesson.grade}</span>
-                    </div>
-                  )}
-
-                  {lesson.week && (
-                    <div className="flex items-center bg-green-500/15 px-2 py-1 rounded-md border border-green-400/25">
-                      <Calendar className="w-3 h-3 mr-1 text-green-400" />
-                      <span className="text-green-200 font-medium text-xs">Week {lesson.week}</span>
-                    </div>
-                  )}
-
-                  {lesson.videoUrl && (
-                    <div className="flex items-center bg-purple-500/15 px-2 py-1 rounded-md border border-purple-400/25">
-                      <Video className="w-3 h-3 mr-1 text-purple-400" />
-                      <span className="text-purple-200 font-medium text-xs">Video</span>
-                    </div>
-                  )}
-
-                  {lesson.zoomLink && (
-                    <div className="flex items-center bg-green-500/15 px-2 py-1 rounded-md border border-green-400/25">
-                      <ExternalLink className="w-3 h-3 mr-1 text-green-400" />
-                      <span className="text-green-200 font-medium text-xs">Zoom</span>
-                    </div>
-                  )}
-
-                  {lesson.scheduledDate && (
-                    <div className="inline-flex items-center bg-gradient-to-r from-indigo-500/20 to-violet-500/20 px-3 py-2 rounded-lg border border-indigo-400/30 text-sm col-span-2 shadow-md backdrop-blur-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-indigo-400" />
-                      <span className="text-indigo-200 font-semibold">
-                        {new Date(lesson.scheduledDate).toLocaleDateString('en-US', { 
-                          weekday: 'short',
-                          month: 'long', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
                 {/* Video Player Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Video Player */}
@@ -554,7 +473,7 @@ export default function LessonPage() {
                               // Handle YouTube URLs
                             <iframe
                                 src={`https://www.youtube.com/embed/${getYouTubeVideoId(lesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                              title={lesson.title}
+                              title={lesson.lessonName || lesson.topic || 'Lesson'}
                               className="w-full h-full"
                               allowFullScreen
                               frameBorder="0"
@@ -643,6 +562,84 @@ export default function LessonPage() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Video Details - Moved below video */}
+                  <div className="lg:col-span-2 mt-4">
+                    <div className="space-y-4">
+                      {/* Lesson Title */}
+                      <h1 className="text-white text-xl lg:text-2xl font-bold">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
+                      
+                      {/* Lesson Tags */}
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        {lesson.topic && (
+                          <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200`}>
+                            {lesson.topic}
+                          </span>
+                        )}
+                        {lesson.type && (
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                            {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
+                            {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
+                            {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                            {lesson.type}
+                          </span>
+                        )}
+                        {lesson.program && (
+                          <span className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
+                            <Target className="w-3 h-3 mr-1.5" />
+                            {lesson.program}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Lesson Info Pills */}
+                      <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                        {lesson.duration && (
+                          <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
+                            <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
+                            <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
+                          </div>
+                        )}
+                        {lesson.teacher && (
+                          <div className="flex items-center bg-blue-500/15 px-2.5 py-1.5 rounded-md border border-blue-400/25">
+                            <User className="w-3 h-3 mr-1.5 text-blue-400" />
+                            <span className="text-blue-200 font-medium text-xs truncate max-w-[120px]">{lesson.teacher}</span>
+                          </div>
+                        )}
+                        {lesson.subject && (
+                          <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
+                            <BookOpen className="w-3 h-3 mr-1.5 text-emerald-400" />
+                            <span className="text-emerald-200 font-medium text-xs">{lesson.subject}</span>
+                          </div>
+                        )}
+                        {lesson.time && (
+                          <div className="flex items-center bg-purple-500/15 px-2.5 py-1.5 rounded-md border border-purple-400/25">
+                            <Play className="w-3 h-3 mr-1.5 text-purple-400" />
+                            <span className="text-purple-200 font-medium text-xs">{lesson.time}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {lesson.scheduledDate && (() => {
+                        const date = new Date(lesson.scheduledDate)
+                        if (!isNaN(date.getTime())) {
+                          return (
+                            <div className="inline-flex items-center bg-slate-500/15 px-2.5 py-1.5 rounded-md border border-slate-400/25 text-xs">
+                              <Calendar className="w-3 h-3 mr-1.5 text-slate-400" />
+                              <span className="text-slate-300 font-medium">
+                              {date.toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                              </span>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
                   </div>
 
@@ -833,11 +830,7 @@ export default function LessonPage() {
                               </div>
                             )}
 
-                            {/* Secondary Actions */}
-                              <Button className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/40 text-blue-200 hover:from-blue-500/30 hover:to-indigo-600/30 hover:border-blue-300/50 transition-all duration-200 rounded-full py-3 font-semibold shadow-lg hover:shadow-blue-500/20">
-                                <MessageSquare className="w-4 h-4 mr-2" />
-                                Ask AI Tutor
-                            </Button>
+
                           </>
                         )
                       })()}
