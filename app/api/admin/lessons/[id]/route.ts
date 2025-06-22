@@ -38,8 +38,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     } = body
 
     const updateData = {
-      lessonName: lessonName || '',
-      topic: title, // Map "title" from frontend to "topic" in database
+      lessonName: title, // Use title as the main lesson name
+      topic: title, // Map "title" from frontend to "topic" in database for compatibility
       subject,
       type: type || 'Lesson',
       teacher: teacher || '',

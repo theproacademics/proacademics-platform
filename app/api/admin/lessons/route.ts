@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { lessonService } from "@/lib/db/lessons"
+import { lessonService, type Lesson } from "@/lib/db/lessons"
 
 // GET /api/admin/lessons - Get all lessons with pagination and filtering
 export async function GET(req: Request) {
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     const { 
       lessonName, 
       title, // Frontend sends "title" but we map it to "topic" in database
+      description, // Add description field
       subject, 
       type, 
       teacher, 
@@ -64,8 +65,9 @@ export async function POST(req: Request) {
 
     const lesson: Lesson = {
       id: lessonId,
-      lessonName: lessonName || "",
-      topic: title, // Map "title" from frontend to "topic" in database
+      lessonName: title, // Use title as the main lesson name
+      topic: title, // Map "title" from frontend to "topic" in database for compatibility
+      description: description || "", // Include description field
       subject,
       type: type || 'Lesson',
       teacher: teacher || "",

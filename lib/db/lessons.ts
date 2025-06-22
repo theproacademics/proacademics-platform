@@ -30,6 +30,7 @@ export interface Lesson {
   id: string
   lessonName?: string
   topic: string // Actual topic field
+  description?: string // Add description field
   subject: string
   program?: string
   type?: 'Lesson' | 'Tutorial' | 'Workshop'
