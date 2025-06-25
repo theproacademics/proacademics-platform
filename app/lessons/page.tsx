@@ -40,6 +40,8 @@ const isStreamingUrl = (url: string): boolean => {
 
 
 
+
+
 // Dynamic subject colors (loaded from database)
 let subjectColors: Record<string, string> = {
   Mathematics: "from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200",
@@ -49,6 +51,8 @@ let subjectColors: Record<string, string> = {
   "Computer Science": "from-indigo-500/20 to-blue-500/20 border-indigo-400/30 text-indigo-200",
   English: "from-pink-500/20 to-rose-500/20 border-pink-400/30 text-pink-200",
 }
+
+
 
 
 
@@ -138,6 +142,7 @@ export default function LessonsPage() {
   const [subjects, setSubjects] = useState<string[]>([])
   const [programs, setPrograms] = useState<string[]>([])
   const [subjectProgramsMap, setSubjectProgramsMap] = useState<Record<string, string[]>>({})
+  const [dynamicSubjectStyles, setDynamicSubjectStyles] = useState<Record<string, React.CSSProperties>>({})
 
   const [dataReady, setDataReady] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -148,6 +153,41 @@ export default function LessonsPage() {
     waitForImages: true,
     waitForFonts: true 
   })
+
+  // Helper function to get subject styling
+  const getSubjectStyle = (subject: string): { style?: React.CSSProperties; className?: string } => {
+    if (dynamicSubjectStyles[subject]) {
+      return {
+        style: dynamicSubjectStyles[subject]
+      }
+    }
+    
+    // Fallback to predefined classes for subjects not in database
+    const fallbackClass = subjectColors[subject] || "from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-200"
+    return {
+      className: `bg-gradient-to-r ${fallbackClass}`
+    }
+  }
+
+  // Helper function to get subject border color for card
+  const getSubjectBorderColor = (subject: string): string => {
+    if (dynamicSubjectStyles[subject]) {
+      // Extract the color from the dynamic style
+      return dynamicSubjectStyles[subject].borderColor as string
+    }
+    
+    // Fallback colors for predefined subjects
+    const fallbackColors: Record<string, string> = {
+      Mathematics: 'rgba(59, 130, 246, 1)', // blue
+      Physics: 'rgba(34, 197, 94, 1)', // green  
+      Chemistry: 'rgba(168, 85, 247, 1)', // purple
+      Biology: 'rgba(251, 146, 60, 1)', // orange
+      "Computer Science": 'rgba(99, 102, 241, 1)', // indigo
+      English: 'rgba(236, 72, 153, 1)', // pink
+    }
+    
+    return fallbackColors[subject] || 'rgba(156, 163, 175, 1)' // gray fallback
+  }
 
   // Fetch subjects and programs from admin APIs
   const fetchSubjectsAndPrograms = async () => {
@@ -172,11 +212,29 @@ export default function LessonsPage() {
           
           // Update subject colors if available
           if (programsMapData.subjectColors) {
+            const newDynamicStyles: Record<string, React.CSSProperties> = {}
+            
             Object.keys(programsMapData.subjectColors).forEach(subject => {
-              const color = programsMapData.subjectColors[subject]
-              // Convert hex to gradient class (simplified for now)
-              subjectColors[subject] = `from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200`
+              const hexColor = programsMapData.subjectColors[subject]
+              if (hexColor) {
+                // Remove # if present
+                const hex = hexColor.replace('#', '')
+                
+                // Convert hex to RGB
+                const r = parseInt(hex.substr(0, 2), 16)
+                const g = parseInt(hex.substr(2, 2), 16)
+                const b = parseInt(hex.substr(4, 2), 16)
+                
+                // Create dynamic styles with the actual hex color
+                newDynamicStyles[subject] = {
+                  background: `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.15), rgba(${r}, ${g}, ${b}, 0.25))`,
+                  borderColor: `rgba(${r}, ${g}, ${b}, 0.4)`,
+                  color: `rgba(${r}, ${g}, ${b}, 0.9)`
+                }
+              }
             })
+            
+            setDynamicSubjectStyles(newDynamicStyles)
           }
         }
       }
@@ -425,11 +483,17 @@ export default function LessonsPage() {
                               
                               {/* Comprehensive Info Badges */}
                               <div className="flex flex-wrap items-center gap-2">
-                                {lesson.subject && (
-                                  <span className="inline-flex items-center bg-gradient-to-r from-blue-500/25 to-blue-600/25 border-blue-400/40 text-blue-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
-                                    {lesson.subject}
-                                  </span>
-                                )}
+                                {lesson.subject && (() => {
+                                  const subjectStyling = getSubjectStyle(lesson.subject)
+                                  return (
+                                    <span 
+                                      className={`inline-flex items-center px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200 ${subjectStyling.className || ''}`}
+                                      style={subjectStyling.style}
+                                    >
+                                      {lesson.subject}
+                                    </span>
+                                  )
+                                })()}
                                 {lesson.program && (
                                   <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
                                     {lesson.program}
@@ -627,6 +691,54 @@ export default function LessonsPage() {
                   key={lesson.id}
                   className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
                 >
+                  {/* Glass-style Subject Color Accent */}
+                  {lesson.subject && (
+                    <>
+                      {/* Full height glass border */}
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 backdrop-blur-sm"
+                        style={{ 
+                          backgroundColor: getSubjectBorderColor(lesson.subject),
+                          borderRadius: '0 12px 12px 0',
+                          boxShadow: `
+                            0 0 20px ${getSubjectBorderColor(lesson.subject)}, 
+                            inset 0 1px 0 rgba(255,255,255,0.4),
+                            inset 0 -1px 0 rgba(255,255,255,0.2)
+                          `,
+                          border: `1px solid rgba(255,255,255,0.3)`,
+                          borderLeft: 'none'
+                        }}
+                      />
+                      
+                      {/* Glass reflection effect */}
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2"
+                        style={{ 
+                          background: `linear-gradient(135deg, 
+                            rgba(255,255,255,0.4) 0%, 
+                            rgba(255,255,255,0.1) 50%, 
+                            transparent 100%)`,
+                          borderRadius: '0 12px 12px 0',
+                          mixBlendMode: 'overlay'
+                        }}
+                      />
+                      
+                      {/* Enhanced glow without opacity */}
+                      <div 
+                        className="absolute left-1.5 top-0 bottom-0 w-8 transition-all duration-300 group-hover:w-12 group-hover:left-2"
+                        style={{ 
+                          background: `linear-gradient(90deg, 
+                            ${getSubjectBorderColor(lesson.subject)} 0%, 
+                            ${getSubjectBorderColor(lesson.subject)}80 30%, 
+                            ${getSubjectBorderColor(lesson.subject)}40 60%, 
+                            transparent 100%)`,
+                          filter: 'blur(8px)',
+                          borderRadius: '0 20px 20px 0'
+                        }}
+                      />
+                    </>
+                  )}
+                  
                   {/* Subtle hover gradient effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
@@ -640,6 +752,9 @@ export default function LessonsPage() {
                         {timeString}
                       </div>
                     </div>
+
+                    {/* Separator Line */}
+                    <div className="flex-shrink-0 h-16 lg:h-20 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
 
                     {/* Video Thumbnail */}
                     <div className="flex-shrink-0">
@@ -709,11 +824,17 @@ export default function LessonsPage() {
 
                       {/* Subject, Type, and Duration Tags */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        {lesson.subject && (
-                          <span className="inline-flex items-center bg-emerald-500/15 text-emerald-200 border border-emerald-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
-                            {lesson.subject}
-                          </span>
-                        )}
+                        {lesson.subject && (() => {
+                          const subjectStyling = getSubjectStyle(lesson.subject)
+                          return (
+                            <span 
+                              className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg border ${subjectStyling.className || ''}`}
+                              style={subjectStyling.style}
+                            >
+                              {lesson.subject}
+                            </span>
+                          )
+                        })()}
                         {lesson.type && (
                           <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
                             {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
