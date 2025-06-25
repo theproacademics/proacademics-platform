@@ -132,6 +132,12 @@ export default function LessonsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("all")
+  const [selectedProgram, setSelectedProgram] = useState("all")
+
+  // New state for admin data
+  const [subjects, setSubjects] = useState<string[]>([])
+  const [programs, setPrograms] = useState<string[]>([])
+  const [subjectProgramsMap, setSubjectProgramsMap] = useState<Record<string, string[]>>({})
 
   const [dataReady, setDataReady] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -143,29 +149,48 @@ export default function LessonsPage() {
     waitForFonts: true 
   })
 
-  useEffect(() => {
-    const fetchLessons = async () => {
-      setIsLoading(true)
-      try {
-        const [lessonsResponse, subjectColorsResponse] = await Promise.all([
-          fetch('/api/admin/lessons?limit=1000&status=active'),
-          fetch('/api/admin/subjects/programs-map')
-        ])
+  // Fetch subjects and programs from admin APIs
+  const fetchSubjectsAndPrograms = async () => {
+    try {
+      const [subjectsResponse, programsMapResponse] = await Promise.all([
+        fetch('/api/admin/subjects'),
+        fetch('/api/admin/subjects/programs-map')
+      ])
 
-        const apiResult = await lessonsResponse.json()
-        
-        // Update subject colors if available
-        if (subjectColorsResponse.ok) {
-          const subjectData = await subjectColorsResponse.json()
-          if (subjectData.success && subjectData.subjectColors) {
-            // Convert hex colors to gradient classes for each subject
-            Object.keys(subjectData.subjectColors).forEach(subject => {
-              const color = subjectData.subjectColors[subject]
+      if (subjectsResponse.ok) {
+        const subjectsData = await subjectsResponse.json()
+        if (subjectsData.success) {
+          const subjectNames = subjectsData.subjects.map((subject: any) => subject.name)
+          setSubjects(["all", ...subjectNames])
+        }
+      }
+
+      if (programsMapResponse.ok) {
+        const programsMapData = await programsMapResponse.json()
+        if (programsMapData.success) {
+          setSubjectProgramsMap(programsMapData.subjectPrograms || {})
+          
+          // Update subject colors if available
+          if (programsMapData.subjectColors) {
+            Object.keys(programsMapData.subjectColors).forEach(subject => {
+              const color = programsMapData.subjectColors[subject]
               // Convert hex to gradient class (simplified for now)
               subjectColors[subject] = `from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200`
             })
           }
         }
+      }
+    } catch (error) {
+      console.error("Failed to fetch subjects and programs:", error)
+    }
+  }
+
+  useEffect(() => {
+    const fetchLessons = async () => {
+      setIsLoading(true)
+      try {
+        const lessonsResponse = await fetch('/api/admin/lessons?limit=1000&status=active')
+        const apiResult = await lessonsResponse.json()
         
         const apiLessons = apiResult.lessons || []
         const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({
@@ -197,18 +222,33 @@ export default function LessonsPage() {
     }
 
     fetchLessons()
+    fetchSubjectsAndPrograms()
   }, [])
 
-  // Get unique subjects from lessons data
-  const subjects = ["all", ...Array.from(new Set(lessons.map(l => l.subject).filter(Boolean)))]
+  // Update programs when subject changes
+  useEffect(() => {
+    if (selectedSubject === "all") {
+      // Show all programs from all subjects
+      const allPrograms = Object.values(subjectProgramsMap).flat()
+      setPrograms(["all", ...new Set(allPrograms)])
+    } else {
+      // Show programs for selected subject
+      const subjectPrograms = subjectProgramsMap[selectedSubject] || []
+      setPrograms(["all", ...subjectPrograms])
+    }
+    
+    // Reset program selection when subject changes
+    setSelectedProgram("all")
+  }, [selectedSubject, subjectProgramsMap])
 
   const filteredLessons = lessons.filter((lesson) => {
     const matchesSearch = (lesson.topic || lesson.lessonName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (lesson.teacher || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (lesson.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSubject = selectedSubject === "all" || lesson.subject === selectedSubject
+    const matchesProgram = selectedProgram === "all" || lesson.program === selectedProgram
 
-    return matchesSearch && matchesSubject
+    return matchesSearch && matchesSubject && matchesProgram
   })
 
   const handleLessonClick = (lessonId: string) => {
@@ -515,18 +555,31 @@ export default function LessonsPage() {
                     </div>
               
               <div className="flex gap-3">
-                      <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                   <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
                           <SelectValue placeholder="Subject" />
                         </SelectTrigger>
                         <SelectContent>
                           {subjects.map((subject) => (
-                            <SelectItem key={subject} value={subject || ''}>
+                            <SelectItem key={subject} value={subject}>
                               {subject === "all" ? "All Subjects" : subject}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+
+                       <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+                         <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
+                           <SelectValue placeholder="Program" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {programs.map((program) => (
+                             <SelectItem key={program} value={program}>
+                               {program === "all" ? "All Programs" : program}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
 
                       <Button
                         variant="outline"
@@ -742,6 +795,7 @@ export default function LessonsPage() {
                 onClick={() => {
                   setSearchTerm("")
                   setSelectedSubject("all")
+                  setSelectedProgram("all")
                 }}
                 className="border-white/20 text-white hover:bg-white/10"
               >

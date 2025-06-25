@@ -152,6 +152,8 @@ export default function LessonsPage() {
   const [subjects, setSubjects] = useState<string[]>([])
   const [teachers, setTeachers] = useState<string[]>([])
   
+  // Add state for admin subjects and programs
+  const [adminSubjects, setAdminSubjects] = useState<{id: string, name: string, color: string, isActive: boolean}[]>([])
 
   
   // Filter and pagination states
@@ -218,10 +220,11 @@ export default function LessonsPage() {
   // Fetch filter options and dynamic subject-programs mapping
   const fetchFilterOptions = async () => {
     try {
-      const [subjectsRes, teachersRes, subjectProgramsRes] = await Promise.all([
+      const [subjectsRes, teachersRes, subjectProgramsRes, adminSubjectsRes] = await Promise.all([
         fetch('/api/admin/lessons/filters/subjects'),
         fetch('/api/admin/lessons/filters/teachers'),
-        fetch('/api/admin/subjects/programs-map')
+        fetch('/api/admin/subjects/programs-map'),
+        fetch('/api/admin/subjects')
       ])
       
       if (subjectsRes.ok) {
@@ -239,6 +242,13 @@ export default function LessonsPage() {
         if (subjectProgramsData.success) {
           SUBJECT_PROGRAMS = subjectProgramsData.subjectPrograms || {}
           SUBJECT_COLORS = subjectProgramsData.subjectColors || {}
+        }
+      }
+
+      if (adminSubjectsRes.ok) {
+        const adminSubjectsData = await adminSubjectsRes.json()
+        if (adminSubjectsData.success) {
+          setAdminSubjects(adminSubjectsData.subjects || [])
         }
       }
     } catch (error) {
@@ -1611,18 +1621,20 @@ export default function LessonsPage() {
                             className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                             style={{ zIndex: 999999 }}
                           >
-                            <SelectItem value="Maths" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Maths
-                            </SelectItem>
-                            <SelectItem value="Biology" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Biology
-                            </SelectItem>
-                            <SelectItem value="Chemistry" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Chemistry
-                            </SelectItem>
-                            <SelectItem value="Physics" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Physics
-                            </SelectItem>
+                            {adminSubjects
+                              .filter(subject => subject.isActive)
+                              .map((subject) => (
+                                <SelectItem key={subject.id} value={subject.name} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: subject.color }}
+                                    />
+                                    {subject.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
                   </div>
@@ -2062,18 +2074,20 @@ export default function LessonsPage() {
                             className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                             style={{ zIndex: 999999 }}
                           >
-                            <SelectItem value="Maths" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Maths
-                            </SelectItem>
-                            <SelectItem value="Biology" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Biology
-                            </SelectItem>
-                            <SelectItem value="Chemistry" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Chemistry
-                            </SelectItem>
-                            <SelectItem value="Physics" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                              Physics
-                            </SelectItem>
+                            {adminSubjects
+                              .filter(subject => subject.isActive)
+                              .map((subject) => (
+                                <SelectItem key={subject.id} value={subject.name} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: subject.color }}
+                                    />
+                                    {subject.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
             </div>
