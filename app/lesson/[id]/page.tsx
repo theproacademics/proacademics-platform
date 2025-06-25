@@ -444,20 +444,6 @@ export default function LessonPage() {
       <main className="lg:ml-72 min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
           <div className="space-y-6 pb-16">
-            {/* Enhanced Header */}
-            <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-                className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
-              onClick={() => {
-                const backConfig = getBackButtonConfig()
-                window.location.href = backConfig.href
-              }}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                <span className="font-medium">{getBackButtonConfig().text}</span>
-            </Button>
-            </div>
 
             {/* Lesson Card */}
             <Card className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group">
@@ -470,9 +456,24 @@ export default function LessonPage() {
               
               <CardContent className="relative z-10">
                 {/* Video Player Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="space-y-8">
                   {/* Video Player */}
-                  <div className="lg:col-span-3">
+                  <div>
+                    {/* Back to Lessons Button Above Video */}
+                    <div className="mb-4">
+                      <Button 
+                        variant="ghost" 
+                        className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
+                        onClick={() => {
+                          const backConfig = getBackButtonConfig()
+                          window.location.href = backConfig.href
+                        }}
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+                        <span className="font-medium">{getBackButtonConfig().text}</span>
+                      </Button>
+                    </div>
+                    
                     <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden relative transition-all duration-300">
                   {lesson.videoUrl ? (
                     <>
@@ -566,8 +567,13 @@ export default function LessonPage() {
                       )}
                   </div>
 
+                    {/* Separator Line */}
+                    <div className="border-t border-white/20 my-8 relative">
+                      <div className="absolute inset-0 border-t border-purple-400/20"></div>
+                    </div>
+
                     {/* Video Details - Below video */}
-                    <div className="mt-6 space-y-4">
+                    <div className="space-y-4">
                       {/* Lesson Title */}
                       <h1 className="text-white text-2xl lg:text-3xl font-bold">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
                       
@@ -656,11 +662,11 @@ export default function LessonPage() {
                     </div>
                   </div>
 
-                  {/* Actions Sidebar */}
-                  <div className="lg:col-span-1 space-y-4">
+                  {/* Actions Section - Now Below Video */}
+                  <div className="space-y-4">
                     <div>
                       <h3 className="text-white font-semibold mb-4 text-xl">Actions</h3>
-                      <div className="space-y-4">
+                      <div className="flex flex-wrap gap-4">
                         {lesson?.zoomLink && (
                                 <Button 
                                   onClick={() => {
@@ -668,7 +674,7 @@ export default function LessonPage() {
                                       window.open(lesson.zoomLink, '_blank')
                                     }
                                   }}
-                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30"
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30"
                           >
                             <ExternalLink className="w-5 h-5 mr-2" />
                             Join Live Session
@@ -680,7 +686,7 @@ export default function LessonPage() {
                               <Button 
                                 onClick={handleMarkAsFinished}
                                 disabled={isFinishing}
-                            className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
+                            className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
                               >
                                 {isFinishing ? (
                                   <>
@@ -698,7 +704,7 @@ export default function LessonPage() {
 
                             {/* Completion Status */}
                             {isFinished && (
-                                <div className="w-full bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-xl p-5 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden">
+                                <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-xl p-5 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden">
                                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 animate-pulse"></div>
                                   <div className="relative z-10">
                                 <div className="flex items-center justify-center gap-3 mb-2">
@@ -717,10 +723,8 @@ export default function LessonPage() {
                             )}
                       </div>
                     </div>
-
-
                   </div>
-                    </div>
+                </div>
                   </CardContent>
                 </Card>
           </div>
