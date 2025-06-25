@@ -631,13 +631,13 @@ export default function LessonsPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   <div className="flex items-center gap-4 relative z-10">
-                    {/* Left: Time and Date */}
+                    {/* Left: Date and Time */}
                     <div className="flex-shrink-0 text-center min-w-[80px]">
                       <div className="text-2xl font-bold text-white leading-tight">
-                        {timeString}
+                        {dateString}
                       </div>
                       <div className="text-sm text-slate-400 font-medium">
-                        {lesson.duration || '20 min'}
+                        {timeString}
                       </div>
                     </div>
 
@@ -682,8 +682,6 @@ export default function LessonsPage() {
                           </h3>
                           <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
                             <span>{lesson.teacher}</span>
-                            <span>•</span>
-                            <span>{dateString}</span>
                           </div>
                         </div>
                         
@@ -691,15 +689,9 @@ export default function LessonsPage() {
                           const lessonStatus = getLessonStatus(lesson)
                           if (lessonStatus.status === 'live') {
                             return (
-                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold animate-pulse border shadow-lg rounded-full backdrop-blur-sm">
+                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold animate-pulse border shadow-lg rounded-lg backdrop-blur-sm">
                                 <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
                                 LIVE
-                              </Badge>
-                            )
-                          } else if (lessonStatus.status === 'past') {
-                            return (
-                              <Badge className="bg-gradient-to-r from-gray-500/40 to-gray-600/40 border-gray-400/60 text-gray-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border shadow-lg rounded-full backdrop-blur-sm">
-                                Completed
                               </Badge>
                             )
                           }
@@ -709,34 +701,40 @@ export default function LessonsPage() {
 
                       {/* Program Badge */}
                       {lesson.program && (
-                        <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
+                        <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
                           <Target className="w-3 h-3 mr-1.5" />
                           {lesson.program}
                         </div>
                       )}
 
-                      {/* Subject Tags */}
+                      {/* Subject, Type, and Duration Tags */}
                       <div className="flex items-center gap-2 flex-wrap">
                         {lesson.subject && (
-                          <span className="inline-flex items-center bg-emerald-500/15 text-emerald-200 border border-emerald-400/25 px-2.5 py-1 text-xs font-semibold rounded-lg">
+                          <span className="inline-flex items-center bg-emerald-500/15 text-emerald-200 border border-emerald-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
                             {lesson.subject}
                           </span>
                         )}
                         {lesson.type && (
-                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
                             {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
                             {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
                             {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
                             {lesson.type}
                           </span>
                         )}
+                        {lesson.duration && (
+                          <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-amber-400/40 text-amber-100 gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-amber-500/35 hover:to-orange-500/35 transition-all duration-200">
+                            <Clock className="w-3 h-3" />
+                            {lesson.duration}
+                          </span>
+                        )}
                       </div>
 
                       {/* Lesson Description */}
                       {lesson.description && (
-                        <div className="flex items-center bg-cyan-500/15 px-2.5 py-1.5 rounded-md border border-cyan-400/25">
+                        <div className="flex items-center bg-cyan-500/15 px-3 py-1.5 rounded-lg border border-cyan-400/25">
                           <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
-                          <span className="text-cyan-200 font-medium text-xs truncate">
+                          <span className="text-cyan-200 font-semibold text-xs truncate">
                             {lesson.description.length > 60 
                               ? lesson.description.substring(0, 60) + '...' 
                               : lesson.description
