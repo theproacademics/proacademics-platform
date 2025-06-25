@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Play, Clock, Star, Search, Users, ArrowRight, User, Video, Award, ChevronLeft, ChevronRight, GraduationCap, ExternalLink } from "lucide-react"
+import { BookOpen, Play, Clock, Star, Search, Users, ArrowRight, User, Video, Award, ChevronLeft, ChevronRight, GraduationCap, ExternalLink, Target, Calendar as CalendarIcon, AlignLeft } from "lucide-react"
 
 // Helper function to get YouTube video ID
 const getYouTubeVideoId = (url: string): string | null => {
@@ -40,41 +40,92 @@ const isStreamingUrl = (url: string): boolean => {
 
 
 
-// Subject colors for consistent theming
-const subjectColors: Record<string, string> = {
-  Mathematics: "bg-blue-500/10 border-blue-400/30 text-blue-300",
-  Physics: "bg-green-500/10 border-green-400/30 text-green-300",
-  Chemistry: "bg-purple-500/10 border-purple-400/30 text-purple-300",
-  Biology: "bg-orange-500/10 border-orange-400/30 text-orange-300",
-  "Computer Science": "bg-indigo-500/10 border-indigo-400/30 text-indigo-300",
-  English: "bg-pink-500/10 border-pink-400/30 text-pink-300",
+// Subject colors for consistent theming (matching timetable)
+const subjectColors = {
+  Mathematics: "from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200",
+  Physics: "from-green-500/20 to-emerald-500/20 border-green-400/30 text-green-200",
+  Chemistry: "from-purple-500/20 to-violet-500/20 border-purple-400/30 text-purple-200",
+  Biology: "from-orange-500/20 to-amber-500/20 border-orange-400/30 text-orange-200",
+  "Computer Science": "from-indigo-500/20 to-blue-500/20 border-indigo-400/30 text-indigo-200",
+  English: "from-pink-500/20 to-rose-500/20 border-pink-400/30 text-pink-200",
 }
 
-// Difficulty colors
-const difficultyColors: Record<string, string> = {
-  Beginner: "bg-green-500/15 text-green-300 border-green-400/30",
-  Intermediate: "bg-yellow-500/15 text-yellow-300 border-yellow-400/30",
-  Advanced: "bg-red-500/15 text-red-300 border-red-400/30",
-}
 
-// Define the lesson type for the frontend component
+
+// Define the lesson type for the frontend component (matching timetable)
 interface Lesson {
   id: string;
+  lessonName?: string;  // Lesson name
+  topic?: string;       // Topic/title of the lesson
   subject?: string;
-  topic: string;
   program?: string;
-  type?: string;
-  duration: string;
-  instructor: string;
-  isLive: boolean;
-  liveDate?: string;
-  description: string;
+  type?: 'Lesson' | 'Tutorial' | 'Workshop';
+  scheduledDate?: string;
+  time?: string;
+  duration?: string;
+  teacher?: string;     // Teacher name (not instructor)
+  status?: 'draft' | 'active';
   videoUrl?: string;
   zoomLink?: string;
-  scheduledDate?: string;
+  description?: string; // Lesson description
 }
 
+// Lesson status function (matching timetable)
+const getLessonStatus = (lesson: Lesson) => {
+  if (!lesson.scheduledDate) {
+    // No scheduled date - default to join lesson
+    return {
+      status: 'future',
+      buttonText: 'Watch Now',
+      buttonClass: 'bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20'
+    }
+  }
 
+  const now = new Date()
+  const lessonDate = new Date(lesson.scheduledDate)
+  
+  if (isNaN(lessonDate.getTime())) {
+    // Invalid date - default to join lesson
+    return {
+      status: 'future',
+      buttonText: 'Watch Now',
+      buttonClass: 'bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20'
+    }
+  }
+  
+  let durationMinutes = 60
+  if (lesson.duration) {
+    const durationMatch = lesson.duration.match(/(\d+)/)
+    if (durationMatch) {
+      durationMinutes = parseInt(durationMatch[1])
+    }
+  }
+  
+  const lessonEndTime = new Date(lessonDate.getTime() + durationMinutes * 60000)
+  
+  if (now < lessonDate) {
+    // Future lesson
+    return {
+      status: 'future',
+      buttonText: 'Watch Now',
+      buttonClass: 'bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20'
+    }
+  } else if (now >= lessonDate && now <= lessonEndTime) {
+    // Currently live (happening right now)
+    return {
+      status: 'live',
+      buttonText: 'Join Lesson',
+      buttonClass: 'bg-red-500/30 backdrop-blur-xl border border-red-400/50 hover:bg-red-500/40 hover:border-red-400/70 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-red-500/20 hover:shadow-red-500/30 animate-pulse'
+    }
+  } else {
+    // Past lesson
+    return {
+      status: 'past',
+      buttonText: 'Watch Lesson',
+      buttonClass: 'bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20'
+    }
+  }
+}
 
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
@@ -102,18 +153,19 @@ export default function LessonsPage() {
         const apiLessons = apiResult.lessons || []
         const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({
           id: lesson.id,
+          lessonName: lesson.lessonName,
+          topic: lesson.topic || lesson.subtopic || 'General Topic',
           subject: lesson.subject,
-          topic: lesson.subtopic || lesson.topic || 'General Topic',
           program: lesson.program || lesson.course,
-          type: lesson.type || lesson.lessonType || 'Regular',
-          duration: lesson.duration || '30 min',
-          instructor: lesson.teacher || lesson.instructor || 'ProAcademics Team',
-          isLive: lesson.status === 'active',
-          liveDate: lesson.scheduledDate,
-          description: lesson.description || 'Join us for this exciting lesson!',
+          type: lesson.type || 'Lesson',
+          scheduledDate: lesson.scheduledDate,
+          time: lesson.time,
+          duration: lesson.duration || '60 min',
+          teacher: lesson.teacher || lesson.instructor || 'ProAcademics Team',
+          status: lesson.status,
           videoUrl: lesson.videoUrl,
           zoomLink: lesson.zoomLink,
-          scheduledDate: lesson.scheduledDate,
+          description: lesson.description || 'Join us for this exciting lesson!',
         }))
         
         setLessons(transformedLessons)
@@ -134,8 +186,8 @@ export default function LessonsPage() {
   const subjects = ["all", ...Array.from(new Set(lessons.map(l => l.subject).filter(Boolean)))]
 
   const filteredLessons = lessons.filter((lesson) => {
-    const matchesSearch = (lesson.topic || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (lesson.instructor || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (lesson.topic || lesson.lessonName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (lesson.teacher || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (lesson.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSubject = selectedSubject === "all" || lesson.subject === selectedSubject
 
@@ -355,7 +407,7 @@ export default function LessonsPage() {
                               <div className="flex items-center gap-6 text-white/80">
                                 <div className="flex items-center gap-2">
                                   <User className="w-4 h-4" />
-                                  <span className="font-medium">{lesson.instructor}</span>
+                                  <span className="font-medium">{lesson.teacher}</span>
                                 </div>
                   </div>
                               
@@ -437,7 +489,7 @@ export default function LessonsPage() {
                       <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <Input
-                          placeholder="Search lessons, topics, or instructors..."
+                          placeholder="Search lessons, topics, or teachers..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:border-blue-500/50"
@@ -476,117 +528,188 @@ export default function LessonsPage() {
             </p>
           </div>
 
-          {/* Lessons List */}
-          <div className="space-y-4">
-            {filteredLessons.map((lesson) => (
-              <div
-                key={lesson.id}
-                className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
-              >
-                {/* Subtle hover gradient effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Lessons List - Enhanced UI with Time/Date Left and Thumbnails */}
+          <div className="space-y-3">
+            {filteredLessons.map((lesson) => {
+              // Parse scheduled date and time
+              const scheduledDate = lesson.scheduledDate ? new Date(lesson.scheduledDate) : new Date()
+              const isValidDate = !isNaN(scheduledDate.getTime())
+              
+              // Extract time from scheduled date or use default
+              const timeString = isValidDate 
+                ? scheduledDate.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                  })
+                : lesson.time || '2:30pm' // Use lesson.time or default
                 
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 relative z-10">
-                  {/* Left side - Thumbnail */}
-                  <div className="flex-shrink-0">
-                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative">
-                      {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
-                        <img 
-                          src={getVideoThumbnail(lesson.videoUrl)!}
-                          alt={lesson.topic}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
-                            if (youtubeId && !target.src.includes('mqdefault')) {
-                              target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Video className="w-8 h-8 text-slate-400" />
-                        </div>
-                      )}
-                      
-                      {/* Small overlay for consistency */}
-                      <div className="absolute inset-0 bg-black/20" />
-                    </div>
-                  </div>
+              // Format date
+              const dateString = isValidDate
+                ? scheduledDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })
+                : 'Today' // Default date
 
-                  {/* Main content */}
-                  <div className="flex-1 space-y-3">
-                    {/* Title and main badges */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-white text-lg leading-tight">
-                          {lesson.topic}
-                        </h3>
+              return (
+                <div
+                  key={lesson.id}
+                  className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
+                >
+                  {/* Subtle hover gradient effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="flex items-center gap-4 relative z-10">
+                    {/* Left: Time and Date */}
+                    <div className="flex-shrink-0 text-center min-w-[80px]">
+                      <div className="text-2xl font-bold text-white leading-tight">
+                        {timeString}
+                      </div>
+                      <div className="text-sm text-slate-400 font-medium">
+                        {lesson.duration || '20 min'}
+                      </div>
+                    </div>
+
+                    {/* Video Thumbnail */}
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative">
+                        {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
+                          <img 
+                            src={getVideoThumbnail(lesson.videoUrl)!}
+                            alt={lesson.lessonName || lesson.topic}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
+                              if (youtubeId && !target.src.includes('mqdefault')) {
+                                target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Video className="w-8 h-8 text-slate-400" />
+                          </div>
+                        )}
                         
-                        {/* Main info badges */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {lesson.subject && (
-                            <span className="inline-flex items-center bg-gradient-to-r from-blue-500/25 to-blue-600/25 border-blue-400/40 text-blue-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
-                              {lesson.subject}
-                            </span>
-                          )}
-                          {lesson.program && (
-                            <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
-                              {lesson.program}
-                            </span>
-                          )}
-                          {lesson.type && (
-                            <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-green-600/25 border-green-400/40 text-green-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
-                              <Video className="w-3 h-3" />
-                              {lesson.type}
-                            </span>
-                          )}
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                            <Play className="w-3 h-3 text-white ml-0.5" />
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Secondary info */}
-                    <div className="flex flex-wrap items-center gap-2.5 text-sm">
-                      {lesson.duration && (
-                        <div className="flex items-center bg-amber-500/15 px-2.5 py-1.5 rounded-md border border-amber-400/25">
-                          <Clock className="w-3 h-3 mr-1.5 text-amber-400" />
-                          <span className="text-amber-200 font-medium text-xs">{lesson.duration}</span>
+                    {/* Main Content */}
+                    <div className="flex-1 min-w-0 space-y-2">
+                      {/* Header with Lesson Name and Status */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white text-lg leading-tight">
+                            {lesson.lessonName || lesson.topic || 'Untitled Lesson'}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
+                            <span>{lesson.teacher}</span>
+                            <span>•</span>
+                            <span>{dateString}</span>
+                          </div>
+                        </div>
+                        
+                        {(() => {
+                          const lessonStatus = getLessonStatus(lesson)
+                          if (lessonStatus.status === 'live') {
+                            return (
+                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold animate-pulse border shadow-lg rounded-full backdrop-blur-sm">
+                                <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
+                                LIVE
+                              </Badge>
+                            )
+                          } else if (lessonStatus.status === 'past') {
+                            return (
+                              <Badge className="bg-gradient-to-r from-gray-500/40 to-gray-600/40 border-gray-400/60 text-gray-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border shadow-lg rounded-full backdrop-blur-sm">
+                                Completed
+                              </Badge>
+                            )
+                          }
+                          return null
+                        })()}
+                      </div>
+
+                      {/* Program Badge */}
+                      {lesson.program && (
+                        <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2.5 py-1.5 text-xs font-medium rounded-md">
+                          <Target className="w-3 h-3 mr-1.5" />
+                          {lesson.program}
                         </div>
                       )}
-                      {lesson.instructor && (
-                        <div className="flex items-center bg-emerald-500/15 px-2.5 py-1.5 rounded-md border border-emerald-400/25">
-                          <User className="w-3 h-3 mr-1.5 text-emerald-400" />
-                          <span className="text-emerald-200 font-medium text-xs truncate max-w-[120px]">{lesson.instructor}</span>
+
+                      {/* Subject Tags */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {lesson.subject && (
+                          <span className="inline-flex items-center bg-emerald-500/15 text-emerald-200 border border-emerald-400/25 px-2.5 py-1 text-xs font-semibold rounded-lg">
+                            {lesson.subject}
+                          </span>
+                        )}
+                        {lesson.type && (
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-2.5 py-1 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                            {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
+                            {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
+                            {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                            {lesson.type}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Lesson Description */}
+                      {lesson.description && (
+                        <div className="flex items-center bg-cyan-500/15 px-2.5 py-1.5 rounded-md border border-cyan-400/25">
+                          <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
+                          <span className="text-cyan-200 font-medium text-xs truncate">
+                            {lesson.description.length > 60 
+                              ? lesson.description.substring(0, 60) + '...' 
+                              : lesson.description
+                            }
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Description */}
-                    {lesson.description && (
-                      <div className="bg-slate-500/15 px-2.5 py-2 rounded-md border border-slate-400/25">
-                        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2">
-                          {lesson.description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right side - Action button */}
-                  <div className="flex-shrink-0 flex sm:justify-end">
-                    <Button 
-                      className="bg-gradient-to-r from-violet-500/80 to-purple-600/80 hover:from-violet-500 hover:to-purple-600 text-white border border-violet-400/50 hover:border-violet-400/70 transition-all duration-200 px-6 py-2.5 text-sm font-semibold rounded-lg shadow-lg hover:shadow-xl backdrop-blur-sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleLessonClick(lesson.id)
-                      }}
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      Watch Now
-                    </Button>
+                    {/* Action Button */}
+                    <div className="flex-shrink-0">
+                      {(() => {
+                        const lessonStatus = getLessonStatus(lesson)
+                        
+                        return (
+                          <Button 
+                            className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-6 py-2.5 text-sm font-semibold`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              // Simple logic: Past = watch lesson (video), Live/Future = join lesson (prefer zoom)
+                              if (lessonStatus.status === 'past') {
+                                // Past lesson - watch lesson (video)
+                                window.location.href = `/lesson/${lesson.id}?from=lessons`
+                              } else {
+                                // Live/Future lesson - join lesson (prefer zoom if available)
+                                if (lesson.zoomLink) {
+                                  window.open(lesson.zoomLink, '_blank')
+                                } else {
+                                  window.location.href = `/lesson/${lesson.id}?from=lessons`
+                                }
+                              }
+                            }}
+                          >
+                            {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
+                            {lessonStatus.buttonText}
+                          </Button>
+                        )
+                      })()}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Empty State */}
