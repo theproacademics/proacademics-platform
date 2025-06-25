@@ -40,8 +40,8 @@ const isStreamingUrl = (url: string): boolean => {
 
 
 
-// Subject colors for consistent theming (matching timetable)
-const subjectColors = {
+// Dynamic subject colors (loaded from database)
+let subjectColors: Record<string, string> = {
   Mathematics: "from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200",
   Physics: "from-green-500/20 to-emerald-500/20 border-green-400/30 text-green-200",
   Chemistry: "from-purple-500/20 to-violet-500/20 border-purple-400/30 text-purple-200",
@@ -147,8 +147,25 @@ export default function LessonsPage() {
     const fetchLessons = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch('/api/admin/lessons?limit=1000&status=active')
-        const apiResult = await response.json()
+        const [lessonsResponse, subjectColorsResponse] = await Promise.all([
+          fetch('/api/admin/lessons?limit=1000&status=active'),
+          fetch('/api/admin/subjects/programs-map')
+        ])
+
+        const apiResult = await lessonsResponse.json()
+        
+        // Update subject colors if available
+        if (subjectColorsResponse.ok) {
+          const subjectData = await subjectColorsResponse.json()
+          if (subjectData.success && subjectData.subjectColors) {
+            // Convert hex colors to gradient classes for each subject
+            Object.keys(subjectData.subjectColors).forEach(subject => {
+              const color = subjectData.subjectColors[subject]
+              // Convert hex to gradient class (simplified for now)
+              subjectColors[subject] = `from-blue-500/20 to-cyan-500/20 border-blue-400/30 text-blue-200`
+            })
+          }
+        }
         
         const apiLessons = apiResult.lessons || []
         const transformedLessons: Lesson[] = apiLessons.map((lesson: any) => ({

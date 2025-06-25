@@ -19,47 +19,9 @@ import Link from "next/link"
 const ITEMS_PER_PAGE = 10
 
 // Subject-Program mapping
-const SUBJECT_PROGRAMS = {
-  "Maths": [
-    "GCSE - Yr 10",
-    "GCSE - Yr 11",
-    "A-Level - Yr 12",
-    "A-Level - Yr 13",
-    "GCSE - Level 10",
-    "High Achievers Vault"
-  ],
-  "Maths Easter Club": [
-    "GCSE - Yr 10",
-    "GCSE - Yr 11",
-    "A-Level - Yr 12",
-    "A-Level - Yr 13"
-  ],
-  "1% Club": [],
-  "Biology": [
-    "GCSE - Yr 10",
-    "GCSE - Yr 11",
-    "GCSE - Level 10",
-    "High Achievers Vault",
-    "A-Level - Yr 12",
-    "A-Level - Yr 13"
-  ],
-  "Chemistry": [
-    "GCSE - Yr 10",
-    "GCSE - Yr 11",
-    "GCSE - Level 10",
-    "High Achievers Vault",
-    "A-Level - Yr 12",
-    "A-Level - Yr 13"
-  ],
-  "Physics": [
-    "GCSE - Yr 10",
-    "GCSE - Yr 11",
-    "GCSE - Level 10",
-    "High Achievers Vault",
-    "A-Level - Yr 12",
-    "A-Level - Yr 13"
-  ]
-};
+// Dynamic subject-programs mapping (loaded from database)
+let SUBJECT_PROGRAMS: Record<string, string[]> = {}
+let SUBJECT_COLORS: Record<string, string> = {}
 
 
 // Types
@@ -253,12 +215,13 @@ export default function LessonsPage() {
     }
   }
 
-  // Fetch filter options
+  // Fetch filter options and dynamic subject-programs mapping
   const fetchFilterOptions = async () => {
     try {
-      const [subjectsRes, teachersRes] = await Promise.all([
+      const [subjectsRes, teachersRes, subjectProgramsRes] = await Promise.all([
         fetch('/api/admin/lessons/filters/subjects'),
-        fetch('/api/admin/lessons/filters/teachers')
+        fetch('/api/admin/lessons/filters/teachers'),
+        fetch('/api/admin/subjects/programs-map')
       ])
       
       if (subjectsRes.ok) {
@@ -269,6 +232,14 @@ export default function LessonsPage() {
       if (teachersRes.ok) {
         const teachersData = await teachersRes.json()
         setTeachers(teachersData.teachers || [])
+      }
+
+      if (subjectProgramsRes.ok) {
+        const subjectProgramsData = await subjectProgramsRes.json()
+        if (subjectProgramsData.success) {
+          SUBJECT_PROGRAMS = subjectProgramsData.subjectPrograms || {}
+          SUBJECT_COLORS = subjectProgramsData.subjectColors || {}
+        }
       }
     } catch (error) {
       console.error('Error fetching filter options:', error)
