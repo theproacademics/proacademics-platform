@@ -116,21 +116,36 @@ export default function PastPapersPage() {
   const fetchPastPapers = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/admin/pastpapers')
-      // if (!response.ok) throw new Error('Failed to fetch past papers')
-      // const data = await response.json()
-      // setPastPapers(data.pastPapers || [])
-      // setTotalPapers(data.total || 0)
-      // setTotalPages(data.totalPages || 1)
       
-      // For now, start with empty array
-      setPastPapers([])
-      setTotalPapers(0)
-      setTotalPages(1)
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: ITEMS_PER_PAGE.toString()
+      })
+      
+      if (searchTerm) params.append('search', searchTerm)
+      if (selectedSubject !== 'all') params.append('subject', selectedSubject)
+      if (selectedBoard !== 'all') params.append('board', selectedBoard)
+      if (selectedYear !== 'all') params.append('year', selectedYear)
+      if (selectedStatus !== 'all') params.append('status', selectedStatus)
+      
+      const response = await fetch(`/api/admin/pastpapers?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch past papers')
+      
+      const data = await response.json()
+      if (data.success) {
+        setPastPapers(data.pastPapers || [])
+        setTotalPapers(data.total || 0)
+        setTotalPages(data.totalPages || 1)
+      } else {
+        throw new Error(data.error || 'Failed to fetch past papers')
+      }
     } catch (error) {
       console.error('Error fetching past papers:', error)
       toast.error('Failed to fetch past papers')
+      setPastPapers([])
+      setTotalPapers(0)
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }
@@ -166,16 +181,60 @@ export default function PastPapersPage() {
 
   // Effect hooks
   useEffect(() => {
-    fetchPastPapers()
     fetchFilterOptions()
   }, [])
+
+  useEffect(() => {
+    fetchPastPapers()
+  }, [currentPage, searchTerm, selectedSubject, selectedBoard, selectedYear, selectedStatus])
 
 
 
   // CRUD Operations
   const handleCreatePaper = async () => {
     try {
-      // TODO: Replace with actual API call
+      // Validate required fields
+      if (!formData.paperName.trim()) {
+        toast.error('Past paper name is required')
+        return
+      }
+      if (!formData.board.trim()) {
+        toast.error('Board is required')
+        return
+      }
+      if (!formData.subject.trim()) {
+        toast.error('Subject is required')
+        return
+      }
+      if (!formData.program.trim()) {
+        toast.error('Program is required')
+        return
+      }
+      
+      // Validate papers
+      if (!formData.papers || formData.papers.length === 0) {
+        toast.error('At least one paper is required')
+        return
+      }
+      
+      for (let i = 0; i < formData.papers.length; i++) {
+        const paper = formData.papers[i]
+        if (!paper.name.trim()) {
+          toast.error(`Paper ${i + 1} name is required`)
+          return
+        }
+        if (!paper.questionPaperUrl.trim()) {
+          toast.error(`Paper ${i + 1} question paper URL is required`)
+          return
+        }
+        if (!paper.markSchemeUrl.trim()) {
+          toast.error(`Paper ${i + 1} mark scheme URL is required`)
+          return
+        }
+      }
+
+      console.log('Creating past paper with data:', formData)
+
       const response = await fetch('/api/admin/pastpapers', {
         method: 'POST',
         headers: {
@@ -192,11 +251,14 @@ export default function PastPapersPage() {
         })
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to create past paper')
+      console.log('API response status:', response.status)
+      
+      const data = await response.json()
+      console.log('API response data:', data)
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create past paper')
       }
-
-      const newPaper = await response.json()
       
       setIsCreateDialogOpen(false)
       setFormData(createEmptyFormData())
@@ -206,7 +268,7 @@ export default function PastPapersPage() {
       fetchPastPapers()
     } catch (error) {
       console.error('Error creating past paper:', error)
-      toast.error('Failed to create past paper')
+      toast.error(error instanceof Error ? error.message : 'Failed to create past paper')
     }
   }
 
@@ -233,7 +295,6 @@ export default function PastPapersPage() {
     if (!selectedPaper) return
     
     try {
-      // TODO: Replace with actual API call
       const response = await fetch(`/api/admin/pastpapers/${selectedPaper.id}`, {
         method: 'PUT',
         headers: {
@@ -250,8 +311,10 @@ export default function PastPapersPage() {
         })
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to update past paper')
+      const data = await response.json()
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update past paper')
       }
       
       setIsEditDialogOpen(false)
@@ -263,19 +326,20 @@ export default function PastPapersPage() {
       fetchPastPapers()
     } catch (error) {
       console.error('Error updating past paper:', error)
-      toast.error('Failed to update past paper')
+      toast.error(error instanceof Error ? error.message : 'Failed to update past paper')
     }
   }
 
   const handleDeletePaper = async (paperId: string) => {
     try {
-      // TODO: Replace with actual API call
       const response = await fetch(`/api/admin/pastpapers/${paperId}`, {
         method: 'DELETE'
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to delete past paper')
+      const data = await response.json()
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete past paper')
       }
 
       toast.success('Past paper deleted successfully!')
@@ -284,7 +348,7 @@ export default function PastPapersPage() {
       fetchPastPapers()
     } catch (error) {
       console.error('Error deleting past paper:', error)
-      toast.error('Failed to delete past paper')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete past paper')
     }
   }
 
@@ -326,7 +390,12 @@ export default function PastPapersPage() {
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      onClick={() => setFormData(createEmptyFormData())}
+                      onClick={() => {
+                        console.log('Opening create dialog, resetting form...')
+                        const newFormData = createEmptyFormData()
+                        console.log('New form data:', newFormData)
+                        setFormData(newFormData)
+                      }}
                       className="bg-blue-500/10 border border-blue-400/30 text-blue-400 
                                hover:bg-blue-500/20 hover:border-blue-400/50 
                                focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400/60
@@ -664,18 +733,13 @@ function PastPaperDialog({
 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">Board</label>
-                  <Select value={formData.board} onValueChange={(value) => setFormData({ ...formData, board: value })}>
-                    <SelectTrigger className="h-10 bg-white/5 border border-white/20 text-white rounded-lg">
-                      <SelectValue placeholder="Select board" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900/95 border border-white/20 rounded-lg">
-                      {BOARDS.map((board) => (
-                        <SelectItem key={board} value={board} className="text-white hover:bg-white/10">
-                          {board}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={formData.board}
+                    onChange={(e) => setFormData({ ...formData, board: e.target.value })}
+                    placeholder="Enter board name"
+                    className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -757,11 +821,21 @@ function PastPaperDialog({
                       className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                       style={{ zIndex: 999999 }}
                     >
-                      {formData.subject && SUBJECT_PROGRAMS[formData.subject as keyof typeof SUBJECT_PROGRAMS]?.map((program) => (
-                        <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                          {program}
+                      {formData.subject && adminSubjects
+                        .find(subject => subject.name === formData.subject)
+                        ?.programs?.filter((program: any) => program.isActive)
+                        ?.map((program: any) => (
+                          <SelectItem key={program.id} value={program.name} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: program.color }}
+                              />
+                              {program.name}
+                            </div>
                         </SelectItem>
-                      ))}
+                        ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>
@@ -876,18 +950,32 @@ function PastPaperDialog({
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-white/80 block">Publication Status</label>
-                <Select value={formData.status} onValueChange={(value: 'draft' | 'active') => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger className="h-10 bg-white/5 border border-white/20 text-white rounded-lg">
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value: 'draft' | 'active') => {
+                    console.log('Status dropdown clicked!')
+                    console.log('Status changed from', formData.status, 'to', value)
+                    console.log('Current form data before change:', formData)
+                    const updatedFormData = { ...formData, status: value }
+                    setFormData(updatedFormData)
+                    console.log('Updated form data:', updatedFormData)
+                  }}
+                >
+                  <SelectTrigger className="glass-select-trigger h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                           rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900/95 border border-white/20 rounded-lg">
-                    <SelectItem value="draft" className="text-white hover:bg-white/10">
+                  <SelectContent 
+                    className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
+                    style={{ zIndex: 999999 }}
+                  >
+                    <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                         <span>Draft</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="active" className="text-white hover:bg-white/10">
+                    <SelectItem value="active" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                         <span>Active</span>
@@ -911,8 +999,12 @@ function PastPaperDialog({
               Cancel
             </Button>
             <Button 
-              type="submit"
-              onClick={onSave}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                console.log('Create button clicked, current formData:', formData)
+                onSave()
+              }}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
                        text-white h-10 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
             >
