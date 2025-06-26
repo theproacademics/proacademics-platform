@@ -19,6 +19,7 @@ import {
   X,
   Zap,
   LogOut,
+  FileText,
 } from "lucide-react"
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Lex AI", href: "/lex", icon: Brain },
   { name: "Lessons", href: "/lessons", icon: BookOpen },
   { name: "Homework", href: "/homework", icon: ClipboardList },
+  { name: "Past Papers", href: "/pastpapers", icon: FileText },
   { name: "Progress", href: "/progress", icon: TrendingUp },
   { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { name: "Ask Lex", href: "/chat", icon: MessageCircle },
