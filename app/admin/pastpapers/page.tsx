@@ -10,27 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, FileText, Settings, Calendar, ChevronLeft, ChevronRight, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, Download } from "lucide-react"
+import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, FileText, Settings, Calendar, ChevronLeft, ChevronRight, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, Download, PlayCircle } from "lucide-react"
 import { toast } from "sonner"
+import { PastPaper } from "@/types"
 
 // Types
-interface PastPaper {
-  _id?: string
-  id: string
-  paperName: string
-  board: string
-  year: number
-  subject: string
-  program: string
-  papers: {
-    name: string
-    questionPaperUrl: string
-    markSchemeUrl: string
-  }[]
-  status: 'draft' | 'active'
-  createdAt: string
-  updatedAt: string
-}
 
 interface PastPaperFormData {
   paperName: string
@@ -100,6 +84,8 @@ export default function PastPapersPage() {
   
   // Form state
   const [formData, setFormData] = useState<PastPaperFormData>(createEmptyFormData())
+
+
 
   // Get programs for selected subject (same logic as lessons page)
   const getAvailablePrograms = (subjectName: string) => {
@@ -352,6 +338,14 @@ export default function PastPapersPage() {
     }
   }
 
+  // Question management functions
+  const handleViewQuestions = (paper: PastPaper) => {
+    // Navigate to questions page
+    window.location.href = `/admin/pastpapers/${paper.id}/questions`
+  }
+
+
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Animated Background Elements */}
@@ -509,74 +503,89 @@ export default function PastPapersPage() {
                   </TableHeader>
                   <TableBody>
                     {pastPapers.map((paper) => (
-                      <TableRow key={paper.id} className="border-white/10 hover:bg-white/5">
-                        <TableCell className="text-white font-medium">{paper.paperName}</TableCell>
-                        <TableCell className="text-slate-300">{paper.board}</TableCell>
-                        <TableCell className="text-slate-300">{paper.year}</TableCell>
-                        <TableCell className="text-slate-300">{paper.subject}</TableCell>
-                        <TableCell className="text-slate-300">{paper.program}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={
-                              paper.status === 'active' 
-                                ? "bg-green-500/15 text-green-400 border-green-400/30" 
-                                : "bg-gray-500/15 text-gray-400 border-gray-400/30"
-                            }
-                          >
-                            {paper.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleViewPaper(paper)}
-                              className="hover:bg-blue-500/20 text-blue-400"
+                      <>
+                        {/* Main Past Paper Row */}
+                        <TableRow key={paper.id} className="border-white/10 hover:bg-white/5">
+                          <TableCell className="text-white font-medium">{paper.paperName}</TableCell>
+                          <TableCell className="text-slate-300">{paper.board}</TableCell>
+                          <TableCell className="text-slate-300">{paper.year}</TableCell>
+                          <TableCell className="text-slate-300">{paper.subject}</TableCell>
+                          <TableCell className="text-slate-300">{paper.program}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              className={
+                                paper.status === 'active' 
+                                  ? "bg-green-500/15 text-green-400 border-green-400/30" 
+                                  : "bg-gray-500/15 text-gray-400 border-gray-400/30"
+                              }
                             >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditPaper(paper)}
-                              className="hover:bg-green-500/20 text-green-400"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="hover:bg-red-500/20 text-red-400"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-slate-800/95 border border-white/20 rounded-2xl">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-white">Delete Past Paper</AlertDialogTitle>
-                                  <AlertDialogDescription className="text-slate-400">
-                                    This will permanently delete "{paper.paperName}". This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-slate-700/80 text-white border-slate-600 hover:bg-slate-600">
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeletePaper(paper.id)}
-                                    className="bg-red-600 hover:bg-red-700 text-white"
+                              {paper.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleViewQuestions(paper)}
+                                className="hover:bg-purple-500/20 text-purple-400"
+                                title="View Questions"
+                              >
+                                <PlayCircle className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleViewPaper(paper)}
+                                className="hover:bg-blue-500/20 text-blue-400"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditPaper(paper)}
+                                className="hover:bg-green-500/20 text-green-400"
+                                title="Edit Paper"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="hover:bg-red-500/20 text-red-400"
+                                    title="Delete Paper"
                                   >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-slate-800/95 border border-white/20 rounded-2xl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-white">Delete Past Paper</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-slate-400">
+                                      This will permanently delete "{paper.paperName}". This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-slate-700/80 text-white border-slate-600 hover:bg-slate-600">
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeletePaper(paper.id)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </>
                     ))}
                   </TableBody>
                 </Table>
@@ -613,6 +622,7 @@ export default function PastPapersPage() {
         }}
         paper={selectedPaper}
       />
+
     </div>
   )
 }
@@ -1135,4 +1145,7 @@ function ViewPastPaperDialog({
       </DialogContent>
     </Dialog>
   )
-} 
+}
+
+
+

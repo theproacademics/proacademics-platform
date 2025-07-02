@@ -21,7 +21,12 @@ import {
   ArrowRight,
   Download,
   Eye,
-  Calendar
+  Calendar,
+  PlayCircle,
+  Clock,
+  User,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 
 // Icon mapping for subjects
@@ -42,6 +47,19 @@ const getSubjectIcon = (subjectName: string) => {
 }
 
 // Interfaces
+interface QuestionVideo {
+  id: string
+  questionNumber: number
+  topic: string
+  questionName: string
+  questionDescription: string
+  duration: string
+  teacher: string
+  videoEmbedLink: string
+  createdAt: string
+  updatedAt: string
+}
+
 interface PastPaper {
   _id: string
   id: string
@@ -55,6 +73,7 @@ interface PastPaper {
     questionPaperUrl: string
     markSchemeUrl: string
   }[]
+  questions?: QuestionVideo[]
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -82,6 +101,47 @@ export default function PastPapersPage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null)
   const [view, setView] = useState<'subjects' | 'boards' | 'papers'>('subjects')
+  
+  // Question videos state
+  const [questionsData, setQuestionsData] = useState<Record<string, QuestionVideo[]>>({})
+  const [loadingQuestions, setLoadingQuestions] = useState<Record<string, boolean>>({})
+  const [questionPages, setQuestionPages] = useState<Record<string, number>>({})
+  const QUESTIONS_PER_PAGE = 6
+
+  // Extract video thumbnail URL
+  const getVideoThumbnail = (videoUrl: string): string | null => {
+    try {
+      if (!videoUrl) return null
+      
+      // YouTube URL patterns (youtube.com, youtu.be, youtube.com/embed)
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      const youtubeMatch = videoUrl.match(youtubeRegex)
+      
+      if (youtubeMatch && youtubeMatch[1]) {
+        // Try maxresdefault first, fallback handled by onError
+        return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
+      }
+      
+      // Vimeo URL patterns
+      const vimeoRegex = /vimeo\.com\/(?:.*\/)?(\d+)/
+      const vimeoMatch = videoUrl.match(vimeoRegex)
+      
+      if (vimeoMatch && vimeoMatch[1]) {
+        // For Vimeo, we could use their oembed API, but for now return null
+        // Future enhancement: fetch thumbnail from Vimeo API
+        return null
+      }
+      
+      // Add more platforms as needed
+      // Dailymotion: /dailymotion\.com\/video\/([^_]+)/
+      // Twitch: /twitch\.tv\/videos\/(\d+)/
+      
+      return null
+    } catch (error) {
+      console.error('Error extracting video thumbnail:', error)
+      return null
+    }
+  }
 
   // Fetch all subjects from admin and get paper counts
   const fetchPastPapers = async () => {
@@ -191,9 +251,40 @@ export default function PastPapersPage() {
   const handleBoardClick = (boardName: string) => {
     setSelectedBoard(boardName)
     const boardData = boards.find(b => b.board === boardName)
-    // Always navigate to papers view, even if no papers exist
-    setPapers(boardData ? boardData.papers : [])
+    const papers = boardData ? boardData.papers : []
+    setPapers(papers)
     setView('papers')
+    
+    // Fetch questions for all papers
+    papers.forEach(paper => {
+      fetchQuestionsForPaper(paper.id)
+    })
+  }
+
+  // Fetch questions for a specific paper
+  const fetchQuestionsForPaper = async (paperId: string) => {
+    if (questionsData[paperId] || loadingQuestions[paperId]) return
+
+    try {
+      setLoadingQuestions(prev => ({ ...prev, [paperId]: true }))
+      
+      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions`)
+      if (!response.ok) throw new Error('Failed to fetch questions')
+      
+      const data = await response.json()
+      if (data.success) {
+        setQuestionsData(prev => ({
+          ...prev,
+          [paperId]: data.questions || []
+        }))
+        setQuestionPages(prev => ({ ...prev, [paperId]: 1 }))
+      }
+    } catch (error) {
+      console.error('Error fetching questions:', error)
+      setQuestionsData(prev => ({ ...prev, [paperId]: [] }))
+    } finally {
+      setLoadingQuestions(prev => ({ ...prev, [paperId]: false }))
+    }
   }
 
   // Handle back navigation
@@ -202,6 +293,10 @@ export default function PastPapersPage() {
       setView('boards')
       setSelectedBoard(null)
       setPapers([])
+      // Clear questions data when leaving papers view
+      setQuestionsData({})
+      setLoadingQuestions({})
+      setQuestionPages({})
     } else if (view === 'boards') {
       setView('subjects')
       setSelectedSubject(null)
@@ -412,88 +507,218 @@ export default function PastPapersPage() {
                   ))}
                 </div>
               ) : (
-                // Papers List
-                <div className="space-y-6">
-                  {papers.map((paper, index) => (
-                    <div key={paper.id} className="group relative">
-                      {/* Card Background */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-white/[0.01] rounded-3xl transition-all duration-300 group-hover:from-white/[0.08] group-hover:to-white/[0.03]"></div>
-                      <div className="absolute inset-0 border border-white/10 rounded-3xl transition-all duration-300 group-hover:border-white/20"></div>
-                      
-                      {/* Card Content */}
-                      <div className="relative p-6 lg:p-8">
-                        <div className="flex items-start justify-between gap-6">
-                          <div className="flex-1 min-w-0">
-                            {/* Header */}
-                            <div className="flex items-start gap-4 mb-6">
-                              <div className="flex-shrink-0">
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg transition-transform duration-300 group-hover:scale-105">
-                                  <span className="text-white font-bold text-lg">
-                                    {(index + 1).toString().padStart(2, '0')}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-3">
-                                  <h3 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors duration-300 truncate">
-                                    {paper.paperName}
-                                  </h3>
-                                </div>
-                                
-                                {/* Paper Details */}
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-4">
-                                  <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-200 transition-colors">
-                                    <Calendar className="w-4 h-4 text-blue-400" />
-                                    <span className="font-medium">{paper.year}</span>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-200 transition-colors">
-                                    <BookOpen className="w-4 h-4 text-green-400" />
-                                    <span className="font-medium">{paper.program}</span>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-200 transition-colors">
-                                    <FileText className="w-4 h-4 text-orange-400" />
-                                    <span className="font-medium">{paper.papers.length} paper{paper.papers.length !== 1 ? 's' : ''}</span>
-                                  </div>
-                                </div>
-
-                                {/* Individual Papers */}
-                                <div className="space-y-2">
-                                  {paper.papers.map((individualPaper, paperIndex) => (
-                                    <div key={paperIndex} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                                      <span className="text-white font-medium">{individualPaper.name}</span>
-                                      <div className="flex gap-2">
-                                        <a
-                                          href={individualPaper.questionPaperUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
-                                        >
-                                          <Eye className="w-3 h-3" />
-                                          Question Paper
-                                        </a>
-                                        <a
-                                          href={individualPaper.markSchemeUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 rounded-lg transition-colors text-sm"
-                                        >
-                                          <Download className="w-3 h-3" />
-                                          Mark Scheme
-                                        </a>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
+                // Papers with Video Tiles
+                <div className="space-y-8">
+                  {papers.map((paper, index) => {
+                    const paperQuestions = questionsData[paper.id] || []
+                    const currentPage = questionPages[paper.id] || 1
+                    const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE
+                    const endIndex = startIndex + QUESTIONS_PER_PAGE
+                    const paginatedQuestions = paperQuestions.slice(startIndex, endIndex)
+                    const totalPages = Math.ceil(paperQuestions.length / QUESTIONS_PER_PAGE)
+                    const isLoadingQuestions = loadingQuestions[paper.id]
+                    
+                    return (
+                      <div key={paper.id} className="group relative">
+                        {/* Paper Card Background */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-white/[0.01] rounded-3xl transition-all duration-300 group-hover:from-white/[0.08] group-hover:to-white/[0.03]"></div>
+                        <div className="absolute inset-0 border border-white/10 rounded-3xl transition-all duration-300 group-hover:border-white/20"></div>
+                        
+                        {/* Paper Content */}
+                        <div className="relative p-6 lg:p-8">
+                          {/* Paper Header */}
+                          <div className="flex items-start gap-4 mb-6">
+                            <div className="flex-shrink-0">
+                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg transition-transform duration-300 group-hover:scale-105">
+                                <span className="text-white font-bold text-lg">
+                                  {(index + 1).toString().padStart(2, '0')}
+                                </span>
                               </div>
                             </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-3">
+                                <h3 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors duration-300">
+                                  {paper.paperName}
+                                </h3>
+                                <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                  {paper.year}
+                                </Badge>
+                                <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                  {paper.program}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-300 text-sm">{paperQuestions.length} video explanations available</p>
+                            </div>
+                            
+                            {/* Paper Actions */}
+                            <div className="flex gap-2">
+                              {paper.papers.map((individualPaper, paperIndex) => (
+                                <div key={paperIndex} className="flex gap-2">
+                                  <a
+                                    href={individualPaper.questionPaperUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    GO
+                                  </a>
+                                  <a
+                                    href={individualPaper.markSchemeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg transition-colors text-sm"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    Mark Scheme
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Video Tiles Section */}
+                          <div className="mt-6">
+                            {isLoadingQuestions ? (
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                {[...Array(6)].map((_, i) => (
+                                  <div key={i} className="aspect-video bg-white/5 rounded-xl animate-pulse border border-white/10"></div>
+                                ))}
+                              </div>
+                            ) : paperQuestions.length > 0 ? (
+                              <>
+                                                                 {/* Video Tiles Grid */}
+                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                                   {paginatedQuestions.map((question) => {
+                                     const thumbnailUrl = getVideoThumbnail(question.videoEmbedLink)
+                                     
+                                     return (
+                                       <div
+                                         key={question.id}
+                                         className="group/tile relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105"
+                                         onClick={() => window.location.href = `/pastpapers/video/${question.id}`}
+                                       >
+                                         {/* Video Tile Background */}
+                                         <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-white/10 relative">
+                                           {/* Video Thumbnail */}
+                                           {thumbnailUrl && (
+                                             <img
+                                               src={thumbnailUrl}
+                                               alt={`${question.questionName} thumbnail`}
+                                               className="absolute inset-0 w-full h-full object-cover"
+                                               onError={(e) => {
+                                                 // Hide image on error, fallback to gradient background
+                                                 e.currentTarget.style.display = 'none'
+                                               }}
+                                             />
+                                           )}
+                                           
+                                           {/* Play Button Overlay */}
+                                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/tile:bg-black/20 transition-all duration-300">
+                                             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover/tile:scale-110 transition-transform duration-300 border border-white/30">
+                                               <PlayCircle className="w-6 h-6 text-white" />
+                                             </div>
+                                           </div>
+                                           
+                                           {/* Question Number Badge */}
+                                           <div className="absolute top-2 left-2 bg-purple-500/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full border border-purple-400/50">
+                                             Q{question.questionNumber}
+                                           </div>
+                                           
+                                           {/* Duration Badge */}
+                                           <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs flex items-center gap-1 px-2 py-1 rounded-full border border-white/20">
+                                             <Clock className="w-3 h-3" />
+                                             {question.duration}
+                                           </div>
+                                         </div>
+                                         
+                                         {/* Video Info */}
+                                         <div className="mt-2 px-1">
+                                           <h4 className="text-white text-sm font-medium truncate group-hover/tile:text-purple-200 transition-colors">
+                                             {question.questionName}
+                                           </h4>
+                                           <p className="text-slate-400 text-xs truncate">
+                                             {question.topic}
+                                           </p>
+                                           <div className="flex items-center gap-1 mt-1">
+                                             <User className="w-3 h-3 text-slate-500" />
+                                             <span className="text-slate-500 text-xs truncate">{question.teacher}</span>
+                                           </div>
+                                         </div>
+                                       </div>
+                                     )
+                                   })}
+                                 </div>
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                  <div className="flex items-center justify-center gap-4">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setQuestionPages(prev => ({
+                                        ...prev,
+                                        [paper.id]: Math.max(1, currentPage - 1)
+                                      }))}
+                                      disabled={currentPage === 1}
+                                      className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                    >
+                                      <ChevronLeft className="w-4 h-4 mr-1" />
+                                      Previous
+                                    </Button>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      {[...Array(totalPages)].map((_, i) => {
+                                        const pageNum = i + 1
+                                        return (
+                                          <button
+                                            key={pageNum}
+                                            onClick={() => setQuestionPages(prev => ({
+                                              ...prev,
+                                              [paper.id]: pageNum
+                                            }))}
+                                            className={`w-8 h-8 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                              currentPage === pageNum
+                                                ? 'bg-purple-500 text-white'
+                                                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                          >
+                                            {pageNum}
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                    
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setQuestionPages(prev => ({
+                                        ...prev,
+                                        [paper.id]: Math.min(totalPages, currentPage + 1)
+                                      }))}
+                                      disabled={currentPage === totalPages}
+                                      className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                    >
+                                      Next
+                                      <ChevronRight className="w-4 h-4 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="text-center py-8">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
+                                  <PlayCircle className="w-8 h-8 text-purple-400/50" />
+                                </div>
+                                <p className="text-slate-400 text-sm">No video explanations available yet</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   
                   {papers.length === 0 && (
                     <div className="text-center py-16">

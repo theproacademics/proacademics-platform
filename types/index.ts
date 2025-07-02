@@ -50,6 +50,51 @@ export interface Question {
   xpReward: number
 }
 
+// Past Paper Question Video interface
+export interface QuestionVideo {
+  id: string
+  questionNumber: number
+  topic: string
+  questionName: string
+  questionDescription: string
+  duration: string
+  teacher: string
+  videoEmbedLink: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Past Paper interface
+export interface PastPaper {
+  _id?: string
+  id: string
+  paperName: string
+  board: string
+  year: number
+  subject: string
+  program: string
+  papers: {
+    name: string
+    questionPaperUrl: string
+    markSchemeUrl: string
+  }[]
+  questions?: QuestionVideo[]
+  status: 'draft' | 'active'
+  createdAt: string
+  updatedAt: string
+}
+
+// Form data for creating/editing question videos
+export interface QuestionVideoFormData {
+  questionNumber: number
+  topic: string
+  questionName: string
+  questionDescription: string
+  duration: string
+  teacher: string
+  videoEmbedLink: string
+}
+
 export interface Lesson {
   _id?: string
   id: string
