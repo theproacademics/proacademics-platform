@@ -562,7 +562,7 @@ export default function PastPapersPage() {
                                     className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
                                   >
                                     <Eye className="w-3 h-3" />
-                                    GO
+                                    Question Paper
                                   </a>
                                   <a
                                     href={individualPaper.markSchemeUrl}
