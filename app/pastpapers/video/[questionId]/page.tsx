@@ -225,10 +225,10 @@ export default function QuestionVideoPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
               
-              <CardContent className="relative z-10 p-6 lg:p-8">
+              <CardContent className="relative z-10 p-4 sm:p-6 lg:p-8">
                 <div className="space-y-8">
-                  {/* Back Button */}
-                  <div>
+                  {/* Back Button - Improved styling to match lesson page */}
+                  <div className="mb-4">
                     <Button 
                       variant="ghost" 
                       className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
@@ -266,8 +266,17 @@ export default function QuestionVideoPage() {
                       </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20">
+                          <div className="w-full h-full" style={{
+                            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(139,92,246,0.3) 1px, transparent 0)',
+                            backgroundSize: '30px 30px'
+                          }}></div>
+                        </div>
                         <div className="text-center relative z-10">
-                          <Video className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-purple-500/30 rounded-full blur-xl animate-pulse"></div>
+                            <Video className="w-16 h-16 text-purple-300 mx-auto mb-4 relative" />
+                          </div>
                           <p className="text-gray-300 text-base font-medium">Video content not available</p>
                         </div>
                       </div>
@@ -279,88 +288,93 @@ export default function QuestionVideoPage() {
                     <div className="absolute inset-0 border-t border-purple-400/20"></div>
                   </div>
 
-                  {/* Question Details */}
-                  <div className="space-y-4">
+                  {/* Question Details - Better responsive layout */}
+                  <div className="space-y-6">
                     {/* Paper Context */}
-                    <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border border-slate-600/50 rounded-xl p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <BookOpen className="w-5 h-5 text-blue-400" />
-                        <span className="text-blue-200 font-semibold">{paper.paperName}</span>
+                    <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border border-slate-600/50 rounded-xl p-4 sm:p-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <BookOpen className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <span className="text-blue-200 font-semibold text-lg">{paper.paperName}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
                         <span>{paper.board}</span>
-                        <span>•</span>
+                        <span className="text-slate-500">•</span>
                         <span>{paper.year}</span>
-                        <span>•</span>
+                        <span className="text-slate-500">•</span>
                         <span>{paper.subject}</span>
-                        <span>•</span>
+                        <span className="text-slate-500">•</span>
                         <span>{paper.program}</span>
                       </div>
                     </div>
 
-                    {/* Question Title */}
-                    <div className="flex items-center gap-3">
-                      <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-lg font-bold px-4 py-2">
-                        Q{question.questionNumber}
-                      </Badge>
-                      <h1 className="text-white text-2xl lg:text-3xl font-bold">{question.questionName}</h1>
-                    </div>
-                    
-                    {/* Question Tags */}
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="inline-flex items-center bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-emerald-400/30 text-emerald-200 px-3 py-2 text-sm font-bold border rounded-lg">
-                        <Target className="w-4 h-4 mr-2" />
-                        {question.topic}
-                      </span>
-                    </div>
-
-                    {/* Question Info Pills */}
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <div className="flex items-center bg-amber-500/15 px-3 py-2 rounded-lg border border-amber-400/25">
-                        <Clock className="w-4 h-4 mr-2 text-amber-400" />
-                        <span className="text-amber-200 font-medium">{question.duration}</span>
+                    {/* Question Header */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-base font-bold px-3 py-1.5 flex-shrink-0">
+                          Q{question.questionNumber}
+                        </Badge>
+                        <h1 className="text-white text-lg sm:text-xl lg:text-2xl font-bold leading-tight">{question.questionName}</h1>
                       </div>
-                      <div className="flex items-center bg-blue-500/15 px-3 py-2 rounded-lg border border-blue-400/25">
-                        <User className="w-4 h-4 mr-2 text-blue-400" />
-                        <span className="text-blue-200 font-medium">{question.teacher}</span>
+                      
+                      {/* Question Tags - Compact */}
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="inline-flex items-center bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-emerald-400/30 text-emerald-200 px-3 py-1.5 text-sm font-medium border rounded-lg">
+                          <Target className="w-4 h-4 mr-2" />
+                          {question.topic}
+                        </span>
                       </div>
-                    </div>
 
-                    {/* Question Description */}
-                    {question.questionDescription && (
-                      <div className="bg-slate-800/30 border border-slate-600/50 rounded-xl p-4">
-                        <p className="text-slate-300 leading-relaxed">{question.questionDescription}</p>
+                      {/* Question Info Pills - More compact layout */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center bg-amber-500/15 px-3 py-2 rounded-lg border border-amber-400/25">
+                          <Clock className="w-4 h-4 mr-2 text-amber-400 flex-shrink-0" />
+                          <span className="text-amber-200 font-medium text-sm">{question.duration}</span>
+                        </div>
+                        <div className="flex items-center bg-blue-500/15 px-3 py-2 rounded-lg border border-blue-400/25">
+                          <User className="w-4 h-4 mr-2 text-blue-400 flex-shrink-0" />
+                          <span className="text-blue-200 font-medium text-sm">{question.teacher}</span>
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="space-y-4">
-                    <h3 className="text-white font-semibold text-xl">What's Next?</h3>
-                    <div className="flex flex-wrap gap-4">
-                      {/* Study This Topic Button */}
-                      <Button 
-                        onClick={handleStudyTopic}
-                        className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-emerald-400/30"
-                      >
-                        <GraduationCap className="w-5 h-5 mr-2" />
-                        Study This Topic
-                      </Button>
-
-                      {/* Next Question Button */}
-                      {nextQuestion ? (
-                        <Button 
-                          onClick={handleNextQuestion}
-                          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-400/30"
-                        >
-                          <span>Next Question (Q{nextQuestion.questionNumber})</span>
-                          <ChevronRight className="w-5 h-5 ml-2" />
-                        </Button>
-                      ) : (
-                        <div className="bg-slate-600/20 border border-slate-500/30 px-6 py-4 rounded-xl">
-                          <p className="text-slate-400 font-medium">🎉 You've completed all questions in this paper!</p>
+                      {/* Question Description */}
+                      {question.questionDescription && (
+                        <div className="bg-slate-800/30 border border-slate-600/50 rounded-xl p-4 sm:p-6">
+                          <p className="text-slate-300 leading-relaxed">{question.questionDescription}</p>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons - Improved compact layout */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-white font-semibold mb-4 text-xl">What's Next?</h3>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {/* Study This Topic Button - Compact */}
+                        <Button 
+                          onClick={handleStudyTopic}
+                          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-green-400/30 text-sm"
+                        >
+                          <GraduationCap className="w-4 h-4 mr-2" />
+                          Study This Topic
+                        </Button>
+
+                        {/* Next Question Button - Compact */}
+                        {nextQuestion ? (
+                          <Button 
+                            onClick={handleNextQuestion}
+                            className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-purple-400/30 text-sm"
+                          >
+                            <span>Next Question (Q{nextQuestion.questionNumber})</span>
+                            <ChevronRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        ) : (
+                          <div className="bg-gradient-to-r from-slate-600/20 to-slate-700/20 border border-slate-500/30 px-4 py-2.5 rounded-lg inline-flex items-center gap-2">
+                            <span className="text-lg">🎉</span>
+                            <p className="text-slate-300 font-medium text-sm">You've completed all questions!</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
