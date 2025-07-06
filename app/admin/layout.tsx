@@ -7,6 +7,9 @@ import { AdminNavigation } from "@/components/admin/admin-navigation"
 export default function AdminLayout({ children }: { children: ReactNode }) {
   // Add styles to prevent white background on scroll
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     const style = document.createElement('style')
     style.textContent = `
       /* Fix background coverage for all scroll scenarios */
@@ -25,7 +28,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     document.head.appendChild(style)
     
     return () => {
-      if (document.head.contains(style)) {
+      if (typeof window !== 'undefined' && document.head.contains(style)) {
         document.head.removeChild(style)
       }
     }

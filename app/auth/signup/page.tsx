@@ -208,6 +208,9 @@ export default function SignUpPage() {
     }
     
     // Completely disable autofill styling and force normal appearance
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     const style = document.createElement('style')
     style.id = 'autofill-override-signup'
     style.textContent = `
@@ -287,16 +290,20 @@ export default function SignUpPage() {
       }
     }
     
-    const urlError = new URLSearchParams(window.location.search).get("error")
-    if (urlError) setError("Authentication failed. Please try again.")
+    if (typeof window !== 'undefined') {
+      const urlError = new URLSearchParams(window.location.search).get("error")
+      if (urlError) setError("Authentication failed. Please try again.")
+    }
     
     return () => {
-      document.body.style.background = ''
-      document.documentElement.style.background = ''
-      document.body.style.backgroundAttachment = ''
-      document.documentElement.style.backgroundAttachment = ''
-      const existingStyle = document.getElementById('autofill-override-signup')
-      if (existingStyle) document.head.removeChild(existingStyle)
+      if (typeof window !== 'undefined') {
+        document.body.style.background = ''
+        document.documentElement.style.background = ''
+        document.body.style.backgroundAttachment = ''
+        document.documentElement.style.backgroundAttachment = ''
+        const existingStyle = document.getElementById('autofill-override-signup')
+        if (existingStyle) document.head.removeChild(existingStyle)
+      }
     }
   }, [])
 

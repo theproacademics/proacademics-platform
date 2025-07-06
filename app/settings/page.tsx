@@ -120,6 +120,9 @@ export default function SettingsPage() {
   }
 
   const handleExportData = () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     // Simulate data export
     const data = {
       profile: { name: settings.name, email: settings.email },

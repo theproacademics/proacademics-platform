@@ -34,6 +34,9 @@ export function ZoomMeeting({
   // Load Zoom SDK
   useEffect(() => {
     const loadZoomSDK = async () => {
+      // Only run on client side
+      if (typeof window === 'undefined') return
+
       try {
         // Load Zoom SDK script
         if (!document.getElementById('zoom-sdk')) {
