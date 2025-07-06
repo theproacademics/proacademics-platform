@@ -77,8 +77,8 @@ export interface PastPaper {
     name: string
     questionPaperUrl: string
     markSchemeUrl: string
+    questions: QuestionVideo[]
   }[]
-  questions?: QuestionVideo[]
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string

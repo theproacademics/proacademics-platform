@@ -1,24 +1,27 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { ArrowLeft, Plus, Edit, Trash2, PlayCircle, X } from "lucide-react"
+import { ArrowLeft, Plus, Edit, Trash2, PlayCircle, X, FileTextIcon } from "lucide-react"
 import { toast } from "sonner"
 import { PastPaper, QuestionVideo, QuestionVideoFormData } from "@/types"
 
 export default function QuestionsPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const paperId = params.id as string
+  const paperIndex = searchParams.get('paper') ? parseInt(searchParams.get('paper')!) : 0
 
   // State management
-  const [paper, setPaper] = useState<PastPaper | null>(null)
+  const [pastPaper, setPastPaper] = useState<PastPaper | null>(null)
+  const [currentPaper, setCurrentPaper] = useState<{name: string, questionPaperUrl: string, markSchemeUrl: string} | null>(null)
   const [questions, setQuestions] = useState<QuestionVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [questionsLoading, setQuestionsLoading] = useState(false)
@@ -37,37 +40,44 @@ export default function QuestionsPage() {
     videoEmbedLink: ""
   })
 
-  // Fetch paper details
-  const fetchPaper = async () => {
+  // Fetch past paper details
+  const fetchPastPaper = async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/admin/pastpapers`)
-      if (!response.ok) throw new Error('Failed to fetch papers')
+      if (!response.ok) throw new Error('Failed to fetch past papers')
       
       const data = await response.json()
       if (data.success) {
         const foundPaper = data.pastPapers.find((p: PastPaper) => p.id === paperId)
         if (foundPaper) {
-          setPaper(foundPaper)
+          setPastPaper(foundPaper)
+          
+          // Set current paper based on index
+          if (foundPaper.papers && foundPaper.papers[paperIndex]) {
+            setCurrentPaper(foundPaper.papers[paperIndex])
+          } else {
+            throw new Error('Paper not found at specified index')
+          }
         } else {
-          throw new Error('Paper not found')
+          throw new Error('Past paper not found')
         }
       } else {
-        throw new Error(data.error || 'Failed to fetch paper')
+        throw new Error(data.error || 'Failed to fetch past paper')
       }
     } catch (error) {
-      console.error('Error fetching paper:', error)
-      toast.error('Failed to fetch paper details')
+      console.error('Error fetching past paper:', error)
+      toast.error('Failed to fetch past paper details')
     } finally {
       setLoading(false)
     }
   }
 
-  // Fetch questions
+  // Fetch questions for specific paper
   const fetchQuestions = async () => {
     try {
       setQuestionsLoading(true)
-      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions`)
+      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions?paper=${paperIndex}`)
       if (!response.ok) throw new Error('Failed to fetch questions')
       
       const data = await response.json()
@@ -119,7 +129,10 @@ export default function QuestionsPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(questionFormData)
+        body: JSON.stringify({
+          ...questionFormData,
+          paperIndex: paperIndex
+        })
       })
 
       const data = await response.json()
@@ -150,6 +163,7 @@ export default function QuestionsPage() {
         },
         body: JSON.stringify({
           questionId: selectedQuestion.id,
+          paperIndex: paperIndex,
           ...questionFormData
         })
       })
@@ -174,7 +188,7 @@ export default function QuestionsPage() {
 
   const handleDeleteQuestion = async (questionId: string) => {
     try {
-      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions?questionId=${questionId}`, {
+      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions?questionId=${questionId}&paper=${paperIndex}`, {
         method: 'DELETE'
       })
 
@@ -196,10 +210,10 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     if (paperId) {
-      fetchPaper()
+      fetchPastPaper()
       fetchQuestions()
     }
-  }, [paperId])
+  }, [paperId, paperIndex])
 
   if (loading) {
     return (
@@ -212,11 +226,12 @@ export default function QuestionsPage() {
     )
   }
 
-  if (!paper) {
+  if (!pastPaper || !currentPaper) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl text-white mb-4">Past Paper Not Found</h1>
+          <h1 className="text-2xl text-white mb-4">Paper Not Found</h1>
+          <p className="text-slate-400 mb-6">The requested paper could not be found or doesn't exist.</p>
           <Button onClick={() => router.push('/admin/pastpapers')} className="bg-blue-600 hover:bg-blue-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Past Papers
@@ -260,10 +275,37 @@ export default function QuestionsPage() {
                 <span className="text-xs lg:text-sm text-purple-300 font-medium tracking-wider uppercase">Question Videos</span>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3 tracking-tight">
-                {paper.paperName}
+                {pastPaper.paperName}
               </h1>
+              
+              {/* Current Paper Info */}
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-4 mb-4 max-w-2xl mx-auto">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <FileTextIcon className="w-5 h-5 text-purple-400" />
+                  <h2 className="text-lg font-semibold text-white">{currentPaper.name}</h2>
+                </div>
+                <div className="flex items-center justify-center gap-6 text-sm text-slate-300">
+                  <a 
+                    href={currentPaper.questionPaperUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-blue-400 transition-colors flex items-center gap-1"
+                  >
+                    📄 Question Paper ↗
+                  </a>
+                  <a 
+                    href={currentPaper.markSchemeUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-green-400 transition-colors flex items-center gap-1"
+                  >
+                    ✅ Mark Scheme ↗
+                  </a>
+                </div>
+              </div>
+              
               <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
-                {paper.board} • {paper.year} • {paper.subject} • {paper.program}
+                {pastPaper.board} • {pastPaper.year} • {pastPaper.subject} • {pastPaper.program}
               </p>
               <div className="mt-4 h-1 w-32 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mx-auto animate-pulse"></div>
             </div>
@@ -276,8 +318,8 @@ export default function QuestionsPage() {
               <CardContent className="relative p-3 sm:p-4 lg:p-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-lg font-semibold text-white mb-1">Question Management</h2>
-                    <p className="text-sm text-slate-400">Add, edit, and manage question videos for this past paper</p>
+                    <h3 className="text-lg font-semibold text-white mb-1">Question Management</h3>
+                    <p className="text-sm text-slate-400">Add, edit, and manage question videos for "{currentPaper.name}"</p>
                   </div>
                   <Button
                     onClick={handleAddQuestion}
@@ -296,7 +338,7 @@ export default function QuestionsPage() {
             <CardHeader className="p-6 border-b border-white/10 bg-gradient-to-r from-slate-800/30 to-purple-800/20">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-3">
                 <PlayCircle className="w-5 h-5 text-purple-400" />
-                Questions ({questions.length})
+                Questions for "{currentPaper.name}" ({questions.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -316,7 +358,7 @@ export default function QuestionsPage() {
                             <span className="text-purple-400 font-bold">Q{question.questionNumber}</span>
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold text-white">{question.questionName}</h3>
+                            <h4 className="text-lg font-semibold text-white">{question.questionName}</h4>
                             <p className="text-sm text-slate-400">{question.topic}</p>
                           </div>
                         </div>
@@ -343,7 +385,7 @@ export default function QuestionsPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-white">Delete Question</AlertDialogTitle>
                                 <AlertDialogDescription className="text-slate-400">
-                                  This will permanently delete "{question.questionName}". This action cannot be undone.
+                                  This will permanently delete "{question.questionName}" from "{currentPaper.name}". This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -398,7 +440,7 @@ export default function QuestionsPage() {
                 <div className="text-center py-12">
                   <PlayCircle className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">No Question Videos</h3>
-                  <p className="text-slate-400 mb-6">This past paper doesn't have any question videos yet.</p>
+                  <p className="text-slate-400 mb-6">"{currentPaper.name}" doesn't have any question videos yet.</p>
                   <Button
                     onClick={handleAddQuestion}
                     className="bg-blue-500/10 border border-blue-400/30 text-blue-400 hover:bg-blue-500/20"
@@ -432,7 +474,7 @@ export default function QuestionsPage() {
         formData={questionFormData}
         setFormData={setQuestionFormData}
         title="Add Question Video"
-        paperName={paper.paperName}
+        paperName={`${pastPaper.paperName} - ${currentPaper.name}`}
       />
 
       <QuestionDialog 
@@ -454,7 +496,7 @@ export default function QuestionsPage() {
         formData={questionFormData}
         setFormData={setQuestionFormData}
         title="Edit Question Video"
-        paperName={paper.paperName}
+        paperName={`${pastPaper.paperName} - ${currentPaper.name}`}
       />
     </div>
   )
@@ -478,13 +520,43 @@ function QuestionDialog({
   title: string
   paperName: string
 }) {
+  const validateForm = () => {
+    if (!formData.questionName.trim()) {
+      toast.error('Question name is required')
+      return false
+    }
+    if (!formData.topic.trim()) {
+      toast.error('Topic is required')
+      return false
+    }
+    if (!formData.duration.trim()) {
+      toast.error('Duration is required')
+      return false
+    }
+    if (!formData.teacher.trim()) {
+      toast.error('Teacher is required')
+      return false
+    }
+    if (!formData.videoEmbedLink.trim()) {
+      toast.error('Video embed link is required')
+      return false
+    }
+    return true
+  }
+
+  const handleSave = () => {
+    if (validateForm()) {
+      onSave()
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl overflow-y-auto [&>button]:!hidden">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl overflow-y-auto">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-3xl"></div>
         <div className="relative">
           {/* Header */}
-          <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 px-6 py-4 -m-6 mb-0 border-b border-white/10">
+          <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 px-6 py-4 -m-6 mb-6 border-b border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center border border-white/10">
@@ -501,117 +573,106 @@ function QuestionDialog({
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={onClose}
-                className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0"
+                className="h-8 w-8 hover:bg-white/10"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4 text-slate-400" />
               </Button>
             </div>
           </DialogHeader>
-      
-          {/* Content */}
-          <div className="px-6 py-5 space-y-6">
-            {/* Question Details */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">Question Number</label>
-                  <Input
-                    type="number"
-                    value={formData.questionNumber}
-                    onChange={(e) => setFormData({ ...formData, questionNumber: parseInt(e.target.value) || 1 })}
-                    placeholder="Question number"
-                    min="1"
-                    className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                    required
-                  />
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">Topic</label>
-                  <Input
-                    value={formData.topic}
-                    onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                    placeholder="Question topic"
-                    className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">Duration</label>
-                  <Input
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    placeholder="e.g., 15 mins"
-                    className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">Teacher</label>
-                  <Input
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({ ...formData, teacher: e.target.value })}
-                    placeholder="Teacher name"
-                    className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-white/80 block">Question Name</label>
+          {/* Form */}
+          <div className="space-y-6 p-6 -m-6 mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-white text-sm font-medium mb-2 block">Question Number *</label>
                 <Input
+                  type="number"
+                  placeholder="1"
+                  value={formData.questionNumber}
+                  onChange={(e) => setFormData({...formData, questionNumber: parseInt(e.target.value) || 1})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div>
+                <label className="text-white text-sm font-medium mb-2 block">Topic *</label>
+                <Input
+                  placeholder="e.g., Algebra, Geometry, etc."
+                  value={formData.topic}
+                  onChange={(e) => setFormData({...formData, topic: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="text-white text-sm font-medium mb-2 block">Question Name *</label>
+                <Input
+                  placeholder="e.g., Quadratic Equations Problem"
                   value={formData.questionName}
-                  onChange={(e) => setFormData({ ...formData, questionName: e.target.value })}
-                  placeholder="Question title or name"
-                  className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                  required
+                  onChange={(e) => setFormData({...formData, questionName: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-white/80 block">Question Description</label>
-                <Textarea
-                  value={formData.questionDescription}
-                  onChange={(e) => setFormData({ ...formData, questionDescription: e.target.value })}
-                  placeholder="Detailed description of the question"
-                  className="bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg min-h-[80px]"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-white/80 block">Video Embed Link</label>
+              
+              <div>
+                <label className="text-white text-sm font-medium mb-2 block">Duration *</label>
                 <Input
+                  placeholder="e.g., 15 mins"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div>
+                <label className="text-white text-sm font-medium mb-2 block">Teacher *</label>
+                <Input
+                  placeholder="Teacher name"
+                  value={formData.teacher}
+                  onChange={(e) => setFormData({...formData, teacher: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="text-white text-sm font-medium mb-2 block">Video Embed Link *</label>
+                <Input
+                  placeholder="https://www.youtube.com/embed/..."
                   value={formData.videoEmbedLink}
-                  onChange={(e) => setFormData({ ...formData, videoEmbedLink: e.target.value })}
-                  placeholder="YouTube, Vimeo, or other video URL"
-                  className="h-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 rounded-lg"
-                  required
+                  onChange={(e) => setFormData({...formData, videoEmbedLink: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="text-white text-sm font-medium mb-2 block">Question Description</label>
+                <Textarea
+                  placeholder="Detailed description of the question and solution approach..."
+                  value={formData.questionDescription}
+                  onChange={(e) => setFormData({...formData, questionDescription: e.target.value})}
+                  className="bg-white/10 border-white/20 text-white focus:border-blue-400/50 min-h-[100px]"
                 />
               </div>
             </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
-              <Button
-                variant="ghost"
-                onClick={onClose}
-                className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={onSave}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Save Question
-              </Button>
-            </div>
+          {/* Footer */}
+          <div className="flex justify-end gap-3 p-6 -m-6 mt-0 border-t border-white/10 bg-slate-900/50">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            >
+              {title.includes('Edit') ? 'Update Question' : 'Add Question'}
+            </Button>
           </div>
         </div>
       </DialogContent>

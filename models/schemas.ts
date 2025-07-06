@@ -211,3 +211,30 @@ export interface Report extends BaseDocument {
   format: "pdf" | "html" | "json"
   status: "generating" | "completed" | "failed"
 }
+
+// Past Paper interfaces
+export interface PastPaper extends BaseDocument {
+  paperName: string
+  board: string
+  year: number
+  subject: string
+  program: string
+  papers: {
+    name: string
+    questionPaperUrl: string
+    markSchemeUrl: string
+    questions: QuestionVideo[]
+  }[]
+  status: 'draft' | 'active'
+}
+
+export interface QuestionVideo extends BaseDocument {
+  questionId: string
+  questionNumber: number
+  topic: string
+  questionName: string
+  questionDescription: string
+  duration: string
+  teacher: string
+  videoEmbedLink: string
+}

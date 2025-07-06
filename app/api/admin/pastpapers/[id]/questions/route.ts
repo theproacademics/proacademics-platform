@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 
-// GET: Fetch all questions for a specific past paper
+// GET: Fetch all questions for a specific paper within a past paper
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -10,6 +10,8 @@ export async function GET(
   try {
     const db = await getDatabase()
     const pastPaperId = params.id
+    const { searchParams } = new URL(request.url)
+    const paperIndex = searchParams.get('paper') ? parseInt(searchParams.get('paper')!) : 0
     
     // Find the past paper with its questions
     const pastPaper = await db.collection('pastpapers').findOne({
@@ -23,12 +25,20 @@ export async function GET(
       )
     }
     
-    // Return questions array (empty if no questions exist)
-    const questions = pastPaper.questions || []
+    // Check if the paper exists at the specified index
+    if (!pastPaper.papers || !pastPaper.papers[paperIndex]) {
+      return NextResponse.json(
+        { success: false, error: 'Paper not found at specified index' },
+        { status: 404 }
+      )
+    }
+    
+    // Get questions for the specific paper
+    const paperQuestions = pastPaper.papers[paperIndex].questions || []
     
     return NextResponse.json({
       success: true,
-      questions
+      questions: paperQuestions
     })
     
   } catch (error) {
@@ -40,7 +50,7 @@ export async function GET(
   }
 }
 
-// POST: Add a new question to a past paper
+// POST: Add a new question to a specific paper within a past paper
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -51,11 +61,11 @@ export async function POST(
     const body = await request.json()
     
     // Validate required fields
-    const { questionNumber, topic, questionName, questionDescription, duration, teacher, videoEmbedLink } = body
+    const { questionNumber, topic, questionName, questionDescription, duration, teacher, videoEmbedLink, paperIndex } = body
     
-    if (!questionNumber || !topic || !questionName || !questionDescription || !duration || !teacher || !videoEmbedLink) {
+    if (!questionNumber || !topic || !questionName || !questionDescription || !duration || !teacher || !videoEmbedLink || paperIndex === undefined) {
       return NextResponse.json(
-        { success: false, error: 'All question fields are required' },
+        { success: false, error: 'All question fields and paper index are required' },
         { status: 400 }
       )
     }
@@ -68,6 +78,14 @@ export async function POST(
     if (!pastPaper) {
       return NextResponse.json(
         { success: false, error: 'Past paper not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Check if the paper exists at the specified index
+    if (!pastPaper.papers || !pastPaper.papers[paperIndex]) {
+      return NextResponse.json(
+        { success: false, error: 'Paper not found at specified index' },
         { status: 404 }
       )
     }
@@ -86,11 +104,14 @@ export async function POST(
       updatedAt: new Date().toISOString()
     }
     
-    // Add question to the past paper
+    // Add question to the specific paper
+    const updateQuery = {}
+    updateQuery[`papers.${paperIndex}.questions`] = newQuestion
+    
     const result = await db.collection('pastpapers').updateOne(
       { _id: new ObjectId(pastPaperId) },
       { 
-        $push: { questions: newQuestion },
+        $push: updateQuery,
         $set: { updatedAt: new Date().toISOString() }
       }
     )
@@ -116,7 +137,7 @@ export async function POST(
   }
 }
 
-// PUT: Update a specific question
+// PUT: Update a specific question within a paper
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -126,31 +147,31 @@ export async function PUT(
     const pastPaperId = params.id
     const body = await request.json()
     
-    const { questionId, questionNumber, topic, questionName, questionDescription, duration, teacher, videoEmbedLink } = body
+    const { questionId, questionNumber, topic, questionName, questionDescription, duration, teacher, videoEmbedLink, paperIndex } = body
     
-    if (!questionId) {
+    if (!questionId || paperIndex === undefined) {
       return NextResponse.json(
-        { success: false, error: 'Question ID is required' },
+        { success: false, error: 'Question ID and paper index are required' },
         { status: 400 }
       )
     }
     
-    // Update the specific question in the array
+    // Update the specific question in the specific paper
     const result = await db.collection('pastpapers').updateOne(
       { 
         _id: new ObjectId(pastPaperId),
-        'questions.id': questionId
+        [`papers.${paperIndex}.questions.id`]: questionId
       },
       {
         $set: {
-          'questions.$.questionNumber': parseInt(questionNumber),
-          'questions.$.topic': topic,
-          'questions.$.questionName': questionName,
-          'questions.$.questionDescription': questionDescription,
-          'questions.$.duration': duration,
-          'questions.$.teacher': teacher,
-          'questions.$.videoEmbedLink': videoEmbedLink,
-          'questions.$.updatedAt': new Date().toISOString(),
+          [`papers.${paperIndex}.questions.$.questionNumber`]: parseInt(questionNumber),
+          [`papers.${paperIndex}.questions.$.topic`]: topic,
+          [`papers.${paperIndex}.questions.$.questionName`]: questionName,
+          [`papers.${paperIndex}.questions.$.questionDescription`]: questionDescription,
+          [`papers.${paperIndex}.questions.$.duration`]: duration,
+          [`papers.${paperIndex}.questions.$.teacher`]: teacher,
+          [`papers.${paperIndex}.questions.$.videoEmbedLink`]: videoEmbedLink,
+          [`papers.${paperIndex}.questions.$.updatedAt`]: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
       }
@@ -177,7 +198,7 @@ export async function PUT(
   }
 }
 
-// DELETE: Remove a specific question
+// DELETE: Remove a specific question from a paper
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -187,6 +208,7 @@ export async function DELETE(
     const pastPaperId = params.id
     const { searchParams } = new URL(request.url)
     const questionId = searchParams.get('questionId')
+    const paperIndex = searchParams.get('paper') ? parseInt(searchParams.get('paper')!) : 0
     
     if (!questionId) {
       return NextResponse.json(
@@ -195,11 +217,14 @@ export async function DELETE(
       )
     }
     
-    // Remove the question from the array
+    // Remove the question from the specific paper
+    const pullQuery = {}
+    pullQuery[`papers.${paperIndex}.questions`] = { id: questionId }
+    
     const result = await db.collection('pastpapers').updateOne(
       { _id: new ObjectId(pastPaperId) },
       {
-        $pull: { questions: { id: questionId } },
+        $pull: pullQuery,
         $set: { updatedAt: new Date().toISOString() }
       }
     )

@@ -26,7 +26,9 @@ import {
   Clock,
   User,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FolderOpen,
+  FileTextIcon
 } from "lucide-react"
 
 // Icon mapping for subjects
@@ -72,8 +74,8 @@ interface PastPaper {
     name: string
     questionPaperUrl: string
     markSchemeUrl: string
+    questions: QuestionVideo[]
   }[]
-  questions?: QuestionVideo[]
   status: 'draft' | 'active'
   createdAt: string
   updatedAt: string
@@ -96,14 +98,14 @@ interface BoardSummary {
 export default function PastPapersPage() {
   const [subjects, setSubjects] = useState<SubjectSummary[]>([])
   const [boards, setBoards] = useState<BoardSummary[]>([])
-  const [papers, setPapers] = useState<PastPaper[]>([])
+  const [pastPapers, setPastPapers] = useState<PastPaper[]>([])
+  const [selectedPastPaper, setSelectedPastPaper] = useState<PastPaper | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null)
-  const [view, setView] = useState<'subjects' | 'boards' | 'papers'>('subjects')
+  const [view, setView] = useState<'subjects' | 'boards' | 'past-papers' | 'individual-papers'>('subjects')
   
-  // Question videos state
-  const [questionsData, setQuestionsData] = useState<Record<string, QuestionVideo[]>>({})
+  // Question videos state for individual papers
   const [loadingQuestions, setLoadingQuestions] = useState<Record<string, boolean>>({})
   const [questionPages, setQuestionPages] = useState<Record<string, number>>({})
   const QUESTIONS_PER_PAGE = 6
@@ -113,12 +115,11 @@ export default function PastPapersPage() {
     try {
       if (!videoUrl) return null
       
-      // YouTube URL patterns (youtube.com, youtu.be, youtube.com/embed)
+      // YouTube URL patterns
       const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
       const youtubeMatch = videoUrl.match(youtubeRegex)
       
       if (youtubeMatch && youtubeMatch[1]) {
-        // Try maxresdefault first, fallback handled by onError
         return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
       }
       
@@ -127,14 +128,8 @@ export default function PastPapersPage() {
       const vimeoMatch = videoUrl.match(vimeoRegex)
       
       if (vimeoMatch && vimeoMatch[1]) {
-        // For Vimeo, we could use their oembed API, but for now return null
-        // Future enhancement: fetch thumbnail from Vimeo API
-        return null
+        return null // Could implement Vimeo API call here
       }
-      
-      // Add more platforms as needed
-      // Dailymotion: /dailymotion\.com\/video\/([^_]+)/
-      // Twitch: /twitch\.tv\/videos\/(\d+)/
       
       return null
     } catch (error) {
@@ -252,51 +247,57 @@ export default function PastPapersPage() {
     setSelectedBoard(boardName)
     const boardData = boards.find(b => b.board === boardName)
     const papers = boardData ? boardData.papers : []
-    setPapers(papers)
-    setView('papers')
-    
-    // Fetch questions for all papers
-    papers.forEach(paper => {
-      fetchQuestionsForPaper(paper.id)
-    })
+    setPastPapers(papers)
+    setView('past-papers')
+  }
+
+  // Handle past paper selection - show individual papers
+  const handlePastPaperClick = (pastPaper: PastPaper) => {
+    setSelectedPastPaper(pastPaper)
+    setView('individual-papers')
   }
 
   // Fetch questions for a specific paper
-  const fetchQuestionsForPaper = async (paperId: string) => {
-    if (questionsData[paperId] || loadingQuestions[paperId]) return
+  const fetchQuestionsForPaper = async (pastPaperId: string, paperIndex: number) => {
+    const cacheKey = `${pastPaperId}-${paperIndex}`
+    if (loadingQuestions[cacheKey]) return
 
     try {
-      setLoadingQuestions(prev => ({ ...prev, [paperId]: true }))
+      setLoadingQuestions(prev => ({ ...prev, [cacheKey]: true }))
       
-      const response = await fetch(`/api/admin/pastpapers/${paperId}/questions`)
+      const response = await fetch(`/api/admin/pastpapers/${pastPaperId}/questions?paper=${paperIndex}`)
       if (!response.ok) throw new Error('Failed to fetch questions')
       
       const data = await response.json()
       if (data.success) {
-        setQuestionsData(prev => ({
-          ...prev,
-          [paperId]: data.questions || []
-        }))
-        setQuestionPages(prev => ({ ...prev, [paperId]: 1 }))
+        // Update the selected past paper with the fetched questions
+        if (selectedPastPaper && selectedPastPaper.id === pastPaperId) {
+          const updatedPastPaper = { ...selectedPastPaper }
+          if (updatedPastPaper.papers[paperIndex]) {
+            updatedPastPaper.papers[paperIndex].questions = data.questions || []
+          }
+          setSelectedPastPaper(updatedPastPaper)
+        }
+        setQuestionPages(prev => ({ ...prev, [cacheKey]: 1 }))
       }
     } catch (error) {
       console.error('Error fetching questions:', error)
-      setQuestionsData(prev => ({ ...prev, [paperId]: [] }))
     } finally {
-      setLoadingQuestions(prev => ({ ...prev, [paperId]: false }))
+      setLoadingQuestions(prev => ({ ...prev, [cacheKey]: false }))
     }
   }
 
   // Handle back navigation
   const handleBack = () => {
-    if (view === 'papers') {
-      setView('boards')
-      setSelectedBoard(null)
-      setPapers([])
-      // Clear questions data when leaving papers view
-      setQuestionsData({})
+    if (view === 'individual-papers') {
+      setView('past-papers')
+      setSelectedPastPaper(null)
       setLoadingQuestions({})
       setQuestionPages({})
+    } else if (view === 'past-papers') {
+      setView('boards')
+      setSelectedBoard(null)
+      setPastPapers([])
     } else if (view === 'boards') {
       setView('subjects')
       setSelectedSubject(null)
@@ -351,12 +352,14 @@ export default function PastPapersPage() {
                     <h2 className="text-2xl font-bold text-white">
                       {view === 'subjects' && 'Select Subject'}
                       {view === 'boards' && `Select Board - ${selectedSubject}`}
-                      {view === 'papers' && `${selectedSubject} - ${selectedBoard}`}
+                      {view === 'past-papers' && `Past Papers - ${selectedSubject} (${selectedBoard})`}
+                      {view === 'individual-papers' && selectedPastPaper && `${selectedPastPaper.paperName} - Individual Papers`}
                     </h2>
                     <p className="text-purple-200 text-sm">
                       {view === 'subjects' && 'Choose from available academic subjects'}
                       {view === 'boards' && 'Choose from available examination boards'}
-                      {view === 'papers' && 'Available past papers'}
+                      {view === 'past-papers' && 'Select a past paper to view individual papers'}
+                      {view === 'individual-papers' && 'View individual papers and question videos'}
                     </p>
                   </div>
                 </div>
@@ -506,20 +509,93 @@ export default function PastPapersPage() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                // Papers with Video Tiles
+              ) : view === 'past-papers' ? (
+                // Past Papers Grid
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pastPapers.map((pastPaper) => (
+                    <div
+                      key={pastPaper.id}
+                      onClick={() => handlePastPaperClick(pastPaper)}
+                      className="group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105"
+                    >
+                      {/* Card Background */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-3xl transition-all duration-300 group-hover:from-white/[0.12] group-hover:to-white/[0.04]"></div>
+                      <div className="absolute inset-0 border border-white/10 rounded-3xl transition-all duration-300 group-hover:border-white/20"></div>
+                      
+                      {/* Card Content */}
+                      <div className="relative p-6 h-full">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg flex items-center justify-center border-2 border-white/20 transition-all duration-300 group-hover:scale-110">
+                            <FolderOpen className="w-8 h-8 text-white" />
+                          </div>
+                          <Badge 
+                            className="bg-white/10 text-white border border-white/20 px-3 py-1.5 text-sm font-medium rounded-full"
+                          >
+                            {pastPaper.papers?.length || 0} papers
+                          </Badge>
+                        </div>
+                        
+                        {/* Past Paper Info */}
+                        <div className="mb-6">
+                          <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-200 transition-colors duration-300">
+                            {pastPaper.paperName}
+                          </h3>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs">
+                              {pastPaper.year}
+                            </Badge>
+                            <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs">
+                              {pastPaper.program}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">
+                            {pastPaper.papers?.length || 0} individual papers available
+                          </p>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="flex items-center justify-between mt-auto">
+                          <div className="flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors">
+                            <FileText className="w-4 h-4" />
+                            <span className="text-sm font-medium">
+                              {pastPaper.papers?.length || 0} papers
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-purple-400 group-hover:text-purple-300 transition-all duration-300">
+                            <span className="text-sm font-medium">View Papers</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {pastPapers.length === 0 && (
+                    <div className="col-span-full text-center py-16">
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
+                        <FileText className="w-12 h-12 text-purple-400/50" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-3">No past papers found</h3>
+                      <p className="text-purple-200/70 max-w-md mx-auto">No past papers available for this board yet</p>
+                    </div>
+                  )}
+                </div>
+              ) : view === 'individual-papers' && selectedPastPaper ? (
+                // Individual Papers View with Question Videos
                 <div className="space-y-8">
-                  {papers.map((paper, index) => {
-                    const paperQuestions = questionsData[paper.id] || []
-                    const currentPage = questionPages[paper.id] || 1
+                  {selectedPastPaper.papers.map((paper, paperIndex) => {
+                    const cacheKey = `${selectedPastPaper.id}-${paperIndex}`
+                    const paperQuestions = paper.questions || []
+                    const currentPage = questionPages[cacheKey] || 1
                     const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE
                     const endIndex = startIndex + QUESTIONS_PER_PAGE
                     const paginatedQuestions = paperQuestions.slice(startIndex, endIndex)
                     const totalPages = Math.ceil(paperQuestions.length / QUESTIONS_PER_PAGE)
-                    const isLoadingQuestions = loadingQuestions[paper.id]
+                    const isLoadingQuestions = loadingQuestions[cacheKey]
                     
                     return (
-                      <div key={paper.id} className="group relative">
+                      <div key={paperIndex} className="group relative">
                         {/* Paper Card Background */}
                         <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-white/[0.01] rounded-3xl transition-all duration-300 group-hover:from-white/[0.08] group-hover:to-white/[0.03]"></div>
                         <div className="absolute inset-0 border border-white/10 rounded-3xl transition-all duration-300 group-hover:border-white/20"></div>
@@ -530,205 +606,220 @@ export default function PastPapersPage() {
                           <div className="flex items-start gap-4 mb-6">
                             <div className="flex-shrink-0">
                               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg transition-transform duration-300 group-hover:scale-105">
-                                <span className="text-white font-bold text-lg">
-                                  {(index + 1).toString().padStart(2, '0')}
-                                </span>
+                                <FileTextIcon className="w-7 h-7 text-white" />
                               </div>
                             </div>
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3 mb-3">
                                 <h3 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors duration-300">
-                                  {paper.paperName}
+                                  {paper.name}
                                 </h3>
-                                <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                  {paper.year}
-                                </Badge>
                                 <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                  {paper.program}
+                                  {paperQuestions.length} videos
                                 </Badge>
                               </div>
-                              <p className="text-slate-300 text-sm">{paperQuestions.length} video explanations available</p>
+                              <p className="text-slate-300 text-sm">
+                                {paperQuestions.length === 0 ? 'No question videos available yet' : `${paperQuestions.length} video explanation${paperQuestions.length !== 1 ? 's' : ''} available`}
+                              </p>
                             </div>
                             
                             {/* Paper Actions */}
                             <div className="flex gap-2">
-                              {paper.papers.map((individualPaper, paperIndex) => (
-                                <div key={paperIndex} className="flex gap-2">
-                                  <a
-                                    href={individualPaper.questionPaperUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
-                                  >
-                                    <Eye className="w-3 h-3" />
-                                    Question Paper
-                                  </a>
-                                  <a
-                                    href={individualPaper.markSchemeUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg transition-colors text-sm"
-                                  >
-                                    <Download className="w-3 h-3" />
-                                    Mark Scheme
-                                  </a>
-                                </div>
-                              ))}
+                              <a
+                                href={paper.questionPaperUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
+                              >
+                                <Eye className="w-3 h-3" />
+                                Question Paper
+                              </a>
+                              <a
+                                href={paper.markSchemeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg transition-colors text-sm"
+                              >
+                                <Download className="w-3 h-3" />
+                                Mark Scheme
+                              </a>
                             </div>
                           </div>
 
-                          {/* Video Tiles Section */}
-                          <div className="mt-6">
-                            {isLoadingQuestions ? (
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                {[...Array(6)].map((_, i) => (
-                                  <div key={i} className="aspect-video bg-white/5 rounded-xl animate-pulse border border-white/10"></div>
-                                ))}
-                              </div>
-                            ) : paperQuestions.length > 0 ? (
-                              <>
-                                                                 {/* Video Tiles Grid */}
-                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-                                   {paginatedQuestions.map((question) => {
-                                     const thumbnailUrl = getVideoThumbnail(question.videoEmbedLink)
-                                     
-                                     return (
-                                       <div
-                                         key={question.id}
-                                         className="group/tile relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105"
-                                         onClick={() => window.location.href = `/pastpapers/video/${question.id}`}
-                                       >
-                                         {/* Video Tile Background */}
-                                         <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-white/10 relative">
-                                           {/* Video Thumbnail */}
-                                           {thumbnailUrl && (
-                                             <img
-                                               src={thumbnailUrl}
-                                               alt={`${question.questionName} thumbnail`}
-                                               className="absolute inset-0 w-full h-full object-cover"
-                                               onError={(e) => {
-                                                 // Hide image on error, fallback to gradient background
-                                                 e.currentTarget.style.display = 'none'
-                                               }}
-                                             />
-                                           )}
-                                           
-                                           {/* Play Button Overlay */}
-                                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/tile:bg-black/20 transition-all duration-300">
-                                             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover/tile:scale-110 transition-transform duration-300 border border-white/30">
-                                               <PlayCircle className="w-6 h-6 text-white" />
-                                             </div>
-                                           </div>
-                                           
-                                           {/* Question Number Badge */}
-                                           <div className="absolute top-2 left-2 bg-purple-500/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full border border-purple-400/50">
-                                             Q{question.questionNumber}
-                                           </div>
-                                           
-                                           {/* Duration Badge */}
-                                           <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs flex items-center gap-1 px-2 py-1 rounded-full border border-white/20">
-                                             <Clock className="w-3 h-3" />
-                                             {question.duration}
-                                           </div>
-                                         </div>
-                                         
-                                         {/* Video Info */}
-                                         <div className="mt-2 px-1">
-                                           <h4 className="text-white text-sm font-medium truncate group-hover/tile:text-purple-200 transition-colors">
-                                             {question.questionName}
-                                           </h4>
-                                           <p className="text-slate-400 text-xs truncate">
-                                             {question.topic}
-                                           </p>
-                                           <div className="flex items-center gap-1 mt-1">
-                                             <User className="w-3 h-3 text-slate-500" />
-                                             <span className="text-slate-500 text-xs truncate">{question.teacher}</span>
-                                           </div>
-                                         </div>
-                                       </div>
-                                     )
-                                   })}
-                                 </div>
+                          {/* Load Questions Button */}
+                          {paperQuestions.length === 0 && !isLoadingQuestions && (
+                            <div className="text-center py-8">
+                              <Button
+                                onClick={() => fetchQuestionsForPaper(selectedPastPaper.id, paperIndex)}
+                                className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30"
+                              >
+                                <PlayCircle className="w-4 h-4 mr-2" />
+                                Load Question Videos
+                              </Button>
+                            </div>
+                          )}
 
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                  <div className="flex items-center justify-center gap-4">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setQuestionPages(prev => ({
-                                        ...prev,
-                                        [paper.id]: Math.max(1, currentPage - 1)
-                                      }))}
-                                      disabled={currentPage === 1}
-                                      className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
-                                    >
-                                      <ChevronLeft className="w-4 h-4 mr-1" />
-                                      Previous
-                                    </Button>
-                                    
-                                    <div className="flex items-center gap-2">
-                                      {[...Array(totalPages)].map((_, i) => {
-                                        const pageNum = i + 1
-                                        return (
-                                          <button
-                                            key={pageNum}
-                                            onClick={() => setQuestionPages(prev => ({
-                                              ...prev,
-                                              [paper.id]: pageNum
-                                            }))}
-                                            className={`w-8 h-8 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                              currentPage === pageNum
-                                                ? 'bg-purple-500 text-white'
-                                                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                                            }`}
-                                          >
-                                            {pageNum}
-                                          </button>
-                                        )
-                                      })}
-                                    </div>
-                                    
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setQuestionPages(prev => ({
-                                        ...prev,
-                                        [paper.id]: Math.min(totalPages, currentPage + 1)
-                                      }))}
-                                      disabled={currentPage === totalPages}
-                                      className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
-                                    >
-                                      Next
-                                      <ChevronRight className="w-4 h-4 ml-1" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <div className="text-center py-8">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
-                                  <PlayCircle className="w-8 h-8 text-purple-400/50" />
+                          {/* Video Tiles Section */}
+                          {(paperQuestions.length > 0 || isLoadingQuestions) && (
+                            <div className="mt-6">
+                              {isLoadingQuestions ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                  {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="aspect-video bg-white/5 rounded-xl animate-pulse border border-white/10"></div>
+                                  ))}
                                 </div>
-                                <p className="text-slate-400 text-sm">No video explanations available yet</p>
-                              </div>
-                            )}
-                          </div>
+                              ) : paperQuestions.length > 0 ? (
+                                <>
+                                  {/* Video Tiles Grid */}
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                                    {paginatedQuestions.map((question) => {
+                                      const thumbnailUrl = getVideoThumbnail(question.videoEmbedLink)
+                                      
+                                      return (
+                                        <div
+                                          key={question.id}
+                                          className="group/tile relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105"
+                                          onClick={() => window.location.href = `/pastpapers/video/${question.id}`}
+                                        >
+                                          {/* Video Tile Background */}
+                                          <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-white/10 relative">
+                                            {/* Video Thumbnail */}
+                                            {thumbnailUrl && (
+                                              <img
+                                                src={thumbnailUrl}
+                                                alt={`${question.questionName} thumbnail`}
+                                                className="absolute inset-0 w-full h-full object-cover"
+                                                onError={(e) => {
+                                                  e.currentTarget.style.display = 'none'
+                                                }}
+                                              />
+                                            )}
+                                            
+                                            {/* Play Button Overlay */}
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/tile:bg-black/20 transition-all duration-300">
+                                              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover/tile:scale-110 transition-transform duration-300 border border-white/30">
+                                                <PlayCircle className="w-6 h-6 text-white" />
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Question Number Badge */}
+                                            <div className="absolute top-2 left-2 bg-purple-500/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full border border-purple-400/50">
+                                              Q{question.questionNumber}
+                                            </div>
+                                            
+                                            {/* Duration Badge */}
+                                            <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs flex items-center gap-1 px-2 py-1 rounded-full border border-white/20">
+                                              <Clock className="w-3 h-3" />
+                                              {question.duration}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Video Info */}
+                                          <div className="mt-2 px-1">
+                                            <h4 className="text-white text-sm font-medium truncate group-hover/tile:text-purple-200 transition-colors">
+                                              {question.questionName}
+                                            </h4>
+                                            <p className="text-slate-400 text-xs truncate">
+                                              {question.topic}
+                                            </p>
+                                            <div className="flex items-center gap-1 mt-1">
+                                              <User className="w-3 h-3 text-slate-500" />
+                                              <span className="text-slate-500 text-xs truncate">{question.teacher}</span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+
+                                  {/* Pagination */}
+                                  {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-4">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setQuestionPages(prev => ({
+                                          ...prev,
+                                          [cacheKey]: Math.max(1, currentPage - 1)
+                                        }))}
+                                        disabled={currentPage === 1}
+                                        className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                      >
+                                        <ChevronLeft className="w-4 h-4 mr-1" />
+                                        Previous
+                                      </Button>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        {[...Array(totalPages)].map((_, i) => {
+                                          const pageNum = i + 1
+                                          return (
+                                            <button
+                                              key={pageNum}
+                                              onClick={() => setQuestionPages(prev => ({
+                                                ...prev,
+                                                [cacheKey]: pageNum
+                                              }))}
+                                              className={`w-8 h-8 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                                currentPage === pageNum
+                                                  ? 'bg-purple-500 text-white'
+                                                  : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                                              }`}
+                                            >
+                                              {pageNum}
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                      
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setQuestionPages(prev => ({
+                                          ...prev,
+                                          [cacheKey]: Math.min(totalPages, currentPage + 1)
+                                        }))}
+                                        disabled={currentPage === totalPages}
+                                        className="text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                      >
+                                        Next
+                                        <ChevronRight className="w-4 h-4 ml-1" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
+                                    <PlayCircle className="w-8 h-8 text-purple-400/50" />
+                                  </div>
+                                  <p className="text-slate-400 text-sm">No video explanations available yet</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
                   })}
                   
-                  {papers.length === 0 && (
+                  {selectedPastPaper.papers.length === 0 && (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
                         <FileText className="w-12 h-12 text-purple-400/50" />
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-3">No papers found</h3>
-                      <p className="text-purple-200/70 max-w-md mx-auto">No papers available for this board yet</p>
+                      <h3 className="text-2xl font-bold text-white mb-3">No individual papers</h3>
+                      <p className="text-purple-200/70 max-w-md mx-auto">This past paper doesn't have any individual papers added yet</p>
                     </div>
                   )}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
+                    <FileText className="w-12 h-12 text-purple-400/50" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">Something went wrong</h3>
+                  <p className="text-purple-200/70 max-w-md mx-auto">Please try refreshing the page</p>
                 </div>
               )}
             </div>

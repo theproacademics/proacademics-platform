@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Validate each paper has required fields
+    // Validate each paper has required fields and initialize questions array
     for (const paper of papers) {
       if (!paper.name || !paper.questionPaperUrl || !paper.markSchemeUrl) {
         return NextResponse.json(
@@ -104,6 +104,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+      // Initialize questions array for each paper
+      paper.questions = paper.questions || []
     }
     
     // Create new past paper document
