@@ -79,33 +79,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    const { paperName, board, year, subject, program, papers, status } = body
+    const { paperName, board, year, subject, program, status } = body
     
-    if (!paperName || !board || !year || !subject || !program || !papers || !status) {
+    if (!paperName || !board || !year || !subject || !program || !status) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       )
     }
     
-    // Validate papers array
-    if (!Array.isArray(papers) || papers.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'At least one paper is required' },
-        { status: 400 }
-      )
-    }
+    // Papers array is optional - can be empty for new containers
+    const papers = body.papers || []
     
-    // Validate each paper has required fields and initialize questions array
-    for (const paper of papers) {
-      if (!paper.name || !paper.questionPaperUrl || !paper.markSchemeUrl) {
-        return NextResponse.json(
-          { success: false, error: 'Each paper must have name, question paper URL, and mark scheme URL' },
-          { status: 400 }
-        )
+    // If papers are provided, validate each paper has required fields and initialize questions array
+    if (Array.isArray(papers) && papers.length > 0) {
+      for (const paper of papers) {
+        if (!paper.name || !paper.questionPaperUrl || !paper.markSchemeUrl) {
+          return NextResponse.json(
+            { success: false, error: 'Each paper must have name, question paper URL, and mark scheme URL' },
+            { status: 400 }
+          )
+        }
+        // Initialize questions array for each paper
+        paper.questions = paper.questions || []
       }
-      // Initialize questions array for each paper
-      paper.questions = paper.questions || []
     }
     
     // Create new past paper document
@@ -127,6 +124,13 @@ export async function POST(request: NextRequest) {
     // Return created document
     const createdPaper = await db.collection('pastpapers').findOne({ _id: result.insertedId })
     
+    if (!createdPaper) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch created past paper' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
       pastPaper: {

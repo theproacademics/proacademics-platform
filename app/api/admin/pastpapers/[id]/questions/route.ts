@@ -105,24 +105,21 @@ export async function POST(
     }
     
     // Add question to the specific paper
-    const updateQuery = {}
-    updateQuery[`papers.${paperIndex}.questions`] = newQuestion
+    const pushUpdate = { $push: {} as any, $set: { updatedAt: new Date().toISOString() } }
+    pushUpdate.$push[`papers.${paperIndex}.questions`] = newQuestion
     
     const result = await db.collection('pastpapers').updateOne(
       { _id: new ObjectId(pastPaperId) },
-      { 
-        $push: updateQuery,
-        $set: { updatedAt: new Date().toISOString() }
-      }
+      pushUpdate
     )
-    
+
     if (result.modifiedCount === 0) {
       return NextResponse.json(
         { success: false, error: 'Failed to add question' },
         { status: 500 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       question: newQuestion
@@ -183,7 +180,7 @@ export async function PUT(
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Question updated successfully'
@@ -218,24 +215,21 @@ export async function DELETE(
     }
     
     // Remove the question from the specific paper
-    const pullQuery = {}
-    pullQuery[`papers.${paperIndex}.questions`] = { id: questionId }
+    const pullUpdate = { $pull: {} as any, $set: { updatedAt: new Date().toISOString() } }
+    pullUpdate.$pull[`papers.${paperIndex}.questions`] = { id: questionId }
     
     const result = await db.collection('pastpapers').updateOne(
       { _id: new ObjectId(pastPaperId) },
-      {
-        $pull: pullQuery,
-        $set: { updatedAt: new Date().toISOString() }
-      }
+      pullUpdate
     )
-    
+
     if (result.modifiedCount === 0) {
       return NextResponse.json(
         { success: false, error: 'Question not found or failed to delete' },
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Question deleted successfully'

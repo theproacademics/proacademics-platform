@@ -12,6 +12,21 @@ import { ArrowLeft, Plus, Edit, Trash2, PlayCircle, X, FileTextIcon } from "luci
 import { toast } from "sonner"
 import { PastPaper, QuestionVideo, QuestionVideoFormData } from "@/types"
 
+// Utility function to ensure URLs have proper protocol
+const ensureUrlProtocol = (url: string): string => {
+  if (!url) return ""
+  // If URL already has protocol, return as is
+  if (url.match(/^https?:\/\//)) {
+    return url
+  }
+  // If URL starts with www or is a domain, add https://
+  if (url.match(/^(www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/)) {
+    return `https://${url}`
+  }
+  // For other cases, add https://
+  return `https://${url}`
+}
+
 export default function QuestionsPage() {
   const params = useParams()
   const router = useRouter()
@@ -284,23 +299,31 @@ export default function QuestionsPage() {
                   <FileTextIcon className="w-5 h-5 text-purple-400" />
                   <h2 className="text-lg font-semibold text-white">{currentPaper.name}</h2>
                 </div>
-                <div className="flex items-center justify-center gap-6 text-sm text-slate-300">
-                  <a 
-                    href={currentPaper.questionPaperUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-400 transition-colors flex items-center gap-1"
+                <div className="flex items-center justify-center gap-4 text-sm">
+                  <button
+                    onClick={() => {
+                      if (currentPaper.questionPaperUrl) {
+                        window.open(ensureUrlProtocol(currentPaper.questionPaperUrl), '_blank', 'noopener,noreferrer')
+                      } else {
+                        toast.error('Question paper URL not available')
+                      }
+                    }}
+                    className="bg-blue-500/10 border border-blue-400/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400/50 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
                   >
                     📄 Question Paper ↗
-                  </a>
-                  <a 
-                    href={currentPaper.markSchemeUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:text-green-400 transition-colors flex items-center gap-1"
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (currentPaper.markSchemeUrl) {
+                        window.open(ensureUrlProtocol(currentPaper.markSchemeUrl), '_blank', 'noopener,noreferrer')
+                      } else {
+                        toast.error('Mark scheme URL not available')
+                      }
+                    }}
+                    className="bg-green-500/10 border border-green-400/30 text-green-400 hover:bg-green-500/20 hover:border-green-400/50 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
                   >
                     ✅ Mark Scheme ↗
-                  </a>
+                  </button>
                 </div>
               </div>
               

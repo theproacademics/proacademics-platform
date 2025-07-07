@@ -120,6 +120,13 @@ export async function PUT(
     // Fetch updated document
     const updatedPaper = await db.collection('pastpapers').findOne({ _id: new ObjectId(id) })
     
+    if (!updatedPaper) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch updated past paper' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
       pastPaper: {
