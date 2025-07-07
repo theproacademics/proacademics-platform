@@ -309,9 +309,8 @@ export default function PastPapersPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       <Navigation />
       
-      <div className="lg:ml-80">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-7xl mx-auto">
+      <main className="lg:ml-72 min-h-screen relative z-10">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             
             {/* Hero Section */}
             <div className="text-center mb-12">
@@ -510,62 +509,87 @@ export default function PastPapersPage() {
                   ))}
                 </div>
               ) : view === 'past-papers' ? (
-                // Past Papers Grid
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                // Past Papers List - Lesson-style Horizontal Tiles
+                <div className="space-y-3">
                   {pastPapers.map((pastPaper) => (
                     <div
                       key={pastPaper.id}
                       onClick={() => handlePastPaperClick(pastPaper)}
-                      className="group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105"
+                      className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01] cursor-pointer"
                     >
-                      {/* Card Background */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-3xl transition-all duration-300 group-hover:from-white/[0.12] group-hover:to-white/[0.04]"></div>
-                      <div className="absolute inset-0 border border-white/10 rounded-3xl transition-all duration-300 group-hover:border-white/20"></div>
+                      {/* Subtle hover gradient effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
-                      {/* Card Content */}
-                      <div className="relative p-6 h-full">
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg flex items-center justify-center border-2 border-white/20 transition-all duration-300 group-hover:scale-110">
-                            <FolderOpen className="w-8 h-8 text-white" />
+                      <div className="flex items-center gap-4 relative z-10">
+                        {/* Left: Year and Board */}
+                        <div className="flex-shrink-0 text-center min-w-[80px]">
+                          <div className="text-2xl font-bold text-white leading-tight">
+                            {pastPaper.year}
                           </div>
-                          <Badge 
-                            className="bg-white/10 text-white border border-white/20 px-3 py-1.5 text-sm font-medium rounded-full"
-                          >
+                          <div className="text-sm text-slate-400 font-medium">
+                            {pastPaper.board}
+                          </div>
+                        </div>
+
+                        {/* Separator Line */}
+                        <div className="flex-shrink-0 h-16 lg:h-20 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+
+                        {/* Paper Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-blue-500 relative border border-white/10">
+                            <div className="w-full h-full flex items-center justify-center">
+                              <FolderOpen className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="flex-1 min-w-0 space-y-2">
+                          {/* Header with Paper Name */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-white text-lg leading-tight">
+                                {pastPaper.paperName}
+                              </h3>
+                              <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
+                                <span>{pastPaper.subject}</span>
+                                {pastPaper.program && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{pastPaper.program}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Paper Count Badge */}
+                          <div className="inline-flex items-center bg-blue-500/15 text-blue-200 border border-blue-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
+                            <FileText className="w-3 h-3 mr-1.5" />
                             {pastPaper.papers?.length || 0} papers
-                          </Badge>
-                        </div>
-                        
-                        {/* Past Paper Info */}
-                        <div className="mb-6">
-                          <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-200 transition-colors duration-300">
-                            {pastPaper.paperName}
-                          </h3>
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs">
+                          </div>
+
+                          {/* Additional Info */}
+                          <div className="flex items-center gap-2">
+                            <div className="inline-flex items-center bg-purple-500/15 text-purple-200 border border-purple-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
                               {pastPaper.year}
-                            </Badge>
-                            <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs">
-                              {pastPaper.program}
-                            </Badge>
+                            </div>
+                            {pastPaper.program && (
+                              <div className="inline-flex items-center bg-green-500/15 text-green-200 border border-green-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
+                                {pastPaper.program}
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">
-                            {pastPaper.papers?.length || 0} individual papers available
-                          </p>
                         </div>
-                        
-                        {/* Footer */}
-                        <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors">
-                            <FileText className="w-4 h-4" />
-                            <span className="text-sm font-medium">
-                              {pastPaper.papers?.length || 0} papers
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-purple-400 group-hover:text-purple-300 transition-all duration-300">
-                            <span className="text-sm font-medium">View Papers</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </div>
+
+                        {/* Action Button */}
+                        <div className="flex-shrink-0">
+                          <Button 
+                            className="bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20 px-6 py-2.5 text-sm"
+                          >
+                            <ArrowRight className="w-4 h-4 mr-2" />
+                            View Papers
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -825,8 +849,7 @@ export default function PastPapersPage() {
             </div>
 
           </div>
-        </div>
-      </div>
+        </main>
     </div>
   );
 }
