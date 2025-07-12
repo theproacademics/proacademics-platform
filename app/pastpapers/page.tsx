@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Navigation } from "@/components/layout/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Preloader } from "@/components/ui/preloader"
+import { usePreloader } from "@/hooks/use-preloader"
 import { 
   FileText, 
   BookOpen, 
@@ -104,11 +106,20 @@ export default function PastPapersPage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null)
   const [view, setView] = useState<'subjects' | 'boards' | 'past-papers' | 'individual-papers'>('subjects')
+  const [dataReady, setDataReady] = useState(false)
   
   // Question videos state for individual papers
   const [loadingQuestions, setLoadingQuestions] = useState<Record<string, boolean>>({})
   const [questionPages, setQuestionPages] = useState<Record<string, number>>({})
   const QUESTIONS_PER_PAGE = 6
+
+  // Preloader hook
+  const { showPreloader, mounted } = usePreloader({ 
+    delay: 1200,
+    dependencies: [dataReady],
+    waitForImages: true,
+    waitForFonts: true 
+  })
 
   // Extract video thumbnail URL
   const getVideoThumbnail = (videoUrl: string): string | null => {
@@ -189,6 +200,8 @@ export default function PastPapersPage() {
       console.error("Failed to fetch subjects and papers:", error)
     } finally {
       setLoading(false)
+      // Mark data as ready after a short delay to ensure UI is rendered
+      setTimeout(() => setDataReady(true), 100)
     }
   }
 
@@ -303,6 +316,11 @@ export default function PastPapersPage() {
       setSelectedSubject(null)
       setBoards([])
     }
+  }
+
+  // Show preloader
+  if (showPreloader || !mounted) {
+    return <Preloader isVisible={showPreloader || !mounted} colorScheme="purple" loadingText="Loading past papers library..." />
   }
 
   return (
