@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Users, BarChart3, BookOpen, Settings, Menu, X, LogOut, Tags, FileText } from "lucide-react"
+import { LayoutDashboard, Users, BarChart3, BookOpen, Settings, Menu, X, LogOut, Tags, FileText, Video } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigation = [
@@ -12,6 +12,7 @@ const navigation = [
   { name: "Students", href: "/admin/students", icon: Users },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Lessons", href: "/admin/lessons", icon: BookOpen },
+  { name: "Topic Vault", href: "/admin/topic-vault", icon: Video },
   { name: "Past Papers", href: "/admin/pastpapers", icon: FileText },
   { name: "Subjects & Programs", href: "/admin/subjects", icon: Tags },
   { name: "System", href: "/admin/system", icon: Settings },

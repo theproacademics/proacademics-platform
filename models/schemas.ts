@@ -238,3 +238,19 @@ export interface QuestionVideo extends BaseDocument {
   teacher: string
   videoEmbedLink: string
 }
+
+// Topic Vault interface
+export interface TopicVault extends BaseDocument {
+  id: string
+  videoName: string
+  topic: string
+  subject: string
+  program: string
+  type: 'Lesson' | 'Tutorial' | 'Workshop'
+  duration: string
+  teacher: string
+  description: string
+  zoomLink?: string
+  videoEmbedLink: string
+  status: 'draft' | 'active'
+}
