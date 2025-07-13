@@ -75,6 +75,23 @@ class TopicVaultService {
     return { ...newTopicVault, _id: result.insertedId }
   }
 
+  async createManyTopicVaults(topicVaultsData: Omit<TopicVault, "_id" | "createdAt" | "updatedAt">[]): Promise<TopicVault[]> {
+    const collection = await this.getCollection()
+    
+    const now = new Date()
+    const newTopicVaults: TopicVault[] = topicVaultsData.map(topicVault => ({
+      ...topicVault,
+      createdAt: now,
+      updatedAt: now,
+    }))
+
+    const result = await collection.insertMany(newTopicVaults)
+    return newTopicVaults.map((topicVault, index) => ({
+      ...topicVault,
+      _id: result.insertedIds[index]
+    }))
+  }
+
   async getAllTopicVaults(query: TopicVaultQuery = {}): Promise<{
     topicVaults: TopicVault[]
     total: number

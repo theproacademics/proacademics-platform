@@ -680,6 +680,12 @@ export default function TopicVaultPage() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  <Link href="/admin/topic-vault/import">
+                    <Button variant="outline" className="glass-button text-green-400 border-green-500/30 hover:bg-green-500/10">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Import CSV
+                    </Button>
+                  </Link>
                   <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
