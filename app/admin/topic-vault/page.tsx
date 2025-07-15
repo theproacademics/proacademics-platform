@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Video, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, RotateCcw, Archive } from "lucide-react"
+import { Video, Plus, Search, Filter, Edit, Trash2, Eye, Play, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, RotateCcw, Archive, FolderOpen, ExternalLink, GripVertical, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -23,13 +23,22 @@ let SUBJECT_PROGRAMS: Record<string, string[]> = {}
 let SUBJECT_COLORS: Record<string, string> = {}
 
 // Types
-interface TopicVault {
+interface Topic {
   _id?: string
   id: string
-  videoName: string
-  topic: string
+  topicName: string
   subject: string
   program: string
+  description?: string
+  status: 'draft' | 'active'
+  subtopics: SubtopicVault[]
+  createdAt: string
+  updatedAt: string
+}
+
+interface SubtopicVault {
+  id: string
+  videoName: string
   type: 'Lesson' | 'Tutorial' | 'Workshop'
   duration: string
   teacher: string
@@ -37,15 +46,18 @@ interface TopicVault {
   zoomLink?: string
   videoEmbedLink: string
   status: 'draft' | 'active'
-  createdAt: string
-  updatedAt: string
 }
 
-interface TopicVaultFormData {
-  videoName: string
-  topic: string
+interface TopicFormData {
+  topicName: string
   subject: string
   program: string
+  description: string
+  status: 'draft' | 'active'
+}
+
+interface SubtopicFormData {
+  videoName: string
   type: 'Lesson' | 'Tutorial' | 'Workshop'
   duration: string
   teacher: string
@@ -55,8 +67,8 @@ interface TopicVaultFormData {
   status: 'draft' | 'active'
 }
 
-interface PaginatedTopicVaults {
-  topicVaults: TopicVault[]
+interface PaginatedTopics {
+  topics: Topic[]
   total: number
   page: number
   limit: number
@@ -64,11 +76,16 @@ interface PaginatedTopicVaults {
 }
 
 // Utility functions
-const createEmptyFormData = (): TopicVaultFormData => ({
-  videoName: "",
-  topic: "",
+const createEmptyTopicFormData = (): TopicFormData => ({
+  topicName: "",
   subject: "",
   program: "",
+  description: "",
+  status: "draft"
+})
+
+const createEmptySubtopicFormData = (): SubtopicFormData => ({
+  videoName: "",
   type: "Lesson",
   duration: "",
   teacher: "",
@@ -106,9 +123,18 @@ const getTypeColor = (type: string) => {
   }
 }
 
+// Utility function to ensure URL has proper protocol
+const ensureUrlProtocol = (url: string): string => {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  return `https://${url}`
+}
+
 export default function TopicVaultPage() {
   // Core data states
-  const [topicVaults, setTopicVaults] = useState<TopicVault[]>([])
+  const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
   const [subjects, setSubjects] = useState<string[]>([])
   const [teachers, setTeachers] = useState<string[]>([])
@@ -116,6 +142,9 @@ export default function TopicVaultPage() {
   
   // Add state for admin subjects
   const [adminSubjects, setAdminSubjects] = useState<{id: string, name: string, color: string, isActive: boolean}[]>([])
+
+  // Expanded topics state
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
 
   // Filter and pagination states
   const [searchTerm, setSearchTerm] = useState("")
@@ -126,23 +155,40 @@ export default function TopicVaultPage() {
   const [selectedProgram, setSelectedProgram] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [totalTopicVaults, setTotalTopicVaults] = useState(0)
+  const [totalTopics, setTotalTopics] = useState(0)
   
   // Dialog states
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedTopicVault, setSelectedTopicVault] = useState<TopicVault | null>(null)
+  const [isCreateTopicDialogOpen, setIsCreateTopicDialogOpen] = useState(false)
+  const [isAddSubtopicDialogOpen, setIsAddSubtopicDialogOpen] = useState(false)
+  const [isEditTopicDialogOpen, setIsEditTopicDialogOpen] = useState(false)
+  const [isViewTopicDialogOpen, setIsViewTopicDialogOpen] = useState(false)
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
   
   // Bulk operations
-  const [selectedTopicVaults, setSelectedTopicVaults] = useState<string[]>([])
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   
-  // Form state
-  const [formData, setFormData] = useState<TopicVaultFormData>(createEmptyFormData())
+  // Form states
+  const [topicFormData, setTopicFormData] = useState<TopicFormData>(createEmptyTopicFormData())
+  const [subtopicFormData, setSubtopicFormData] = useState<SubtopicFormData>(createEmptySubtopicFormData())
 
-  // Fetch topic vaults data
-  const fetchTopicVaults = async () => {
+  // Drag and drop states
+  const [draggedItem, setDraggedItem] = useState<{topicId: string, subtopicIndex: number} | null>(null)
+  const [dragOverItem, setDragOverItem] = useState<{topicId: string, subtopicIndex: number} | null>(null)
+
+  // Toggle expanded state for topics
+  const toggleExpanded = (topicId: string) => {
+    const newExpanded = new Set(expandedTopics)
+    if (newExpanded.has(topicId)) {
+      newExpanded.delete(topicId)
+    } else {
+      newExpanded.add(topicId)
+    }
+    setExpandedTopics(newExpanded)
+  }
+
+  // Fetch topics data
+  const fetchTopics = async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -157,15 +203,16 @@ export default function TopicVaultPage() {
       })
 
       const response = await fetch(`/api/admin/topic-vault?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch topic vaults')
+      if (!response.ok) throw new Error('Failed to fetch topics')
       
-      const data: PaginatedTopicVaults = await response.json()
-      setTopicVaults(data.topicVaults)
-      setTotalPages(data.totalPages)
-      setTotalTopicVaults(data.total)
+      const data: PaginatedTopics = await response.json()
+      setTopics(data.topics || [])
+      setTotalPages(data.totalPages || 1)
+      setTotalTopics(data.total || 0)
     } catch (error) {
-      console.error('Error fetching topic vaults:', error)
-      toast.error('Failed to fetch topic vaults')
+      console.error('Error fetching topics:', error)
+      toast.error('Failed to fetch topics')
+      setTopics([]) // Ensure topics is always an array
     } finally {
       setLoading(false)
     }
@@ -184,17 +231,17 @@ export default function TopicVaultPage() {
       
       if (subjectsRes.ok) {
         const subjectsData = await subjectsRes.json()
-        setSubjects(subjectsData.subjects || [])
+        setSubjects(Array.isArray(subjectsData.subjects) ? subjectsData.subjects : [])
       }
       
       if (teachersRes.ok) {
         const teachersData = await teachersRes.json()
-        setTeachers(teachersData.teachers || [])
+        setTeachers(Array.isArray(teachersData.teachers) ? teachersData.teachers : [])
       }
 
       if (programsRes.ok) {
         const programsData = await programsRes.json()
-        setPrograms(programsData.programs || [])
+        setPrograms(Array.isArray(programsData.programs) ? programsData.programs : [])
       }
 
       if (subjectProgramsRes.ok) {
@@ -208,120 +255,184 @@ export default function TopicVaultPage() {
       if (adminSubjectsRes.ok) {
         const adminSubjectsData = await adminSubjectsRes.json()
         if (adminSubjectsData.success) {
-          setAdminSubjects(adminSubjectsData.subjects || [])
+          setAdminSubjects(Array.isArray(adminSubjectsData.subjects) ? adminSubjectsData.subjects : [])
         }
       }
     } catch (error) {
       console.error('Error fetching filter options:', error)
+      // Ensure arrays are always initialized
+      setSubjects([])
+      setTeachers([])
+      setPrograms([])
+      setAdminSubjects([])
     }
   }
 
   // Effect hooks
   useEffect(() => {
-    fetchTopicVaults()
+    fetchTopics()
   }, [currentPage, searchTerm, selectedSubject, selectedTeacher, selectedStatus, selectedType, selectedProgram])
 
   useEffect(() => {
     fetchFilterOptions()
   }, [])
 
-  // CRUD Operations
-  const handleCreateTopicVault = useCallback(async () => {
+  // Create new topic
+  const handleCreateTopic = useCallback(async () => {
     try {
+      if (!topicFormData.topicName.trim()) {
+        toast.error('Topic name is required')
+        return
+      }
+      if (!topicFormData.subject.trim()) {
+        toast.error('Subject is required')
+        return
+      }
+      if (!topicFormData.program.trim()) {
+        toast.error('Program is required')
+        return
+      }
+
       const response = await fetch('/api/admin/topic-vault', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          description: formData.description || '',
-          zoomLink: formData.zoomLink || '',
-          status: formData.status || 'draft'
+          ...topicFormData,
+          subtopics: [] // Start with empty subtopics array
         })
       })
 
-      if (!response.ok) throw new Error('Failed to create topic vault')
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create topic')
+      }
       
-      toast.success('Topic vault created successfully!')
-      setIsCreateDialogOpen(false)
-      setFormData(createEmptyFormData())
+      toast.success('Topic created successfully!')
+      setIsCreateTopicDialogOpen(false)
+      setTopicFormData(createEmptyTopicFormData())
       
       // Refresh data and filters
       await Promise.all([
-        fetchTopicVaults(),
+        fetchTopics(),
         fetchFilterOptions()
       ])
     } catch (error) {
-      console.error('Error creating topic vault:', error)
-      toast.error('Failed to create topic vault')
+      console.error('Error creating topic:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create topic')
     }
-  }, [formData])
+  }, [topicFormData])
 
-  const handleUpdateTopicVault = useCallback(async () => {
-    if (!selectedTopicVault) return
-    
+  // Add subtopic to topic
+  const handleAddSubtopic = async () => {
+    if (!selectedTopic) return
+
     try {
-      const response = await fetch(`/api/admin/topic-vault/${selectedTopicVault.id}`, {
+      if (!subtopicFormData.videoName.trim()) {
+        toast.error('Video name is required')
+        return
+      }
+      if (!subtopicFormData.teacher.trim()) {
+        toast.error('Teacher is required')
+        return
+      }
+      if (!subtopicFormData.videoEmbedLink.trim()) {
+        toast.error('Video embed link is required')
+        return
+      }
+
+      const updatedSubtopics = [...(selectedTopic.subtopics || []), {...subtopicFormData, id: `subtopic-${Date.now()}`}]
+
+      const response = await fetch(`/api/admin/topic-vault/${selectedTopic.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          description: formData.description || '',
-          zoomLink: formData.zoomLink || '',
-          status: formData.status || 'draft'
+          ...selectedTopic,
+          subtopics: updatedSubtopics
         })
       })
 
-      if (!response.ok) throw new Error('Failed to update topic vault')
+      const data = await response.json()
       
-      toast.success('Topic vault updated successfully!')
-      setIsEditDialogOpen(false)
-      setSelectedTopicVault(null)
-      setFormData(createEmptyFormData())
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to add subtopic')
+      }
+      
+      setIsAddSubtopicDialogOpen(false)
+      setSubtopicFormData(createEmptySubtopicFormData())
+      setSelectedTopic(null)
+      toast.success('Subtopic added successfully!')
+      fetchTopics()
+    } catch (error) {
+      console.error('Error adding subtopic:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to add subtopic')
+    }
+  }
+
+  const handleUpdateTopic = useCallback(async () => {
+    if (!selectedTopic) return
+    
+    try {
+      const response = await fetch(`/api/admin/topic-vault/${selectedTopic.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...topicFormData,
+          subtopics: selectedTopic.subtopics
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to update topic')
+      
+      toast.success('Topic updated successfully!')
+      setIsEditTopicDialogOpen(false)
+      setSelectedTopic(null)
+      setTopicFormData(createEmptyTopicFormData())
       
       // Refresh data and filters
       await Promise.all([
-        fetchTopicVaults(),
+        fetchTopics(),
         fetchFilterOptions()
       ])
     } catch (error) {
-      console.error('Error updating topic vault:', error)
-      toast.error('Failed to update topic vault')
+      console.error('Error updating topic:', error)
+      toast.error('Failed to update topic')
     }
-  }, [selectedTopicVault, formData])
+  }, [selectedTopic, topicFormData])
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [topicVaultToDelete, setTopicVaultToDelete] = useState<string | null>(null)
+  const [topicToDelete, setTopicToDelete] = useState<string | null>(null)
 
-  const confirmDeleteTopicVault = useCallback((topicVaultId: string) => {
-    setTopicVaultToDelete(topicVaultId)
+  const confirmDeleteTopic = useCallback((topicId: string) => {
+    setTopicToDelete(topicId)
     setDeleteConfirmOpen(true)
   }, [])
 
-  const handleDeleteTopicVault = useCallback(async () => {
-    if (!topicVaultToDelete) return
+  const handleDeleteTopic = useCallback(async () => {
+    if (!topicToDelete) return
     
     try {
-      const response = await fetch(`/api/admin/topic-vault/${topicVaultToDelete}`, {
+      const response = await fetch(`/api/admin/topic-vault/${topicToDelete}`, {
         method: 'DELETE'
       })
 
-      if (!response.ok) throw new Error('Failed to delete topic vault')
+      if (!response.ok) throw new Error('Failed to delete topic')
       
-      toast.success('Topic vault deleted successfully!')
+      toast.success('Topic deleted successfully!')
       
       // Refresh data and filters
       await Promise.all([
-        fetchTopicVaults(),
+        fetchTopics(),
         fetchFilterOptions()
       ])
     } catch (error) {
-      console.error('Error deleting topic vault:', error)
-      toast.error('Failed to delete topic vault')
+      console.error('Error deleting topic:', error)
+      toast.error('Failed to delete topic')
     } finally {
       setDeleteConfirmOpen(false)
-      setTopicVaultToDelete(null)
+      setTopicToDelete(null)
     }
-  }, [topicVaultToDelete])
+  }, [topicToDelete])
 
   // Event handlers
   const handlePageChange = useCallback((page: number) => {
@@ -368,95 +479,180 @@ export default function TopicVaultPage() {
     setCurrentPage(1)
   }, [])
 
-  const handleEditTopicVault = useCallback((topicVault: TopicVault) => {
-    setSelectedTopicVault(topicVault)
-    setFormData({
-      videoName: topicVault.videoName || "",
-      topic: topicVault.topic || "",
-      subject: topicVault.subject || "",
-      program: topicVault.program || "",
-      type: topicVault.type || "Lesson",
-      duration: topicVault.duration || "",
-      teacher: topicVault.teacher || "",
-      description: topicVault.description || "",
-      zoomLink: topicVault.zoomLink || "",
-      videoEmbedLink: topicVault.videoEmbedLink || "",
-      status: topicVault.status || "draft"
+  const handleEditTopic = useCallback((topic: Topic) => {
+    setSelectedTopic(topic)
+    setTopicFormData({
+      topicName: topic.topicName || "",
+      subject: topic.subject || "",
+      program: topic.program || "",
+      description: topic.description || "",
+      status: topic.status || "draft"
     })
 
-    setIsEditDialogOpen(true)
+    setIsEditTopicDialogOpen(true)
   }, [])
 
-  const handleViewTopicVault = useCallback((topicVault: TopicVault) => {
-    setSelectedTopicVault(topicVault)
-    setIsViewDialogOpen(true)
+  const handleViewTopic = useCallback((topic: Topic) => {
+    setSelectedTopic(topic)
+    setIsViewTopicDialogOpen(true)
   }, [])
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, topicId: string, subtopicIndex: number) => {
+    setDraggedItem({ topicId, subtopicIndex })
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML)
+    
+    // Add some visual feedback
+    setTimeout(() => {
+      if (e.target instanceof HTMLElement) {
+        e.target.style.opacity = '0.5'
+      }
+    }, 0)
+  }
+
+  const handleDragOver = (e: React.DragEvent, topicId: string, subtopicIndex: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    
+    // Only allow dropping within the same topic
+    if (draggedItem && draggedItem.topicId === topicId) {
+      setDragOverItem({ topicId, subtopicIndex })
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're actually leaving the drop zone
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverItem(null)
+    }
+  }
+
+  const handleDrop = async (e: React.DragEvent, topicId: string, subtopicIndex: number) => {
+    e.preventDefault()
+    
+    if (!draggedItem || draggedItem.topicId !== topicId) return
+    
+    const fromIndex = draggedItem.subtopicIndex
+    const toIndex = subtopicIndex
+    
+    if (fromIndex === toIndex) return
+
+    // Find the topic
+    const topic = topics.find(t => t.id === topicId)
+    if (!topic || !topic.subtopics) return
+
+    const subtopics = [...topic.subtopics]
+    
+    // Remove the dragged item and insert it at the new position
+    const draggedSubtopic = subtopics.splice(fromIndex, 1)[0]
+    subtopics.splice(toIndex, 0, draggedSubtopic)
+
+    try {
+      const response = await fetch(`/api/admin/topic-vault/${topicId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...topic,
+          subtopics: subtopics
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Subtopics reordered successfully!')
+        await fetchTopics()
+      } else {
+        toast.error('Failed to reorder subtopics')
+      }
+    } catch (error) {
+      console.error('Error reordering subtopics:', error)
+      toast.error('Failed to reorder subtopics')
+    }
+
+    // Clear drag states
+    setDraggedItem(null)
+    setDragOverItem(null)
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset visual feedback
+    if (e.target instanceof HTMLElement) {
+      e.target.style.opacity = '1'
+    }
+    
+    // Clear drag states
+    setDraggedItem(null)
+    setDragOverItem(null)
+  }
 
   // Bulk operations
-  const handleSelectTopicVault = useCallback((topicVaultId: string) => {
-    setSelectedTopicVaults(prev => 
-      prev.includes(topicVaultId) 
-        ? prev.filter(id => id !== topicVaultId)
-        : [...prev, topicVaultId]
+  const handleSelectTopic = useCallback((topicId: string) => {
+    setSelectedTopics(prev => 
+      prev.includes(topicId) 
+        ? prev.filter(id => id !== topicId)
+        : [...prev, topicId]
     )
   }, [])
 
   const handleSelectAll = useCallback(() => {
-    if (selectedTopicVaults.length === topicVaults.length) {
-      setSelectedTopicVaults([])
+    if (!topics || topics.length === 0) return
+    if (selectedTopics.length === topics.length) {
+      setSelectedTopics([])
     } else {
-      setSelectedTopicVaults(topicVaults.map(topicVault => topicVault.id))
+      setSelectedTopics(topics.map(topic => topic.id))
     }
-  }, [selectedTopicVaults.length, topicVaults])
+  }, [selectedTopics.length, topics])
 
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
 
   const confirmBulkDelete = useCallback(() => {
-    if (selectedTopicVaults.length === 0) return
+    if (!selectedTopics || selectedTopics.length === 0) return
     setBulkDeleteConfirmOpen(true)
-  }, [selectedTopicVaults.length])
+  }, [selectedTopics])
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedTopicVaults.length === 0) return
+    if (!selectedTopics || selectedTopics.length === 0) return
     
     setBulkActionLoading(true)
     try {
-      const deletePromises = selectedTopicVaults.map(id => 
+      const deletePromises = selectedTopics.map(id => 
         fetch(`/api/admin/topic-vault/${id}`, { method: 'DELETE' })
       )
       
       await Promise.all(deletePromises)
       
-      toast.success(`Successfully deleted ${selectedTopicVaults.length} topic vaults`)
-      setSelectedTopicVaults([])
+      toast.success(`Successfully deleted ${selectedTopics.length} topics`)
+      setSelectedTopics([])
       
       // Refresh data and filters
       await Promise.all([
-        fetchTopicVaults(),
+        fetchTopics(),
         fetchFilterOptions()
       ])
     } catch (error) {
-      console.error('Error bulk deleting topic vaults:', error)
-      toast.error('Failed to delete selected topic vaults')
+      console.error('Error bulk deleting topics:', error)
+      toast.error('Failed to delete selected topics')
     } finally {
       setBulkActionLoading(false)
       setBulkDeleteConfirmOpen(false)
     }
-  }, [selectedTopicVaults])
+  }, [selectedTopics])
 
   // Get available programs for selected subject
   const getAvailablePrograms = useMemo(() => {
-    if (!formData.subject || formData.subject === 'all') return []
-    return SUBJECT_PROGRAMS[formData.subject] || []
-  }, [formData.subject])
+    if (!topicFormData.subject || topicFormData.subject === 'all') return []
+    return SUBJECT_PROGRAMS[topicFormData.subject] || []
+  }, [topicFormData.subject])
 
   // Pagination component
   const PaginationControls = () => (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-2">
         <p className="text-sm text-muted-foreground">
-          Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalTopicVaults)} to{' '}
-          {Math.min(currentPage * ITEMS_PER_PAGE, totalTopicVaults)} of {totalTopicVaults} results
+          Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalTopics)} to{' '}
+          {Math.min(currentPage * ITEMS_PER_PAGE, totalTopics)} of {totalTopics} results
         </p>
       </div>
       <div className="flex items-center space-x-2">
@@ -501,19 +697,69 @@ export default function TopicVaultPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/50 to-purple-900 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-800/30 via-transparent to-purple-800/30 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] pointer-events-none" />
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
+      {/* Global styles for select components and dialogs */}
+      <style jsx global>{`
+        [data-radix-select-content] {
+          z-index: 999999 !important;
+        }
+        [data-radix-select-trigger] {
+          z-index: 1 !important;
+        }
+        .glass-input {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+        .glass-input:focus {
+          outline: none !important;
+          border-color: rgba(255, 255, 255, 0.4) !important;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+        }
+        .glass-select-trigger:focus {
+          outline: none !important;
+          border-color: rgba(255, 255, 255, 0.4) !important;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        /* Hide dialog close buttons */
+        [data-radix-dialog-content] [data-radix-dialog-close] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+        
+        [data-radix-dialog-content] button[aria-label="Close"] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+        
+        [data-radix-dialog-content] > button.absolute {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+      `}</style>
       
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-4 -left-4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/3 -right-8 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-8 left-1/3 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+      
+      {/* Scrollable Content Container */}
       <div className="absolute inset-0 z-10 overflow-y-auto">
         <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-14 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
+
           {/* Enhanced Header */}
           <div className="mb-6 lg:mb-12 text-center">
             <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
               <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <Video className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
+                <BookOpen className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
               </div>
               <span className="text-xs lg:text-sm text-blue-300 font-medium tracking-wider uppercase">Admin Panel</span>
             </div>
@@ -521,7 +767,7 @@ export default function TopicVaultPage() {
               Topic Vault Management
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
-              Create, edit, and manage topic vault videos with advanced analytics and insights
+              Organize topics with subtopic videos in a structured learning format
             </p>
             <div className="mt-4 h-1 w-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto animate-pulse"></div>
           </div>
@@ -536,7 +782,7 @@ export default function TopicVaultPage() {
                   </div>
                   <div>
                     <CardTitle className="text-white text-lg">Filters & Search</CardTitle>
-                    <p className="text-sm text-muted-foreground">Filter and search through topic vaults</p>
+                    <p className="text-sm text-muted-foreground">Filter and search through topics</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -557,7 +803,7 @@ export default function TopicVaultPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search topic vaults by name, topic, subject, teacher..."
+                  placeholder="Search topics by name, subject, program..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="glass-input pl-10 h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40"
@@ -651,15 +897,15 @@ export default function TopicVaultPage() {
                     <div>
                       <h3 className="text-white font-medium">Topic Vault Library</h3>
                       <p className="text-sm text-muted-foreground">
-                        {totalTopicVaults} total topic vaults
+                        {totalTopics} total topics
                       </p>
                     </div>
                   </div>
                   
-                  {selectedTopicVaults.length > 0 && (
+                  {selectedTopics && selectedTopics.length > 0 && (
                     <div className="flex items-center space-x-2">
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                        {selectedTopicVaults.length} selected
+                        {selectedTopics.length} selected
                       </Badge>
                       <Button
                         onClick={confirmBulkDelete}
@@ -686,11 +932,11 @@ export default function TopicVaultPage() {
                       Import CSV
                     </Button>
                   </Link>
-                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <Dialog open={isCreateTopicDialogOpen} onOpenChange={setIsCreateTopicDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Topic Vault
+                        Create Topic
                       </Button>
                     </DialogTrigger>
                   </Dialog>
@@ -699,281 +945,383 @@ export default function TopicVaultPage() {
             </CardContent>
           </Card>
 
-          {/* Enhanced Topic Vaults Table */}
-          <Card className="glass-card-transparent border-white/10 backdrop-blur-xl shadow-2xl">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <Video className="w-4 h-4 text-green-400" />
-                </div>
-                <div>
-                  <CardTitle className="text-white">Topic Vaults</CardTitle>
-                  <p className="text-sm text-muted-foreground">Manage your topic vault library</p>
-                </div>
-              </div>
+          {/* Topics List */}
+          <Card className="relative bg-slate-900/40 border border-white/10 rounded-2xl overflow-hidden">
+            <CardHeader className="p-6 border-b border-white/10 bg-gradient-to-r from-slate-800/30 to-purple-800/20">
+              <CardTitle className="text-white font-semibold text-lg flex items-center gap-3">
+                <BookOpen className="w-5 h-5 text-blue-400" />
+                Topics ({totalTopics})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
-                  <span className="ml-2 text-muted-foreground">Loading topic vaults...</span>
+                <div className="p-8 text-center">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-slate-400">Loading topics...</p>
                 </div>
-              ) : topicVaults.length === 0 ? (
-                <div className="text-center py-12">
-                  <Video className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No topic vaults found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm || selectedSubject !== 'all' || selectedTeacher !== 'all' || selectedStatus !== 'all' || selectedType !== 'all' || selectedProgram !== 'all'
-                      ? 'No topic vaults match your current filters.'
-                      : 'Get started by creating your first topic vault.'}
-                  </p>
-                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+              ) : !topics || topics.length === 0 ? (
+                <div className="p-8 text-center">
+                  <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No topics yet</h3>
+                  <p className="text-slate-400 mb-6">Create your first topic to get started</p>
+                  <Button 
+                    onClick={() => setIsCreateTopicDialogOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Topic Vault
+                    Create Topic
                       </Button>
-                    </DialogTrigger>
-                  </Dialog>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-white/10 overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-white/10 hover:bg-white/5">
-                          <TableHead className="w-12">
-                            <div className="flex items-center justify-center">
+                <div className="space-y-0">
+                  {topics && topics.map((topic) => {
+                    const isExpanded = expandedTopics.has(topic.id)
+                    return (
+                      <div key={topic.id} className="border-b border-white/10 last:border-b-0">
+                        {/* Main Topic Row */}
+                        <div className="p-4 hover:bg-white/5 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleSelectAll}
-                                className="w-6 h-6 p-0 hover:bg-white/10"
+                                onClick={() => handleSelectTopic(topic.id)}
+                                className="p-1 h-auto"
                               >
-                                {selectedTopicVaults.length === topicVaults.length && topicVaults.length > 0 ? (
+                                {selectedTopics.includes(topic.id) ? (
                                   <CheckSquare className="w-4 h-4 text-blue-400" />
                                 ) : (
-                                  <Square className="w-4 h-4 text-muted-foreground" />
+                                  <Square className="w-4 h-4 text-slate-400" />
                                 )}
                               </Button>
-                            </div>
-                          </TableHead>
-                          <TableHead className="text-white font-medium">Video Name</TableHead>
-                          <TableHead className="text-white font-medium">Topic</TableHead>
-                          <TableHead className="text-white font-medium">Subject</TableHead>
-                          <TableHead className="text-white font-medium">Program</TableHead>
-                          <TableHead className="text-white font-medium">Type</TableHead>
-                          <TableHead className="text-white font-medium">Teacher</TableHead>
-                          <TableHead className="text-white font-medium">Duration</TableHead>
-                          <TableHead className="text-white font-medium">Status</TableHead>
-                          <TableHead className="text-white font-medium">Created</TableHead>
-                          <TableHead className="text-white font-medium w-24">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {topicVaults.map((topicVault) => (
-                          <TableRow key={topicVault.id} className="border-white/10 hover:bg-white/5 transition-colors">
-                            <TableCell>
-                              <div className="flex items-center justify-center">
+                              
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleSelectTopicVault(topicVault.id)}
-                                  className="w-6 h-6 p-0 hover:bg-white/10"
+                                onClick={() => toggleExpanded(topic.id)}
+                                className="p-1 h-auto"
                                 >
-                                  {selectedTopicVaults.includes(topicVault.id) ? (
-                                    <CheckSquare className="w-4 h-4 text-blue-400" />
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4 text-slate-400" />
                                   ) : (
-                                    <Square className="w-4 h-4 text-muted-foreground" />
+                                  <ChevronUp className="w-4 h-4 text-slate-400" />
                                   )}
                                 </Button>
+                              
+                              <FolderOpen className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                              
+                              <div className="flex-1">
+                                <h3 className="text-white font-medium">{topic.topicName}</h3>
+                                <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
+                                  <span>{topic.subject}</span>
+                                  <span>{topic.program}</span>
+                                  <Badge 
+                                    className={`px-2 py-1 text-xs ${getStatusColor(topic.status)}`}
+                                  >
+                                    {topic.status}
+                                  </Badge>
+                                  <span className="text-xs">
+                                    {topic.subtopics?.length || 0} subtopics
+                                  </span>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                                  <Video className="w-4 h-4 text-white" />
                                 </div>
-                                <div>
-                                  <div className="font-medium text-white">{topicVault.videoName}</div>
-                                  <div className="text-sm text-muted-foreground truncate max-w-xs">
-                                    {topicVault.description || 'No description'}
                                   </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTopic(topic)
+                                  setSubtopicFormData(createEmptySubtopicFormData())
+                                  setIsAddSubtopicDialogOpen(true)
+                                }}
+                                className="text-blue-400 border-blue-400/30 hover:bg-blue-500/10"
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add Subtopic
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditTopic(topic)}
+                                className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="text-red-400 border-red-400/30 hover:bg-red-500/10">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-slate-900 border-white/20">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-white">Delete Topic</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-slate-400">
+                                      This will permanently delete "{topic.topicName}" and all its subtopics. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => confirmDeleteTopic(topic.id)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-white">{topicVault.topic}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-white">{topicVault.subject}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-white">{topicVault.program}</div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={`${getTypeColor(topicVault.type)} border text-xs`}>
-                                {topicVault.type}
+                        </div>
+
+                        {/* Expanded Subtopics List */}
+                        {isExpanded && (
+                          <div className="bg-slate-800/30 border-t border-white/10">
+                            {topic.subtopics && topic.subtopics.length > 0 ? (
+                              <div className="space-y-0">
+                                {topic.subtopics.map((subtopic, index) => (
+                                  <div
+                                    key={subtopic.id || index}
+                                    className={`p-4 border-b border-white/5 last:border-b-0 ml-12 
+                                               ${draggedItem?.topicId === topic.id && draggedItem.subtopicIndex === index ? 'opacity-50' : ''}
+                                               ${dragOverItem?.topicId === topic.id && dragOverItem.subtopicIndex === index ? 'bg-blue-500/10' : ''}`}
+                                    onDragStart={(e) => handleDragStart(e, topic.id, index)}
+                                    onDragOver={(e) => handleDragOver(e, topic.id, index)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, topic.id, index)}
+                                    onDragEnd={handleDragEnd}
+                                    draggable={true}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
+                                          <GripVertical className="w-4 h-4 text-slate-400 hover:text-white" />
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1">
+                                          <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
+                                            {index + 1}
+                                          </div>
+                                          <div className="text-xs text-slate-500">
+                                            Order
+                                          </div>
+                                        </div>
+                                        <Video className="w-4 h-4 text-purple-400" />
+                                        <div>
+                                          <h4 className="text-white font-medium">{subtopic.videoName}</h4>
+                                          <div className="flex items-center gap-4 text-xs mt-2">
+                                            <Badge className={`${getTypeColor(subtopic.type)} border text-xs`}>
+                                              {subtopic.type}
                               </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-white">{topicVault.teacher}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-white">{topicVault.duration}</div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={`${getStatusColor(topicVault.status)} border text-xs`}>
-                                {topicVault.status}
+                                            <span className="text-slate-400">{subtopic.teacher}</span>
+                                            <span className="text-slate-400">{subtopic.duration}</span>
+                                            <Badge className={`${getStatusColor(subtopic.status)} border text-xs`}>
+                                              {subtopic.status}
                               </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm text-muted-foreground">
-                                {formatDate(topicVault.createdAt)}
+                                            {subtopic.videoEmbedLink && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  window.open(ensureUrlProtocol(subtopic.videoEmbedLink), '_blank', 'noopener,noreferrer')
+                                                }}
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 
+                                                         border border-blue-500/30 hover:border-blue-500/50 rounded-lg
+                                                         text-blue-400 hover:text-blue-300 transition-all duration-200"
+                                              >
+                                                <Play className="w-3 h-3" />
+                                                Watch Video
+                                                <ExternalLink className="w-3 h-3" />
+                                              </button>
+                                            )}
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-1">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleViewTopicVault(topicVault)}
-                                        className="w-8 h-8 p-0 hover:bg-white/10"
-                                      >
-                                        <Eye className="w-4 h-4 text-blue-400" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>View details</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEditTopicVault(topicVault)}
-                                        className="w-8 h-8 p-0 hover:bg-white/10"
-                                      >
-                                        <Edit className="w-4 h-4 text-yellow-400" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Edit topic vault</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => confirmDeleteTopicVault(topicVault.id)}
-                                        className="w-8 h-8 p-0 hover:bg-white/10"
-                                      >
-                                        <Trash2 className="w-4 h-4 text-red-400" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Delete topic vault</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="mt-6">
-                      <PaginationControls />
-                    </div>
-                  )}
+                            ) : (
+                              <div className="p-8 text-center ml-12">
+                                <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                                <p className="text-slate-400 text-sm">No subtopics added yet</p>
+                                      <Button
+                                  variant="outline"
+                                        size="sm"
+                                  onClick={() => {
+                                    setSelectedTopic(topic)
+                                    setSubtopicFormData(createEmptySubtopicFormData())
+                                    setIsAddSubtopicDialogOpen(true)
+                                  }}
+                                  className="mt-3 text-blue-400 border-blue-400/30"
+                                      >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Add First Subtopic
+                                      </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
 
-      {/* Create Topic Vault Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="glass-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl font-bold flex items-center">
-              <Plus className="w-5 h-5 mr-2 text-blue-400" />
-              Create New Topic Vault
-            </DialogTitle>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8">
+                                      <Button
+                variant="outline"
+                                        size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="border-white/20 text-white hover:bg-white/10"
+                                      >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+                                      </Button>
+              
+              <span className="text-white px-4">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+                                      <Button
+                variant="outline"
+                                        size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="border-white/20 text-white hover:bg-white/10"
+                                      >
+                Next
+                <ChevronRight className="w-4 h-4" />
+                                      </Button>
+                              </div>
+          )}
+        </div>
+                  </div>
+                  
+      {/* Create Topic Dialog */}
+      <Dialog open={isCreateTopicDialogOpen} onOpenChange={setIsCreateTopicDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/20 max-w-4xl max-h-[90vh] overflow-hidden [&>button]:!hidden">
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-3xl"></div>
+          <div className="relative">
+            {/* Header */}
+            <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                    <Plus className="w-5 h-5 text-white" />
+                    </div>
+                  <div>
+                    <DialogTitle className="text-xl font-semibold text-white">Create New Topic</DialogTitle>
+                </div>
+        </div>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTopicFormData(createEmptyTopicFormData())}
+                    className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Clear All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsCreateTopicDialogOpen(false)}
+                    className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+      </div>
+              </div>
           </DialogHeader>
           
-          <div className="px-6 py-5 space-y-5">
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5 max-h-[60vh] overflow-y-auto">
             {/* Basic Information */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 pb-2">
                 <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Video className="w-3 h-3 text-blue-400" />
+                    <BookOpen className="w-3 h-3 text-blue-400" />
                 </div>
-                <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
+                  <h3 className="text-sm font-medium text-white/90">Topic Information</h3>
               </div>
               
-              {/* Video Name */}
+                {/* Topic Name - Full Width */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-white/80 block">
-                  Video Name
+                    Topic Name *
                 </label>
                 <Input 
-                  placeholder="Enter video name" 
-                  value={formData.videoName}
-                  onChange={(e) => setFormData({...formData, videoName: e.target.value})}
+                    placeholder="e.g., Calculus Fundamentals" 
+                    value={topicFormData.topicName}
+                    onChange={(e) => setTopicFormData({...topicFormData, topicName: e.target.value})}
                   className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
               </div>
 
-              {/* Topic and Subject */}
+                {/* Subject and Program */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Topic
+                      Subject *
                   </label>
-                  <Input 
-                    placeholder="Enter topic" 
-                    value={formData.topic}
-                    onChange={(e) => setFormData({...formData, topic: e.target.value})}
-                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
-                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                  />
+                    <Select 
+                      value={topicFormData.subject} 
+                      onValueChange={(value) => setTopicFormData({...topicFormData, subject: value, program: ""})}
+                    >
+                      <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
+                        {adminSubjects
+                          .filter(subject => subject.isActive)
+                          .map((subject) => (
+                            <SelectItem key={subject.id} value={subject.name} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: subject.color }}
+                                />
+                                {subject.name}
+                              </div>
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Subject
+                      Program *
                   </label>
                   <Select 
-                    value={formData.subject} 
-                    onValueChange={(value) => setFormData({...formData, subject: value, program: ''})}
+                      value={topicFormData.program} 
+                      onValueChange={(value) => setTopicFormData({...topicFormData, program: value})}
+                      disabled={!topicFormData.subject}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
-                                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
-                      <SelectValue placeholder="Select subject" />
+                      <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10 disabled:opacity-50">
+                        <SelectValue placeholder={topicFormData.subject ? "Select program" : "Select subject first"} />
                     </SelectTrigger>
-                    <SelectContent 
-                      className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
-                      style={{ zIndex: 999999 }}
-                    >
-                      {adminSubjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.name} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                          {subject.name}
+                      <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
+                        {getAvailablePrograms.map((program) => (
+                          <SelectItem key={program} value={program} className="text-white hover:bg-white/10">
+                            {program}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -987,59 +1335,154 @@ export default function TopicVaultPage() {
                   Description
                 </label>
                 <Textarea 
-                  placeholder="Enter description (optional)" 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Enter topic description (optional)" 
+                    value={topicFormData.description}
+                    onChange={(e) => setTopicFormData({...topicFormData, description: e.target.value})}
                   className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
                   rows={3}
                 />
               </div>
 
-              {/* Program and Type */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Status */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Program
+                    Status *
                   </label>
                   <Select 
-                    value={formData.program} 
-                    onValueChange={(value) => setFormData({...formData, program: value})}
-                    disabled={!formData.subject}
+                    value={topicFormData.status} 
+                    onValueChange={(value: 'draft' | 'active') => setTopicFormData({...topicFormData, status: value})}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                    <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
-                      <SelectValue placeholder="Select program" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-                    <SelectContent 
-                      className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
-                      style={{ zIndex: 999999 }}
-                    >
-                      {getAvailablePrograms.map((program) => (
-                        <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                          {program}
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
+                      <SelectItem value="draft" className="text-white hover:bg-white/10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                          Draft
+                        </div>
                         </SelectItem>
-                      ))}
+                      <SelectItem value="active" className="text-white hover:bg-white/10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          Active
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+                </div>
                 
+            {/* Footer */}
+            <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsCreateTopicDialogOpen(false)} 
+                className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                         h-9 px-4 rounded-lg text-sm transition-all duration-200"
+              >
+                <X className="w-3 h-3 mr-1" />
+                Cancel
+              </Button>
+              <Button 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
+                         text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
+                         transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
+                onClick={handleCreateTopic}
+                disabled={!topicFormData.topicName || !topicFormData.subject || !topicFormData.program}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Create Topic
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Subtopic Dialog */}
+      <Dialog open={isAddSubtopicDialogOpen} onOpenChange={setIsAddSubtopicDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/20 max-w-3xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-blue-500/10 rounded-3xl"></div>
+          <div className="relative">
+            {/* Header */}
+            <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                    <Plus className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-semibold text-white">
+                      Add Subtopic to "{selectedTopic?.topicName}"
+                    </DialogTitle>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSubtopicFormData(createEmptySubtopicFormData())}
+                    className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 px-3 text-xs transition-all duration-200"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Clear All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsAddSubtopicDialogOpen(false)}
+                    className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5">
+              {/* Subtopic Information */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2">
+                  <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Video className="w-3 h-3 text-green-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-white/90">Subtopic Information</h3>
+                </div>
+                
+                {/* Video Name */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Type
+                    Video Name *
+                  </label>
+                  <Input 
+                    placeholder="e.g., Introduction to Derivatives" 
+                    value={subtopicFormData.videoName}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, videoName: e.target.value})}
+                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                  />
+                </div>
+
+                {/* Type and Duration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-white/80 block">
+                      Type *
                   </label>
                   <Select 
-                    value={formData.type} 
-                    onValueChange={(value) => setFormData({...formData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
+                      value={subtopicFormData.type} 
+                      onValueChange={(value) => setSubtopicFormData({...subtopicFormData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                      <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent 
-                      className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
-                      style={{ zIndex: 999999 }}
-                    >
+                      <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
                       <SelectItem value="Lesson" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                         Lesson
                       </SelectItem>
@@ -1051,36 +1494,49 @@ export default function TopicVaultPage() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
               </div>
 
-              {/* Duration and Teacher */}
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
                     Duration
                   </label>
                   <Input 
                     placeholder="e.g., 45 minutes" 
-                    value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                      value={subtopicFormData.duration}
+                      onChange={(e) => setSubtopicFormData({...subtopicFormData, duration: e.target.value})}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
+                  </div>
                 </div>
                 
+                {/* Teacher */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Teacher
+                    Teacher *
                   </label>
                   <Input 
                     placeholder="Enter teacher name" 
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({...formData, teacher: e.target.value})}
+                    value={subtopicFormData.teacher}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, teacher: e.target.value})}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
                 </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Description
+                  </label>
+                  <Textarea 
+                    placeholder="Enter description (optional)" 
+                    value={subtopicFormData.description}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, description: e.target.value})}
+                    className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
+                    rows={3}
+                  />
               </div>
 
               {/* Video Links */}
@@ -1095,12 +1551,12 @@ export default function TopicVaultPage() {
                 {/* Video Embed Link */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Video Embed Link
+                      Video Embed Link *
                   </label>
                   <Input 
                     placeholder="Enter video embed link (required)" 
-                    value={formData.videoEmbedLink}
-                    onChange={(e) => setFormData({...formData, videoEmbedLink: e.target.value})}
+                      value={subtopicFormData.videoEmbedLink}
+                      onChange={(e) => setSubtopicFormData({...subtopicFormData, videoEmbedLink: e.target.value})}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
@@ -1113,8 +1569,8 @@ export default function TopicVaultPage() {
                   </label>
                   <Input 
                     placeholder="Enter zoom link (optional)" 
-                    value={formData.zoomLink}
-                    onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
+                      value={subtopicFormData.zoomLink}
+                      onChange={(e) => setSubtopicFormData({...subtopicFormData, zoomLink: e.target.value})}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
@@ -1124,20 +1580,17 @@ export default function TopicVaultPage() {
               {/* Status */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-white/80 block">
-                  Status
+                    Status *
                 </label>
                 <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => setFormData({...formData, status: value as 'draft' | 'active'})}
+                    value={subtopicFormData.status} 
+                    onValueChange={(value) => setSubtopicFormData({...subtopicFormData, status: value as 'draft' | 'active'})}
                 >
-                  <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                    <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
-                  <SelectContent 
-                    className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
-                    style={{ zIndex: 999999 }}
-                  >
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
                     <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                       Draft
                     </SelectItem>
@@ -1150,35 +1603,39 @@ export default function TopicVaultPage() {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 px-6 py-4 border-t border-white/10">
+            {/* Footer */}
+            <div className="bg-slate-900/50 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex gap-3 justify-end">
             <Button 
-              variant="ghost" 
-              onClick={() => setIsCreateDialogOpen(false)}
-              className="glass-button text-white hover:bg-white/10"
+                variant="outline" 
+                onClick={() => setIsAddSubtopicDialogOpen(false)} 
+                className="bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-white/30 
+                         h-9 px-4 rounded-lg text-sm transition-all duration-200"
             >
+                <X className="w-3 h-3 mr-1" />
               Cancel
             </Button>
             <Button 
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
+                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 
                        text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                        transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
-              onClick={handleCreateTopicVault}
-              disabled={!formData.videoName || !formData.topic || !formData.subject || !formData.program || !formData.teacher || !formData.videoEmbedLink}
+                onClick={handleAddSubtopic}
+                disabled={!subtopicFormData.videoName || !subtopicFormData.teacher || !subtopicFormData.videoEmbedLink}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Create Topic Vault
+                Add Subtopic
             </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Topic Vault Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="glass-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Edit Topic Dialog */}
+      <Dialog open={isEditTopicDialogOpen} onOpenChange={setIsEditTopicDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white text-xl font-bold flex items-center">
               <Edit className="w-5 h-5 mr-2 text-yellow-400" />
-              Edit Topic Vault
+              Edit Topic
             </DialogTitle>
           </DialogHeader>
           
@@ -1199,8 +1656,8 @@ export default function TopicVaultPage() {
                 </label>
                 <Input 
                   placeholder="Enter video name" 
-                  value={formData.videoName}
-                  onChange={(e) => setFormData({...formData, videoName: e.target.value})}
+                  value={topicFormData.topicName}
+                  onChange={(e) => setTopicFormData({...topicFormData, topicName: e.target.value})}
                   className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
@@ -1214,8 +1671,8 @@ export default function TopicVaultPage() {
                   </label>
                   <Input 
                     placeholder="Enter topic" 
-                    value={formData.topic}
-                    onChange={(e) => setFormData({...formData, topic: e.target.value})}
+                    value={topicFormData.topicName}
+                    onChange={(e) => setTopicFormData({...topicFormData, topicName: e.target.value})}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
@@ -1226,10 +1683,10 @@ export default function TopicVaultPage() {
                     Subject
                   </label>
                   <Select 
-                    value={formData.subject} 
-                    onValueChange={(value) => setFormData({...formData, subject: value, program: ''})}
+                    value={topicFormData.subject} 
+                    onValueChange={(value) => setTopicFormData({...topicFormData, subject: value, program: ""})}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                    <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
@@ -1254,8 +1711,8 @@ export default function TopicVaultPage() {
                 </label>
                 <Textarea 
                   placeholder="Enter description (optional)" 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  value={topicFormData.description}
+                  onChange={(e) => setTopicFormData({...topicFormData, description: e.target.value})}
                   className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
                   rows={3}
@@ -1269,11 +1726,11 @@ export default function TopicVaultPage() {
                     Program
                   </label>
                   <Select 
-                    value={formData.program} 
-                    onValueChange={(value) => setFormData({...formData, program: value})}
-                    disabled={!formData.subject}
+                    value={topicFormData.program} 
+                    onValueChange={(value) => setTopicFormData({...topicFormData, program: value})}
+                    disabled={!topicFormData.subject}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                    <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
@@ -1292,13 +1749,13 @@ export default function TopicVaultPage() {
                 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Type
+                    Status
                   </label>
                   <Select 
-                    value={formData.type} 
-                    onValueChange={(value) => setFormData({...formData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
+                    value={topicFormData.status} 
+                    onValueChange={(value) => setTopicFormData({...topicFormData, status: value as 'draft' | 'active'})}
                   >
-                    <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                    <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -1306,84 +1763,35 @@ export default function TopicVaultPage() {
                       className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                       style={{ zIndex: 999999 }}
                     >
-                      <SelectItem value="Lesson" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                        Lesson
+                      <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                        Draft
                       </SelectItem>
-                      <SelectItem value="Tutorial" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                        Tutorial
-                      </SelectItem>
-                      <SelectItem value="Workshop" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                        Workshop
+                      <SelectItem value="active" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                        Active
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Duration and Teacher */}
+              {/* Created and Updated Dates */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Duration
+                    Created At
                   </label>
-                  <Input 
-                    placeholder="e.g., 45 minutes" 
-                    value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
-                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">
-                    Teacher
-                  </label>
-                  <Input 
-                    placeholder="Enter teacher name" 
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({...formData, teacher: e.target.value})}
-                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
-                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                  />
+                  <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                    {selectedTopic ? formatDate(selectedTopic.createdAt) : 'Not specified'}
                 </div>
               </div>
 
-              {/* Video Links */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2 pb-2">
-                  <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Play className="w-3 h-3 text-purple-400" />
-                  </div>
-                  <h3 className="text-sm font-medium text-white/90">Video Links</h3>
-                </div>
-
-                {/* Video Embed Link */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-white/80 block">
-                    Video Embed Link
+                    Updated At
                   </label>
-                  <Input 
-                    placeholder="Enter video embed link (required)" 
-                    value={formData.videoEmbedLink}
-                    onChange={(e) => setFormData({...formData, videoEmbedLink: e.target.value})}
-                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
-                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                  />
+                  <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                    {selectedTopic ? formatDate(selectedTopic.updatedAt) : 'Not specified'}
                 </div>
-
-                {/* Zoom Link */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/80 block">
-                    Zoom Link (Optional)
-                  </label>
-                  <Input 
-                    placeholder="Enter zoom link (optional)" 
-                    value={formData.zoomLink}
-                    onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
-                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
-                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
-                  />
                 </div>
               </div>
 
@@ -1393,10 +1801,10 @@ export default function TopicVaultPage() {
                   Status
                 </label>
                 <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => setFormData({...formData, status: value as 'draft' | 'active'})}
+                  value={topicFormData.status} 
+                  onValueChange={(value) => setTopicFormData({...topicFormData, status: value as 'draft' | 'active'})}
                 >
-                  <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                  <SelectTrigger className="glass-input glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -1419,7 +1827,7 @@ export default function TopicVaultPage() {
           <div className="flex justify-end space-x-3 px-6 py-4 border-t border-white/10">
             <Button 
               variant="ghost" 
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={() => setIsEditTopicDialogOpen(false)}
               className="glass-button text-white hover:bg-white/10"
             >
               Cancel
@@ -1428,27 +1836,27 @@ export default function TopicVaultPage() {
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
                        text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                        transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
-              onClick={handleUpdateTopicVault}
-              disabled={!formData.videoName || !formData.topic || !formData.subject || !formData.program || !formData.teacher || !formData.videoEmbedLink}
+              onClick={handleUpdateTopic}
+              disabled={!topicFormData.topicName || !topicFormData.subject || !topicFormData.program}
             >
               <Check className="w-3 h-3 mr-1" />
-              Update Topic Vault
+              Update Topic
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* View Topic Vault Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="glass-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* View Topic Dialog */}
+      <Dialog open={isViewTopicDialogOpen} onOpenChange={setIsViewTopicDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white text-xl font-bold flex items-center">
               <Eye className="w-5 h-5 mr-2 text-green-400" />
-              View Topic Vault Details
+              View Topic Details
             </DialogTitle>
           </DialogHeader>
           
-          {selectedTopicVault && (
+          {selectedTopic && (
             <div>
               <div className="px-6 py-5 space-y-5">
                 {/* Basic Information */}
@@ -1460,26 +1868,26 @@ export default function TopicVaultPage() {
                     <h3 className="text-sm font-medium text-white/90">Basic Information</h3>
                   </div>
 
-                  {/* Video Name - Full Width */}
+                  {/* Topic Name - Full Width */}
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/80 block">Video Name</label>
+                    <label className="text-xs font-medium text-white/80 block">Topic Name</label>
                     <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                      {selectedTopicVault.videoName || 'Not specified'}
+                      {selectedTopic.topicName || 'Not specified'}
                     </div>
                   </div>
 
-                  {/* Topic and Subject - 2 Column */}
+                  {/* Subject and Program - 2 Column */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/80 block">Topic</label>
-                      <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {selectedTopicVault.topic || 'Not specified'}
-                      </div>
-                    </div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">Subject</label>
                       <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {selectedTopicVault.subject || 'Not specified'}
+                        {selectedTopic.subject || 'Not specified'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/80 block">Program</label>
+                      <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
+                        {selectedTopic.program || 'Not specified'}
                       </div>
                     </div>
                   </div>
@@ -1488,92 +1896,28 @@ export default function TopicVaultPage() {
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-white/80 block">Description</label>
                     <div className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-start p-3">
-                      {selectedTopicVault.description || 'No description provided'}
+                      {selectedTopic.description || 'No description provided'}
                     </div>
                   </div>
 
-                  {/* Program and Type - 2 Column */}
+                  {/* Subtopics Info - 2 Column */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/80 block">Program</label>
+                      <label className="text-xs font-medium text-white/80 block">Total Subtopics</label>
                       <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {selectedTopicVault.program || 'Not specified'}
+                        {selectedTopic.subtopics?.length || 0}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/80 block">Type</label>
+                      <label className="text-xs font-medium text-white/80 block">Active Subtopics</label>
                       <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        <Badge className={`${getTypeColor(selectedTopicVault.type)} border text-xs`}>
-                          {selectedTopicVault.type}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Duration and Teacher - 2 Column */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/80 block">Duration</label>
-                      <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {selectedTopicVault.duration || 'Not specified'}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-white/80 block">Teacher</label>
-                      <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {selectedTopicVault.teacher || 'Not specified'}
+                        {selectedTopic.subtopics?.filter(s => s.status === 'active').length || 0}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Video Links */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 pb-2">
-                    <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Play className="w-3 h-3 text-purple-400" />
-                    </div>
-                    <h3 className="text-sm font-medium text-white/90">Video Links</h3>
-                  </div>
 
-                  {/* Video Embed Link */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/80 block">Video Embed Link</label>
-                    <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                      {selectedTopicVault.videoEmbedLink ? (
-                        <a 
-                          href={selectedTopicVault.videoEmbedLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 truncate"
-                        >
-                          {selectedTopicVault.videoEmbedLink}
-                        </a>
-                      ) : (
-                        'Not specified'
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Zoom Link */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/80 block">Zoom Link</label>
-                    <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                      {selectedTopicVault.zoomLink ? (
-                        <a 
-                          href={selectedTopicVault.zoomLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 truncate"
-                        >
-                          {selectedTopicVault.zoomLink}
-                        </a>
-                      ) : (
-                        'Not specified'
-                      )}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Status and Metadata */}
                 <div className="space-y-4">
@@ -1588,15 +1932,15 @@ export default function TopicVaultPage() {
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">Status</label>
                       <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        <Badge className={`${getStatusColor(selectedTopicVault.status)} border text-xs`}>
-                          {selectedTopicVault.status}
+                        <Badge className={`${getStatusColor(selectedTopic.status)} border text-xs`}>
+                          {selectedTopic.status}
                         </Badge>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">Created</label>
                       <div className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white rounded-lg text-sm transition-all duration-200 flex items-center px-3">
-                        {formatDate(selectedTopicVault.createdAt)}
+                        {formatDate(selectedTopic.createdAt)}
                       </div>
                     </div>
                   </div>
@@ -1608,22 +1952,22 @@ export default function TopicVaultPage() {
           <div className="flex justify-end space-x-3 px-6 py-4 border-t border-white/10">
             <Button 
               variant="ghost" 
-              onClick={() => setIsViewDialogOpen(false)}
+              onClick={() => setIsViewTopicDialogOpen(false)}
               className="glass-button text-white hover:bg-white/10"
             >
               Close
             </Button>
-            {selectedTopicVault && (
+            {selectedTopic && (
               <Button 
                 className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 
                          text-white h-9 px-6 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={() => {
-                  setIsViewDialogOpen(false)
-                  handleEditTopicVault(selectedTopicVault)
+                  setIsViewTopicDialogOpen(false)
+                  handleEditTopic(selectedTopic)
                 }}
               >
                 <Edit className="w-3 h-3 mr-1" />
-                Edit Topic Vault
+                Edit Topic
               </Button>
             )}
           </div>
@@ -1636,10 +1980,10 @@ export default function TopicVaultPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white flex items-center">
               <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
-              Delete Topic Vault
+              Delete Topic
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to delete this topic vault? This action cannot be undone.
+              Are you sure you want to delete this topic? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1647,7 +1991,7 @@ export default function TopicVaultPage() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteTopicVault}
+              onClick={handleDeleteTopic}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Delete
@@ -1662,10 +2006,10 @@ export default function TopicVaultPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white flex items-center">
               <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
-              Delete Multiple Topic Vaults
+              Delete Multiple Topics
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to delete {selectedTopicVaults.length} topic vaults? This action cannot be undone.
+              Are you sure you want to delete {selectedTopics?.length || 0} topics? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

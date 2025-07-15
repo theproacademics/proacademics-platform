@@ -32,53 +32,52 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/admin/topic-vault - Create a new topic vault
+// POST /api/admin/topic-vault - Create a new topic container
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { 
-      videoName,
-      topic,
+      topicName,
       subject,
       program,
-      type,
-      duration,
-      teacher,
       description,
-      zoomLink,
-      videoEmbedLink,
-      status 
+      status,
+      subtopics
     } = body
 
-    if (!videoName || !topic || !subject || !program || !teacher || !videoEmbedLink) {
-      return NextResponse.json({ error: "Missing required fields: videoName, topic, subject, program, teacher, videoEmbedLink" }, { status: 400 })
+    if (!topicName || !subject || !program) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Missing required fields: topicName, subject, program" 
+      }, { status: 400 })
     }
 
-    // Generate unique topic vault ID
-    const topicVaultId = `topic-vault-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    // Generate unique topic ID
+    const topicId = `topic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    const topicVault: TopicVault = {
-      id: topicVaultId,
-      videoName,
-      topic,
+    const topic = {
+      id: topicId,
+      topicName,
       subject,
       program,
-      type: type || 'Lesson',
-      duration: duration || "",
-      teacher,
       description: description || "",
-      zoomLink: zoomLink || "",
-      videoEmbedLink,
       status: status || 'draft',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      subtopics: subtopics || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
 
-    const createdTopicVault = await topicVaultService.createTopicVault(topicVault)
+    const createdTopic = await topicVaultService.createTopic(topic)
 
-    return NextResponse.json({ topicVault: createdTopicVault }, { status: 201 })
+    return NextResponse.json({ 
+      success: true,
+      topic: createdTopic 
+    }, { status: 201 })
   } catch (error) {
-    console.error("Error creating topic vault:", error)
-    return NextResponse.json({ error: "Failed to create topic vault" }, { status: 500 })
+    console.error("Error creating topic:", error)
+    return NextResponse.json({ 
+      success: false,
+      error: "Failed to create topic" 
+    }, { status: 500 })
   }
 } 
