@@ -39,6 +39,7 @@ export default withAuth(
         // Allow public routes
         if (pathname.startsWith('/auth/') || 
             pathname.startsWith('/api/auth/') ||
+            pathname.startsWith('/api/debug/') ||
             pathname === '/unauthorized') {
           return true
         }

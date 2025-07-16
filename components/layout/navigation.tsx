@@ -32,6 +32,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Lex AI", href: "/lex", icon: Brain },
   { name: "Lessons", href: "/lessons", icon: BookOpen },
+  { name: "Topic Vault", href: "/topic-vault", icon: BookOpen },
   { name: "Homework", href: "/homework", icon: ClipboardList },
   { name: "Past Papers", href: "/pastpapers", icon: FileText },
   { name: "Progress", href: "/progress", icon: TrendingUp },

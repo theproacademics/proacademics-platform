@@ -162,7 +162,11 @@ export default function TopicVaultPage() {
   const [isAddSubtopicDialogOpen, setIsAddSubtopicDialogOpen] = useState(false)
   const [isEditTopicDialogOpen, setIsEditTopicDialogOpen] = useState(false)
   const [isViewTopicDialogOpen, setIsViewTopicDialogOpen] = useState(false)
+  const [isEditSubtopicDialogOpen, setIsEditSubtopicDialogOpen] = useState(false)
+  const [isDeleteSubtopicDialogOpen, setIsDeleteSubtopicDialogOpen] = useState(false)
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
+  const [selectedSubtopic, setSelectedSubtopic] = useState<SubtopicVault | null>(null)
+  const [selectedSubtopicIndex, setSelectedSubtopicIndex] = useState<number>(-1)
   
   // Bulk operations
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
@@ -367,6 +371,116 @@ export default function TopicVaultPage() {
       console.error('Error adding subtopic:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to add subtopic')
     }
+  }
+
+  // Edit subtopic
+  const handleEditSubtopic = async () => {
+    if (!selectedTopic || selectedSubtopicIndex === -1) return
+
+    try {
+      if (!subtopicFormData.videoName.trim()) {
+        toast.error('Video name is required')
+        return
+      }
+      if (!subtopicFormData.teacher.trim()) {
+        toast.error('Teacher is required')
+        return
+      }
+      if (!subtopicFormData.videoEmbedLink.trim()) {
+        toast.error('Video embed link is required')
+        return
+      }
+
+      const updatedSubtopics = [...(selectedTopic.subtopics || [])]
+      updatedSubtopics[selectedSubtopicIndex] = {...subtopicFormData, id: selectedSubtopic?.id || `subtopic-${Date.now()}`}
+
+      const response = await fetch(`/api/admin/topic-vault/${selectedTopic.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...selectedTopic,
+          subtopics: updatedSubtopics
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update subtopic')
+      }
+      
+      setIsEditSubtopicDialogOpen(false)
+      setSubtopicFormData(createEmptySubtopicFormData())
+      setSelectedTopic(null)
+      setSelectedSubtopic(null)
+      setSelectedSubtopicIndex(-1)
+      toast.success('Subtopic updated successfully!')
+      fetchTopics()
+    } catch (error) {
+      console.error('Error updating subtopic:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update subtopic')
+    }
+  }
+
+  // Delete subtopic
+  const handleDeleteSubtopic = async () => {
+    if (!selectedTopic || selectedSubtopicIndex === -1) return
+
+    try {
+      const updatedSubtopics = [...(selectedTopic.subtopics || [])]
+      updatedSubtopics.splice(selectedSubtopicIndex, 1)
+
+      const response = await fetch(`/api/admin/topic-vault/${selectedTopic.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...selectedTopic,
+          subtopics: updatedSubtopics
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete subtopic')
+      }
+      
+      setIsDeleteSubtopicDialogOpen(false)
+      setSelectedTopic(null)
+      setSelectedSubtopic(null)
+      setSelectedSubtopicIndex(-1)
+      toast.success('Subtopic deleted successfully!')
+      fetchTopics()
+    } catch (error) {
+      console.error('Error deleting subtopic:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete subtopic')
+    }
+  }
+
+  // Open edit subtopic dialog
+  const openEditSubtopicDialog = (topic: Topic, subtopic: SubtopicVault, index: number) => {
+    setSelectedTopic(topic)
+    setSelectedSubtopic(subtopic)
+    setSelectedSubtopicIndex(index)
+    setSubtopicFormData({
+      videoName: subtopic.videoName,
+      type: subtopic.type,
+      duration: subtopic.duration,
+      teacher: subtopic.teacher,
+      description: subtopic.description,
+      zoomLink: subtopic.zoomLink || '',
+      videoEmbedLink: subtopic.videoEmbedLink,
+      status: subtopic.status
+    })
+    setIsEditSubtopicDialogOpen(true)
+  }
+
+  // Open delete subtopic dialog
+  const openDeleteSubtopicDialog = (topic: Topic, subtopic: SubtopicVault, index: number) => {
+    setSelectedTopic(topic)
+    setSelectedSubtopic(subtopic)
+    setSelectedSubtopicIndex(index)
+    setIsDeleteSubtopicDialogOpen(true)
   }
 
   const handleUpdateTopic = useCallback(async () => {
@@ -1023,8 +1137,8 @@ export default function TopicVaultPage() {
                                   <span className="text-xs">
                                     {topic.subtopics?.length || 0} subtopics
                                   </span>
-                              </div>
-                                </div>
+                                                                    </div>
+                                    </div>
                                   </div>
                             
                             <div className="flex items-center gap-2">
@@ -1089,7 +1203,7 @@ export default function TopicVaultPage() {
                                 {topic.subtopics.map((subtopic, index) => (
                                   <div
                                     key={subtopic.id || index}
-                                    className={`p-4 border-b border-white/5 last:border-b-0 ml-12 
+                                    className={`group p-4 border-b border-white/5 last:border-b-0 ml-12 
                                                ${draggedItem?.topicId === topic.id && draggedItem.subtopicIndex === index ? 'opacity-50' : ''}
                                                ${dragOverItem?.topicId === topic.id && dragOverItem.subtopicIndex === index ? 'bg-blue-500/10' : ''}`}
                                     onDragStart={(e) => handleDragStart(e, topic.id, index)}
@@ -1141,6 +1255,33 @@ export default function TopicVaultPage() {
                                             )}
                               </div>
                                         </div>
+                                      </div>
+                                      
+                                      {/* Edit and Delete buttons */}
+                                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openEditSubtopicDialog(topic, subtopic, index)
+                                          }}
+                                          className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300"
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </Button>
+                                        
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openDeleteSubtopicDialog(topic, subtopic, index)
+                                          }}
+                                          className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
                                       </div>
                                     </div>
                                   </div>
@@ -2029,6 +2170,248 @@ export default function TopicVaultPage() {
               ) : (
                 'Delete All'
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Subtopic Dialog */}
+      <Dialog open={isEditSubtopicDialogOpen} onOpenChange={setIsEditSubtopicDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/20 max-w-3xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-green-500/10 rounded-3xl"></div>
+          <div className="relative">
+            {/* Header */}
+            <DialogHeader className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mb-0 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-green-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/10">
+                    <Edit className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-semibold text-white">
+                      Edit Subtopic: "{selectedSubtopic?.videoName}"
+                    </DialogTitle>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditSubtopicDialogOpen(false)}
+                    className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg h-8 w-8 p-0 transition-all duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5">
+              {/* Subtopic Information */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2">
+                  <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Video className="w-3 h-3 text-blue-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-white/90">Subtopic Information</h3>
+                </div>
+                
+                {/* Video Name */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Video Name *
+                  </label>
+                  <Input 
+                    placeholder="e.g., Introduction to Derivatives" 
+                    value={subtopicFormData.videoName}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, videoName: e.target.value})}
+                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                  />
+                </div>
+
+                {/* Type and Duration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-white/80 block">
+                      Type *
+                    </label>
+                    <Select 
+                      value={subtopicFormData.type} 
+                      onValueChange={(value) => setSubtopicFormData({...subtopicFormData, type: value as 'Lesson' | 'Tutorial' | 'Workshop'})}
+                    >
+                      <SelectTrigger className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
+                        <SelectItem value="Lesson" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">Lesson</SelectItem>
+                        <SelectItem value="Tutorial" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">Tutorial</SelectItem>
+                        <SelectItem value="Workshop" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">Workshop</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-white/80 block">
+                      Duration *
+                    </label>
+                    <Input 
+                      placeholder="e.g., 30 min" 
+                      value={subtopicFormData.duration}
+                      onChange={(e) => setSubtopicFormData({...subtopicFormData, duration: e.target.value})}
+                      className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                               rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                    />
+                  </div>
+                </div>
+
+                {/* Teacher */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Teacher *
+                  </label>
+                  <Input 
+                    placeholder="e.g., Dr. Smith" 
+                    value={subtopicFormData.teacher}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, teacher: e.target.value})}
+                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Description
+                  </label>
+                  <Textarea 
+                    placeholder="Brief description of the subtopic..." 
+                    value={subtopicFormData.description}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, description: e.target.value})}
+                    className="glass-input min-h-[80px] bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10 resize-none" 
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Links Section */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2">
+                  <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <ExternalLink className="w-3 h-3 text-green-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-white/90">Links & Resources</h3>
+                </div>
+
+                {/* Video Embed Link */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Video Embed Link *
+                  </label>
+                  <Input 
+                    placeholder="https://youtube.com/watch?v=... or embed URL" 
+                    value={subtopicFormData.videoEmbedLink}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, videoEmbedLink: e.target.value})}
+                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                  />
+                </div>
+
+                {/* Zoom Link */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Zoom Link (Optional)
+                  </label>
+                  <Input 
+                    placeholder="https://zoom.us/j/... (for live sessions)" 
+                    value={subtopicFormData.zoomLink}
+                    onChange={(e) => setSubtopicFormData({...subtopicFormData, zoomLink: e.target.value})}
+                    className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
+                             rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
+                  />
+                </div>
+              </div>
+
+              {/* Status Section */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2">
+                  <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Settings className="w-3 h-3 text-purple-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-white/90">Status & Visibility</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/80 block">
+                    Status *
+                  </label>
+                  <Select 
+                    value={subtopicFormData.status} 
+                    onValueChange={(value) => setSubtopicFormData({...subtopicFormData, status: value as 'draft' | 'active'})}
+                  >
+                    <SelectTrigger className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl z-[999999]">
+                      <SelectItem value="draft" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                        Draft
+                      </SelectItem>
+                      <SelectItem value="active" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                        Active
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl px-6 py-4 -m-6 mt-0 border-t border-white/10 flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setIsEditSubtopicDialogOpen(false)}
+                className="bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg px-4 py-2 text-sm transition-all duration-200"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleEditSubtopic} 
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-500 hover:to-green-500 text-white border-0 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Update Subtopic
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Subtopic Confirmation Dialog */}
+      <AlertDialog open={isDeleteSubtopicDialogOpen} onOpenChange={setIsDeleteSubtopicDialogOpen}>
+        <AlertDialogContent className="glass-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white flex items-center">
+              <Trash2 className="w-5 h-5 mr-2 text-red-400" />
+              Delete Subtopic
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Are you sure you want to delete the subtopic "{selectedSubtopic?.videoName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-button text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSubtopic}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Subtopic
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
