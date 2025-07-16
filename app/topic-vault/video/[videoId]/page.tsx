@@ -315,7 +315,7 @@ export default function TopicVideoPage() {
       <Navigation />
 
       <main className="lg:ml-72 min-h-screen relative z-10">
-        <ResponsiveContainer padding="lg" animated>
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <div className="space-y-6 pb-16 pt-8">
             {/* Back to Topic Vault Button - Outside Card */}
             <div className="pb-6">
@@ -515,7 +515,7 @@ export default function TopicVideoPage() {
               </CardContent>
             </Card>
           </div>
-        </ResponsiveContainer>
+        </div>
       </main>
     </div>
   )

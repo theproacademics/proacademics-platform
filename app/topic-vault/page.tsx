@@ -254,22 +254,26 @@ export default function StudentTopicVaultPage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
-          </div>
-        </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Premium Dark Background with Purple/Blue Gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-indigo-900/60 to-slate-900 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-tr from-purple-900/30 via-transparent to-blue-900/30 pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(139,92,246,0.3),rgba(255,255,255,0))] pointer-events-none" />
+      
+      {/* Floating 3D elements */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-32 left-16 w-40 h-40 border border-purple-400/40 rounded-full animate-pulse shadow-2xl shadow-purple-500/20"></div>
+        <div className="absolute top-60 right-32 w-28 h-28 border border-blue-400/40 rotate-45 animate-pulse delay-1000 shadow-xl shadow-blue-500/20"></div>
+        <div className="absolute bottom-60 left-1/3 w-24 h-24 border border-indigo-400/40 rounded-lg animate-pulse delay-2000 shadow-lg shadow-indigo-500/20"></div>
+        <div className="absolute top-1/2 right-1/4 w-16 h-16 border border-violet-400/40 rounded-full animate-pulse delay-3000"></div>
+      </div>
 
-        {/* Navigation */}
-        <Navigation />
+      {/* Navigation */}
+      <Navigation />
 
-        {/* Main Content */}
-        <div className="relative z-10 p-6 lg:p-8 ml-0 lg:ml-64 pt-16 lg:pt-8">
+      {/* Main Content */}
+      <main className="lg:ml-72 min-h-screen relative z-10">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
@@ -448,12 +452,7 @@ export default function StudentTopicVaultPage() {
                                </div>
                              )}
 
-                             {/* Play Button Overlay */}
-                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                                 <Play className="w-6 h-6 text-white ml-1" />
-                               </div>
-                             </div>
+
 
                              {/* Content Overlaid on Thumbnail */}
                              <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
@@ -702,7 +701,7 @@ export default function StudentTopicVaultPage() {
             </div>
           )}
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   )
 } 
