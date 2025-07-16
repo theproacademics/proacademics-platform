@@ -390,6 +390,121 @@ export default function StudentTopicVaultPage() {
           ) : (
             // Topic Content View (when subject is selected)
             <div className="space-y-8">
+              {/* Recommended Subtopic Videos - Moved to Top */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                  <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                  Recommended Subtopic Videos
+                </h2>
+                
+                {allVideos.slice(0, 3).length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {allVideos.slice(0, 3).map((video, index) => (
+                      <Card 
+                        key={video.id} 
+                        className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group hover:scale-[1.02] opacity-0 animate-fade-in"
+                        style={{
+                          animationDelay: `${index * 150}ms`,
+                          animationFillMode: 'forwards'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                                                 <CardContent className="p-0">
+                           {/* Video Thumbnail with Overlaid Content */}
+                           <div className="relative aspect-video rounded-2xl overflow-hidden">
+                             {getVideoThumbnail(video.videoEmbedLink) ? (
+                               <img 
+                                 src={getVideoThumbnail(video.videoEmbedLink)!} 
+                                 alt={video.videoName}
+                                 className="w-full h-full object-cover"
+                                 onError={(e) => {
+                                   e.currentTarget.style.display = 'none'
+                                 }}
+                               />
+                             ) : (
+                               <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                                 <Video className="w-12 h-12 text-white/60" />
+                               </div>
+                             )}
+                             
+                             {/* Dark gradient overlay for text readability */}
+                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                             
+                             {/* Type Badge */}
+                             <div className="absolute top-3 left-3">
+                               <Badge className={`${getTypeColor(video.type)} border text-xs px-2 py-1 font-semibold`}>
+                                 {video.type}
+                               </Badge>
+                             </div>
+                             
+                             {/* Duration Badge */}
+                             {video.duration && (
+                               <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
+                                 <div className="flex items-center gap-1 text-white text-xs font-medium">
+                                   <Clock className="w-3 h-3" />
+                                   {video.duration}
+                                 </div>
+                               </div>
+                             )}
+
+                             {/* Play Button Overlay */}
+                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+                                 <Play className="w-6 h-6 text-white ml-1" />
+                               </div>
+                             </div>
+
+                             {/* Content Overlaid on Thumbnail */}
+                             <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+                               {/* Video Title */}
+                               <h3 className="text-base font-bold text-white line-clamp-1 group-hover:text-blue-300 transition-colors leading-tight">
+                                 {video.videoName}
+                               </h3>
+                               
+                               {/* Video Info - Compact Layout */}
+                               <div className="space-y-1">
+                                 <div className="flex items-center gap-2 text-xs text-slate-200">
+                                   <User className="w-3 h-3 flex-shrink-0" />
+                                   <span className="truncate font-medium">{video.teacher}</span>
+                                 </div>
+
+                                 <div className="flex items-center gap-2 text-xs text-slate-200">
+                                   <BookOpen className="w-3 h-3 flex-shrink-0" />
+                                   <span className="truncate">{video.topicName}</span>
+                                 </div>
+                               </div>
+
+                               {/* Action Button - Simplified */}
+                               <div className="pt-1">
+                                 <Button
+                                   size="sm"
+                                   onClick={(e) => {
+                                     e.stopPropagation()
+                                     console.log('Navigating to video with ID:', video.id)
+                                     window.location.href = `/topic-vault/video/${video.id}`
+                                   }}
+                                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+                                 >
+                                   <Play className="w-4 h-4 mr-2" />
+                                   Watch
+                                 </Button>
+                               </div>
+                             </div>
+                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Video className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No videos available</h3>
+                    <p className="text-slate-400">Check back later for recommended content</p>
+                  </div>
+                )}
+              </div>
+
               {/* Topic Filters */}
               <Card className="bg-white/5 backdrop-blur-lg border-white/10">
                 <CardHeader>
@@ -450,12 +565,12 @@ export default function StudentTopicVaultPage() {
                 </CardContent>
               </Card>
 
-              {/* Videos Grid */}
+              {/* All Videos List - Lesson Style */}
               <Card className="bg-white/5 backdrop-blur-lg border-white/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-3">
                     <Video className="w-5 h-5 text-green-400" />
-                    Videos ({allVideos.length})
+                    All Videos ({allVideos.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -466,116 +581,116 @@ export default function StudentTopicVaultPage() {
                       <p className="text-slate-400">Try adjusting your filters or search terms</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                      {allVideos.map((video) => (
-                        <div key={video.id} className="group bg-white/8 backdrop-blur-2xl border border-white/20 rounded-2xl overflow-hidden hover:bg-white/12 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl h-fit">
-                          {/* Video Thumbnail with Overlay Content */}
-                          <div className="relative h-64 w-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center overflow-hidden">
-                            {getVideoThumbnail(video.videoEmbedLink) ? (
-                              <img 
-                                src={getVideoThumbnail(video.videoEmbedLink)!} 
-                                alt={video.videoName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none'
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                                <Video className="w-12 h-12 text-white/60" />
-                              </div>
-                            )}
-                            
-                            {/* Dark gradient overlay for text readability */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                            
-                            {/* Play Button Overlay */}
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                                <Play className="w-6 h-6 text-white ml-1" />
-                              </div>
-                            </div>
-                            
-                            {/* Type Badge */}
-                            <div className="absolute top-3 left-3">
-                              <Badge className={`${getTypeColor(video.type)} border text-xs px-2 py-1 font-semibold`}>
+                    <div className="space-y-3">
+                      {allVideos.map((video, index) => (
+                        <div
+                          key={video.id}
+                          className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01] opacity-0 animate-fade-in"
+                          style={{
+                            animationDelay: `${index * 100}ms`,
+                            animationFillMode: 'forwards'
+                          }}
+                        >
+                          {/* Subject Color Accent */}
+                          <div 
+                            className="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 backdrop-blur-sm"
+                            style={{ 
+                              backgroundColor: '#3B82F6',
+                              borderRadius: '0 12px 12px 0',
+                              boxShadow: `0 0 20px #3B82F6, inset 0 1px 0 rgba(255,255,255,0.4)`,
+                              border: `1px solid rgba(255,255,255,0.3)`,
+                              borderLeft: 'none'
+                            }}
+                          />
+                          
+                          {/* Subtle hover gradient effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                          <div className="flex items-center gap-4 relative z-10">
+                            {/* Left: Type Badge */}
+                            <div className="flex-shrink-0 text-center min-w-[80px]">
+                              <Badge className={`${getTypeColor(video.type)} border text-xs px-3 py-2 font-semibold`}>
                                 {video.type}
                               </Badge>
-                            </div>
-                            
-                            {/* Duration Badge */}
-                            {video.duration && (
-                              <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
-                                <div className="flex items-center gap-1 text-white text-xs font-medium">
-                                  <Clock className="w-3 h-3" />
+                              {video.duration && (
+                                <div className="text-xs text-slate-400 font-medium mt-1">
                                   {video.duration}
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
 
-                            {/* Video Info Overlay - Bottom Section */}
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                              <h4 className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-blue-300 transition-colors">
-                                {video.videoName}
-                              </h4>
-                              
-                              <div className="space-y-1 mb-3">
-                                <div className="flex items-center gap-2 text-sm text-slate-200">
-                                  <User className="w-4 h-4 flex-shrink-0" />
-                                  <span className="truncate">{video.teacher}</span>
+                            {/* Separator Line */}
+                            <div className="flex-shrink-0 h-16 lg:h-20 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+
+                            {/* Video Thumbnail */}
+                            <div className="flex-shrink-0">
+                              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative">
+                                {getVideoThumbnail(video.videoEmbedLink) ? (
+                                  <img 
+                                    src={getVideoThumbnail(video.videoEmbedLink)!}
+                                    alt={video.videoName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Video className="w-8 h-8 text-slate-400" />
+                                  </div>
+                                )}
+                                
+                                {/* Play overlay */}
+                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  <div className="w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                    <Play className="w-3 h-3 text-white ml-0.5" />
+                                  </div>
                                 </div>
+                              </div>
+                            </div>
 
-                                <div className="flex items-center gap-2 text-sm text-slate-200">
-                                  <BookOpen className="w-4 h-4 flex-shrink-0" />
-                                  <span className="truncate">{video.topicName}</span>
+                            {/* Main Content */}
+                            <div className="flex-1 min-w-0 space-y-2">
+                              {/* Header with Video Name */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-white text-lg leading-tight">
+                                    {video.videoName}
+                                  </h3>
+                                  <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
+                                    <User className="w-4 h-4" />
+                                    <span>{video.teacher}</span>
+                                  </div>
                                 </div>
                               </div>
 
+                              {/* Topic Badge */}
+                              <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
+                                <BookOpen className="w-3 h-3 mr-1.5" />
+                                {video.topicName}
+                              </div>
+
+                              {/* Description */}
                               {video.description && (
-                                <p className="text-sm text-slate-200 line-clamp-1 mb-3">
+                                <p className="text-sm text-slate-400 line-clamp-2">
                                   {video.description}
                                 </p>
                               )}
+                            </div>
 
-                              {/* Action Buttons */}
-                              <div className="flex gap-2">
-                                {video.videoEmbedLink && (
-                                  <Button
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      console.log('Navigating to video with ID:', video.id)
-                                      console.log('Video details:', {
-                                        id: video.id,
-                                        videoName: video.videoName,
-                                        topicName: video.topicName,
-                                        subject: video.subject,
-                                        status: video.status
-                                      })
-                                      window.location.href = `/topic-vault/video/${video.id}`
-                                    }}
-                                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 backdrop-blur-sm"
-                                  >
-                                    <Play className="w-4 h-4 mr-1" />
-                                    Watch
-                                    <ExternalLink className="w-4 h-4 ml-1" />
-                                  </Button>
-                                )}
-                                
-                                {video.zoomLink && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      window.open(ensureUrlProtocol(video.zoomLink || ''), '_blank', 'noopener,noreferrer')
-                                    }}
-                                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 rounded-xl p-2 backdrop-blur-sm"
-                                  >
-                                    <ExternalLink className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
+                            {/* Right: Action Button */}
+                            <div className="flex-shrink-0">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  console.log('Navigating to video with ID:', video.id)
+                                  window.location.href = `/topic-vault/video/${video.id}`
+                                }}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-xl px-6 py-3 font-medium transition-all duration-300 hover:scale-105"
+                              >
+                                <Play className="w-4 h-4 mr-2" />
+                                Watch
+                              </Button>
                             </div>
                           </div>
                         </div>
