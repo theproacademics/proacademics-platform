@@ -123,13 +123,66 @@ const getTypeColor = (type: string) => {
   }
 }
 
-// Utility function to ensure URL has proper protocol
+  // Utility function to ensure URL has proper protocol
 const ensureUrlProtocol = (url: string): string => {
   if (!url) return url
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
   return `https://${url}`
+}
+
+// Group topics based on groupBy setting
+const groupTopics = (topics: Topic[], groupBy: 'none' | 'subject' | 'program' | 'subject-program') => {
+  if (groupBy === 'none') return { 'All Topics': topics }
+  
+  const grouped: Record<string, Topic[]> = {}
+  
+  topics.forEach(topic => {
+    let key = ''
+    switch (groupBy) {
+      case 'subject':
+        key = topic.subject || 'Unknown Subject'
+        break
+      case 'program':
+        key = topic.program || 'Unknown Program'
+        break
+      case 'subject-program':
+        key = `${topic.subject || 'Unknown Subject'} - ${topic.program || 'Unknown Program'}`
+        break
+      default:
+        key = 'All Topics'
+    }
+    
+    if (!grouped[key]) {
+      grouped[key] = []
+    }
+    grouped[key].push(topic)
+  })
+  
+  return grouped
+}
+
+// Create hierarchical grouping for subject-program structure
+const createHierarchicalGroups = (topics: Topic[]) => {
+  const hierarchical: Record<string, Record<string, Topic[]>> = {}
+  
+  topics.forEach(topic => {
+    const subject = topic.subject || 'Unknown Subject'
+    const program = topic.program || 'Unknown Program'
+    
+    if (!hierarchical[subject]) {
+      hierarchical[subject] = {}
+    }
+    
+    if (!hierarchical[subject][program]) {
+      hierarchical[subject][program] = []
+    }
+    
+    hierarchical[subject][program].push(topic)
+  })
+  
+  return hierarchical
 }
 
 export default function TopicVaultPage() {
@@ -156,6 +209,15 @@ export default function TopicVaultPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalTopics, setTotalTopics] = useState(0)
+  
+  // Grouping states
+  const [groupBy, setGroupBy] = useState<'none' | 'subject' | 'program' | 'subject-program'>('subject-program')
+  const [showGroupControls, setShowGroupControls] = useState(false)
+  
+  // Group expansion states
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(new Set())
+  const [expandedPrograms, setExpandedPrograms] = useState<Set<string>>(new Set())
   
   // Dialog states
   const [isCreateTopicDialogOpen, setIsCreateTopicDialogOpen] = useState(false)
@@ -189,6 +251,40 @@ export default function TopicVaultPage() {
       newExpanded.add(topicId)
     }
     setExpandedTopics(newExpanded)
+  }
+
+  // Toggle expanded state for groups
+  const toggleGroupExpanded = (groupName: string) => {
+    const newExpanded = new Set(expandedGroups)
+    if (newExpanded.has(groupName)) {
+      newExpanded.delete(groupName)
+    } else {
+      newExpanded.add(groupName)
+    }
+    setExpandedGroups(newExpanded)
+  }
+
+  // Toggle expanded state for subjects
+  const toggleSubjectExpanded = (subject: string) => {
+    const newExpanded = new Set(expandedSubjects)
+    if (newExpanded.has(subject)) {
+      newExpanded.delete(subject)
+    } else {
+      newExpanded.add(subject)
+    }
+    setExpandedSubjects(newExpanded)
+  }
+
+  // Toggle expanded state for programs
+  const toggleProgramExpanded = (subject: string, program: string) => {
+    const key = `${subject}::${program}`
+    const newExpanded = new Set(expandedPrograms)
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key)
+    } else {
+      newExpanded.add(key)
+    }
+    setExpandedPrograms(newExpanded)
   }
 
   // Fetch topics data
@@ -280,6 +376,24 @@ export default function TopicVaultPage() {
   useEffect(() => {
     fetchFilterOptions()
   }, [])
+
+  // Auto-expand all groups when groupBy is subject-program and topics are loaded
+  useEffect(() => {
+    if (groupBy === 'subject-program' && topics && topics.length > 0) {
+      const hierarchical = createHierarchicalGroups(topics)
+      const allSubjects = Object.keys(hierarchical)
+      const allPrograms = Object.entries(hierarchical).flatMap(([subject, programs]) => 
+        Object.keys(programs).map(program => `${subject}::${program}`)
+      )
+      
+      setExpandedSubjects(new Set(allSubjects))
+      setExpandedPrograms(new Set(allPrograms))
+    } else if (groupBy !== 'subject-program' && topics && topics.length > 0) {
+      const grouped = groupTopics(topics, groupBy)
+      const allGroupNames = Object.keys(grouped)
+      setExpandedGroups(new Set(allGroupNames))
+    }
+  }, [topics, groupBy])
 
   // Create new topic
   const handleCreateTopic = useCallback(async () => {
@@ -590,6 +704,12 @@ export default function TopicVaultPage() {
     setSelectedStatus("all")
     setSelectedType("all")
     setSelectedProgram("all")
+    setGroupBy("subject-program")
+    setCurrentPage(1)
+  }, [])
+
+  const handleGroupByChange = useCallback((value: 'none' | 'subject' | 'program' | 'subject-program') => {
+    setGroupBy(value)
     setCurrentPage(1)
   }, [])
 
@@ -925,7 +1045,19 @@ export default function TopicVaultPage() {
               </div>
 
               {/* Filter Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+                {/* Group By Filter */}
+                <Select value={groupBy} onValueChange={handleGroupByChange}>
+                  <SelectTrigger className="glass-select-trigger h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white">
+                    <SelectValue placeholder="Group By" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl">
+                    <SelectItem value="none" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">No Grouping</SelectItem>
+                    <SelectItem value="subject" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">Group by Subject</SelectItem>
+                    <SelectItem value="program" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">Group by Program</SelectItem>
+                    <SelectItem value="subject-program" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">Group by Subject & Program</SelectItem>
+                  </SelectContent>
+                </Select>
                 {/* Subject Filter */}
                 <Select value={selectedSubject} onValueChange={handleSubjectFilter}>
                   <SelectTrigger className="glass-select-trigger h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white">
@@ -996,6 +1128,74 @@ export default function TopicVaultPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Quick Filter Tags */}
+              {(subjects.length > 0 || programs.length > 0) && (
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-white/60 font-medium">Quick Filters:</span>
+                    
+                    {/* Subject Quick Filters */}
+                    {subjects.slice(0, 4).map((subject) => (
+                      <Button
+                        key={`subject-${subject}`}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSubject(subject)
+                          setGroupBy('subject')
+                          setCurrentPage(1)
+                        }}
+                        className={`h-7 px-3 text-xs transition-all duration-200 ${
+                          selectedSubject === subject && groupBy === 'subject'
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                            : 'bg-white/5 text-white/70 border-white/20 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {subject}
+                      </Button>
+                    ))}
+                    
+                    {/* Program Quick Filters */}
+                    {programs.slice(0, 3).map((program) => (
+                      <Button
+                        key={`program-${program}`}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedProgram(program)
+                          setGroupBy('program')
+                          setCurrentPage(1)
+                        }}
+                        className={`h-7 px-3 text-xs transition-all duration-200 ${
+                          selectedProgram === program && groupBy === 'program'
+                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
+                            : 'bg-white/5 text-white/70 border-white/20 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {program}
+                      </Button>
+                    ))}
+                    
+                    {/* Group by Subject-Program Quick Filter */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setGroupBy('subject-program')
+                        setCurrentPage(1)
+                      }}
+                      className={`h-7 px-3 text-xs transition-all duration-200 ${
+                        groupBy === 'subject-program'
+                          ? 'bg-green-500/20 text-green-400 border-green-500/40'
+                          : 'bg-white/5 text-white/70 border-white/20 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      🗂️ Group All (Default)
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1012,6 +1212,11 @@ export default function TopicVaultPage() {
                       <h3 className="text-white font-medium">Topic Vault Library</h3>
                       <p className="text-sm text-muted-foreground">
                         {totalTopics} total topics
+                        {groupBy !== 'none' && (() => {
+                          const grouped = groupTopics(topics || [], groupBy)
+                          const groupCount = Object.keys(grouped).length
+                          return ` • ${groupCount} ${groupBy.includes('-') ? 'groups' : groupBy + 's'}`
+                        })()}
                       </p>
                     </div>
                   </div>
@@ -1040,6 +1245,78 @@ export default function TopicVaultPage() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  {groupBy !== 'none' && (() => {
+                    if (groupBy === 'subject-program') {
+                      const hierarchical = createHierarchicalGroups(topics || [])
+                      const allSubjects = Object.keys(hierarchical)
+                      const allPrograms = Object.entries(hierarchical).flatMap(([subject, programs]) => 
+                        Object.keys(programs).map(program => `${subject}::${program}`)
+                      )
+                      const allExpanded = allSubjects.every(name => expandedSubjects.has(name)) && 
+                                         allPrograms.every(name => expandedPrograms.has(name))
+                      
+                      return (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (allExpanded) {
+                              setExpandedSubjects(new Set())
+                              setExpandedPrograms(new Set())
+                            } else {
+                              setExpandedSubjects(new Set(allSubjects))
+                              setExpandedPrograms(new Set(allPrograms))
+                            }
+                          }}
+                          className="glass-button text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+                        >
+                          {allExpanded ? (
+                            <>
+                              <ChevronUp className="w-4 h-4 mr-2" />
+                              Collapse All
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-4 h-4 mr-2" />
+                              Expand All
+                            </>
+                          )}
+                        </Button>
+                      )
+                    } else {
+                      const grouped = groupTopics(topics || [], groupBy)
+                      const allGroupNames = Object.keys(grouped)
+                      const allExpanded = allGroupNames.every(name => expandedGroups.has(name))
+                      
+                      return (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (allExpanded) {
+                              setExpandedGroups(new Set())
+                            } else {
+                              setExpandedGroups(new Set(allGroupNames))
+                            }
+                          }}
+                          className="glass-button text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+                        >
+                          {allExpanded ? (
+                            <>
+                              <ChevronUp className="w-4 h-4 mr-2" />
+                              Collapse All
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-4 h-4 mr-2" />
+                              Expand All
+                            </>
+                          )}
+                        </Button>
+                      )
+                    }
+                  })()}
+                  
                   <Link href="/admin/topic-vault/import">
                     <Button variant="outline" className="glass-button text-green-400 border-green-500/30 hover:bg-green-500/10">
                       <Upload className="w-4 h-4 mr-2" />
@@ -1087,13 +1364,116 @@ export default function TopicVaultPage() {
                       </Button>
                 </div>
               ) : (
-                <div className="space-y-0">
-                  {topics && topics.map((topic) => {
-                    const isExpanded = expandedTopics.has(topic.id)
-                    return (
-                      <div key={topic.id} className="border-b border-white/10 last:border-b-0">
-                        {/* Main Topic Row */}
-                        <div className="p-4 hover:bg-white/5 transition-colors">
+                                <div className="space-y-0">
+                  {(() => {
+                    if (groupBy === 'subject-program') {
+                      const hierarchical = createHierarchicalGroups(topics || [])
+                      return Object.entries(hierarchical).map(([subject, programs]) => (
+                        <div key={subject} className="space-y-0">
+                          {/* Subject Header */}
+                          <div className="sticky top-0 z-20 bg-gradient-to-r from-slate-800/95 to-slate-700/95 backdrop-blur-sm border-b border-white/20 shadow-lg">
+                            <button
+                              onClick={() => toggleSubjectExpanded(subject)}
+                              className="w-full px-6 py-4 hover:bg-white/5 transition-all duration-200 text-left group"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-200">
+                                  {expandedSubjects.has(subject) ? (
+                                    <FolderOpen className="w-5 h-5 text-blue-400" />
+                                  ) : (
+                                    <div className="text-lg">📁</div>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h3 className="text-white font-bold text-xl group-hover:text-blue-200 transition-colors duration-200">
+                                        📚 {subject}
+                                      </h3>
+                                      <p className="text-slate-400 text-sm mt-1">
+                                        {Object.keys(programs).length} program{Object.keys(programs).length !== 1 ? 's' : ''} • 
+                                        {Object.values(programs).flat().length} total topics
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                        expandedSubjects.has(subject) 
+                                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                                          : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                                      }`}>
+                                        Subject
+                                      </div>
+                                      <div className="text-slate-400 group-hover:text-white transition-colors duration-200">
+                                        {expandedSubjects.has(subject) ? (
+                                          <ChevronDown className="w-5 h-5" />
+                                        ) : (
+                                          <ChevronRight className="w-5 h-5" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+
+                          {/* Programs under this subject */}
+                          {expandedSubjects.has(subject) && Object.entries(programs).map(([program, programTopics]) => (
+                            <div key={`${subject}-${program}`} className="ml-8">
+                              {/* Program Header */}
+                              <div className="sticky top-16 z-10 bg-gradient-to-r from-slate-700/90 to-slate-600/90 backdrop-blur-sm border-b border-white/10">
+                                <button
+                                  onClick={() => toggleProgramExpanded(subject, program)}
+                                  className="w-full px-6 py-3 hover:bg-white/5 transition-all duration-200 text-left group"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-200">
+                                      {expandedPrograms.has(`${subject}::${program}`) ? (
+                                        <FolderOpen className="w-4 h-4 text-purple-400" />
+                                      ) : (
+                                        <div className="text-sm">📂</div>
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <h4 className="text-white font-semibold text-lg group-hover:text-purple-200 transition-colors duration-200">
+                                            🎯 {program}
+                                          </h4>
+                                          <p className="text-slate-400 text-xs mt-1">
+                                            {programTopics.length} topic{programTopics.length !== 1 ? 's' : ''} • 
+                                            {programTopics.filter(t => t.status === 'active').length} active
+                                          </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            expandedPrograms.has(`${subject}::${program}`) 
+                                              ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                              : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                                          }`}>
+                                            Program
+                                          </div>
+                                          <div className="text-slate-400 group-hover:text-white transition-colors duration-200">
+                                            {expandedPrograms.has(`${subject}::${program}`) ? (
+                                              <ChevronDown className="w-4 h-4" />
+                                            ) : (
+                                              <ChevronRight className="w-4 h-4" />
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </button>
+                              </div>
+
+                              {/* Topics under this program */}
+                              {expandedPrograms.has(`${subject}::${program}`) && programTopics.map((topic) => {
+                                const isExpanded = expandedTopics.has(topic.id)
+                                return (
+                                  <div key={topic.id} className="border-b border-white/10 last:border-b-0">
+                                    {/* Main Topic Row */}
+                                    <div className="p-4 hover:bg-white/5 transition-colors ml-16 border-l-2 border-white/10">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 flex-1">
                               <Button
@@ -1195,117 +1575,395 @@ export default function TopicVaultPage() {
                               </div>
                         </div>
 
-                        {/* Expanded Subtopics List */}
-                        {isExpanded && (
-                          <div className="bg-slate-800/30 border-t border-white/10">
-                            {topic.subtopics && topic.subtopics.length > 0 ? (
-                              <div className="space-y-0">
-                                {topic.subtopics.map((subtopic, index) => (
-                                  <div
-                                    key={subtopic.id || index}
-                                    className={`group p-4 border-b border-white/5 last:border-b-0 ml-12 
-                                               ${draggedItem?.topicId === topic.id && draggedItem.subtopicIndex === index ? 'opacity-50' : ''}
-                                               ${dragOverItem?.topicId === topic.id && dragOverItem.subtopicIndex === index ? 'bg-blue-500/10' : ''}`}
-                                    onDragStart={(e) => handleDragStart(e, topic.id, index)}
-                                    onDragOver={(e) => handleDragOver(e, topic.id, index)}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => handleDrop(e, topic.id, index)}
-                                    onDragEnd={handleDragEnd}
-                                    draggable={true}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                        <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
-                                          <GripVertical className="w-4 h-4 text-slate-400 hover:text-white" />
-                                        </div>
-                                        <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
-                                          {index + 1}
-                                        </div>
-                                        <Video className="w-4 h-4 text-purple-400" />
-                                        <div>
-                                          <h4 className="text-white font-medium">{subtopic.videoName}</h4>
-                                          <div className="flex items-center gap-4 text-xs mt-2">
-                                            <Badge className={`${getTypeColor(subtopic.type)} border text-xs`}>
-                                              {subtopic.type}
-                              </Badge>
-                                            <span className="text-slate-400">{subtopic.teacher}</span>
-                                            <span className="text-slate-400">{subtopic.duration}</span>
-                                            <Badge className={`${getStatusColor(subtopic.status)} border text-xs`}>
-                                              {subtopic.status}
-                              </Badge>
-                                            {subtopic.videoEmbedLink && (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  window.open(ensureUrlProtocol(subtopic.videoEmbedLink), '_blank', 'noopener,noreferrer')
-                                                }}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 
-                                                         border border-blue-500/30 hover:border-blue-500/50 rounded-lg
-                                                         text-blue-400 hover:text-blue-300 transition-all duration-200"
+                                    {/* Expanded Subtopics List */}
+                                    {isExpanded && (
+                                      <div className="bg-slate-800/30 border-t border-white/10 ml-16">
+                                        {topic.subtopics && topic.subtopics.length > 0 ? (
+                                          <div className="space-y-0">
+                                            {topic.subtopics.map((subtopic, index) => (
+                                              <div
+                                                key={subtopic.id || index}
+                                                className={`group p-4 border-b border-white/5 last:border-b-0 ml-12 
+                                                           ${draggedItem?.topicId === topic.id && draggedItem.subtopicIndex === index ? 'opacity-50' : ''}
+                                                           ${dragOverItem?.topicId === topic.id && dragOverItem.subtopicIndex === index ? 'bg-blue-500/10' : ''}`}
+                                                onDragStart={(e) => handleDragStart(e, topic.id, index)}
+                                                onDragOver={(e) => handleDragOver(e, topic.id, index)}
+                                                onDragLeave={handleDragLeave}
+                                                onDrop={(e) => handleDrop(e, topic.id, index)}
+                                                onDragEnd={handleDragEnd}
+                                                draggable={true}
                                               >
-                                                <Play className="w-3 h-3" />
-                                                Watch Video
-                                                <ExternalLink className="w-3 h-3" />
-                                              </button>
-                                            )}
-                              </div>
-                                        </div>
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
+                                                      <GripVertical className="w-4 h-4 text-slate-400 hover:text-white" />
+                                                    </div>
+                                                    <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
+                                                      {index + 1}
+                                                    </div>
+                                                    <Video className="w-4 h-4 text-purple-400" />
+                                                    <div>
+                                                      <h4 className="text-white font-medium">{subtopic.videoName}</h4>
+                                                      <div className="flex items-center gap-4 text-xs mt-2">
+                                                        <Badge className={`${getTypeColor(subtopic.type)} border text-xs`}>
+                                                          {subtopic.type}
+                                                        </Badge>
+                                                        <span className="text-slate-400">{subtopic.teacher}</span>
+                                                        <span className="text-slate-400">{subtopic.duration}</span>
+                                                        <Badge className={`${getStatusColor(subtopic.status)} border text-xs`}>
+                                                          {subtopic.status}
+                                                        </Badge>
+                                                        {subtopic.videoEmbedLink && (
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation()
+                                                              window.open(ensureUrlProtocol(subtopic.videoEmbedLink), '_blank', 'noopener,noreferrer')
+                                                            }}
+                                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 
+                                                                     border border-blue-500/30 hover:border-blue-500/50 rounded-lg
+                                                                     text-blue-400 hover:text-blue-300 transition-all duration-200"
+                                                          >
+                                                            <Play className="w-3 h-3" />
+                                                            Watch Video
+                                                            <ExternalLink className="w-3 h-3" />
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  {/* Edit and Delete buttons */}
+                                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        openEditSubtopicDialog(topic, subtopic, index)
+                                                      }}
+                                                      className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300"
+                                                    >
+                                                      <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                    
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        openDeleteSubtopicDialog(topic, subtopic, index)
+                                                      }}
+                                                      className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
+                                                    >
+                                                      <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <div className="p-8 text-center ml-12">
+                                            <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                                            <p className="text-slate-400 text-sm">No subtopics added yet</p>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                setSelectedTopic(topic)
+                                                setSubtopicFormData(createEmptySubtopicFormData())
+                                                setIsAddSubtopicDialogOpen(true)
+                                              }}
+                                              className="mt-3 text-blue-400 border-blue-400/30"
+                                            >
+                                              <Plus className="w-4 h-4 mr-1" />
+                                              Add First Subtopic
+                                            </Button>
+                                          </div>
+                                        )}
                                       </div>
-                                      
-                                      {/* Edit and Delete buttons */}
-                                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            openEditSubtopicDialog(topic, subtopic, index)
-                                          }}
-                                          className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300"
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                        
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            openDeleteSubtopicDialog(topic, subtopic, index)
-                                          }}
-                                          className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                    } else {
+                      // Handle other groupBy types (subject, program, none)
+                      const groupedTopics = groupTopics(topics || [], groupBy)
+                      return Object.entries(groupedTopics).map(([groupName, groupTopics]) => (
+                        <div key={groupName} className="space-y-0">
+                          {groupBy !== 'none' && (
+                            <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm border-b border-white/20 shadow-lg">
+                              <button
+                                onClick={() => toggleGroupExpanded(groupName)}
+                                className="w-full px-6 py-4 hover:bg-white/5 transition-all duration-200 text-left group"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-200">
+                                    {expandedGroups.has(groupName) ? (
+                                      <FolderOpen className="w-5 h-5 text-blue-400" />
+                                    ) : (
+                                      <div className="text-lg">📁</div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <h3 className="text-white font-semibold text-xl group-hover:text-blue-200 transition-colors duration-200">
+                                          {groupName}
+                                        </h3>
+                                        <p className="text-slate-400 text-sm mt-1">
+                                          {groupTopics.length} topic{groupTopics.length !== 1 ? 's' : ''} • 
+                                          {groupTopics.filter(t => t.status === 'active').length} active
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                          expandedGroups.has(groupName) 
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                                            : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                                        }`}>
+                                          {expandedGroups.has(groupName) ? 'Expanded' : 'Collapsed'}
+                                        </div>
+                                        <div className="text-slate-400 group-hover:text-white transition-colors duration-200">
+                                          {expandedGroups.has(groupName) ? (
+                                            <ChevronDown className="w-5 h-5" />
+                                          ) : (
+                                            <ChevronRight className="w-5 h-5" />
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="p-8 text-center ml-12">
-                                <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                                <p className="text-slate-400 text-sm">No subtopics added yet</p>
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                          {(groupBy === 'none' || expandedGroups.has(groupName)) && groupTopics.map((topic) => {
+                            const isExpanded = expandedTopics.has(topic.id)
+                            return (
+                              <div key={topic.id} className="border-b border-white/10 last:border-b-0">
+                                {/* Main Topic Row */}
+                                <div className={`p-4 hover:bg-white/5 transition-colors ${groupBy !== 'none' ? 'ml-8 border-l-2 border-white/10' : ''}`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4 flex-1">
                                       <Button
-                                  variant="outline"
+                                        variant="ghost"
                                         size="sm"
-                                  onClick={() => {
-                                    setSelectedTopic(topic)
-                                    setSubtopicFormData(createEmptySubtopicFormData())
-                                    setIsAddSubtopicDialogOpen(true)
-                                  }}
-                                  className="mt-3 text-blue-400 border-blue-400/30"
+                                        onClick={() => handleSelectTopic(topic.id)}
+                                        className="p-1 h-auto"
                                       >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add First Subtopic
+                                        {selectedTopics.includes(topic.id) ? (
+                                          <CheckSquare className="w-4 h-4 text-blue-400" />
+                                        ) : (
+                                          <Square className="w-4 h-4 text-slate-400" />
+                                        )}
                                       </Button>
+                                      
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleExpanded(topic.id)}
+                                        className="p-1 h-auto"
+                                      >
+                                        {isExpanded ? (
+                                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                                        ) : (
+                                          <ChevronUp className="w-4 h-4 text-slate-400" />
+                                        )}
+                                      </Button>
+                                      
+                                      <FolderOpen className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                                      
+                                      <div className="flex-1">
+                                        <h3 className="text-white font-medium">{topic.topicName}</h3>
+                                        <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
+                                          <span>{topic.subject}</span>
+                                          <span>{topic.program}</span>
+                                          <Badge 
+                                            className={`px-2 py-1 text-xs ${getStatusColor(topic.status)}`}
+                                          >
+                                            {topic.status}
+                                          </Badge>
+                                          <span className="text-xs">
+                                            {topic.subtopics?.length || 0} subtopics
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                              
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedTopic(topic)
+                                          setSubtopicFormData(createEmptySubtopicFormData())
+                                          setIsAddSubtopicDialogOpen(true)
+                                        }}
+                                        className="text-blue-400 border-blue-400/30 hover:bg-blue-500/10"
+                                      >
+                                        <Plus className="w-4 h-4 mr-1" />
+                                        Add Subtopic
+                                      </Button>
+                                      
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEditTopic(topic)}
+                                        className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button variant="outline" size="sm" className="text-red-400 border-red-400/30 hover:bg-red-500/10">
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="bg-slate-900 border-white/20">
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-white">Delete Topic</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-slate-400">
+                                              This will permanently delete "{topic.topicName}" and all its subtopics. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
+                                              Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction 
+                                              onClick={() => confirmDeleteTopic(topic.id)}
+                                              className="bg-red-600 hover:bg-red-700 text-white"
+                                            >
+                                              Delete
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Expanded Subtopics List */}
+                                {isExpanded && (
+                                  <div className={`bg-slate-800/30 border-t border-white/10 ${groupBy !== 'none' ? 'ml-8' : ''}`}>
+                                    {topic.subtopics && topic.subtopics.length > 0 ? (
+                                      <div className="space-y-0">
+                                        {topic.subtopics.map((subtopic, index) => (
+                                          <div
+                                            key={subtopic.id || index}
+                                            className={`group p-4 border-b border-white/5 last:border-b-0 ml-12 
+                                                       ${draggedItem?.topicId === topic.id && draggedItem.subtopicIndex === index ? 'opacity-50' : ''}
+                                                       ${dragOverItem?.topicId === topic.id && dragOverItem.subtopicIndex === index ? 'bg-blue-500/10' : ''}`}
+                                            onDragStart={(e) => handleDragStart(e, topic.id, index)}
+                                            onDragOver={(e) => handleDragOver(e, topic.id, index)}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={(e) => handleDrop(e, topic.id, index)}
+                                            onDragEnd={handleDragEnd}
+                                            draggable={true}
+                                          >
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center gap-3">
+                                                <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
+                                                  <GripVertical className="w-4 h-4 text-slate-400 hover:text-white" />
+                                                </div>
+                                                <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
+                                                  {index + 1}
+                                                </div>
+                                                <Video className="w-4 h-4 text-purple-400" />
+                                                <div>
+                                                  <h4 className="text-white font-medium">{subtopic.videoName}</h4>
+                                                  <div className="flex items-center gap-4 text-xs mt-2">
+                                                    <Badge className={`${getTypeColor(subtopic.type)} border text-xs`}>
+                                                      {subtopic.type}
+                                                    </Badge>
+                                                    <span className="text-slate-400">{subtopic.teacher}</span>
+                                                    <span className="text-slate-400">{subtopic.duration}</span>
+                                                    <Badge className={`${getStatusColor(subtopic.status)} border text-xs`}>
+                                                      {subtopic.status}
+                                                    </Badge>
+                                                    {subtopic.videoEmbedLink && (
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation()
+                                                          window.open(ensureUrlProtocol(subtopic.videoEmbedLink), '_blank', 'noopener,noreferrer')
+                                                        }}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 
+                                                                 border border-blue-500/30 hover:border-blue-500/50 rounded-lg
+                                                                 text-blue-400 hover:text-blue-300 transition-all duration-200"
+                                                      >
+                                                        <Play className="w-3 h-3" />
+                                                        Watch Video
+                                                        <ExternalLink className="w-3 h-3" />
+                                                      </button>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              
+                                              {/* Edit and Delete buttons */}
+                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    openEditSubtopicDialog(topic, subtopic, index)
+                                                  }}
+                                                  className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300"
+                                                >
+                                                  <Edit className="w-4 h-4" />
+                                                </Button>
+                                                
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    openDeleteSubtopicDialog(topic, subtopic, index)
+                                                  }}
+                                                  className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
+                                                >
+                                                  <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="p-8 text-center ml-12">
+                                        <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                                        <p className="text-slate-400 text-sm">No subtopics added yet</p>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedTopic(topic)
+                                            setSubtopicFormData(createEmptySubtopicFormData())
+                                            setIsAddSubtopicDialogOpen(true)
+                                          }}
+                                          className="mt-3 text-blue-400 border-blue-400/30"
+                                        >
+                                          <Plus className="w-4 h-4 mr-1" />
+                                          Add First Subtopic
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                            )
+                          })}
+                        </div>
+                      ))
+                    }
+                  })()}
                 </div>
               )}
             </CardContent>

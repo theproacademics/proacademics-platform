@@ -71,6 +71,8 @@ export default function TopicVideoPage() {
   const [error, setError] = useState<string | null>(null)
   const [dataReady, setDataReady] = useState(false)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  const [allVideos, setAllVideos] = useState<SubtopicVideo[]>([])
+  const [nextVideo, setNextVideo] = useState<SubtopicVideo | null>(null)
 
   const { showPreloader, mounted: preloaderMounted } = usePreloader({ 
     delay: 1200,
@@ -124,10 +126,12 @@ export default function TopicVideoPage() {
           throw new Error('No topics found in the database. Please contact your administrator.')
         }
         
-        // Find the video in all topics
+        // Find the video in all topics and collect all videos from same topic
         let foundVideo: SubtopicVideo | null = null
         let searchDetails: any[] = []
         let totalSubtopics = 0
+        let videoTopic: any = null
+        let allTopicVideos: SubtopicVideo[] = []
         
         for (const topic of allTopics) {
           if (topic.subtopics && Array.isArray(topic.subtopics)) {
@@ -163,11 +167,35 @@ export default function TopicVideoPage() {
                 topicName: topic.topicName,
                 subject: topic.subject
               }
+              videoTopic = topic
+              
+              // Collect all active videos from this topic
+              allTopicVideos = activeSubtopics.map((s: any) => ({
+                ...s,
+                topicName: topic.topicName,
+                subject: topic.subject
+              }))
+              
               console.log('Found video:', foundVideo)
+              console.log('All videos in topic:', allTopicVideos.length)
               break
             }
           }
         }
+        
+        // Find next video
+        if (foundVideo && allTopicVideos.length > 1) {
+          const currentIndex = allTopicVideos.findIndex(v => v.id === videoId)
+          const nextIndex = (currentIndex + 1) % allTopicVideos.length
+          const nextVid = allTopicVideos[nextIndex]
+          
+          if (nextVid && nextVid.id !== videoId) {
+            setNextVideo(nextVid)
+            console.log('Next video:', nextVid.videoName)
+          }
+        }
+        
+        setAllVideos(allTopicVideos)
         
         console.log('Search details:', searchDetails)
         console.log('Total active subtopics found:', totalSubtopics)
@@ -511,6 +539,155 @@ export default function TopicVideoPage() {
                       </Button>
                     </div>
                   )}
+
+                  {/* Action Buttons Section */}
+                  <div className="border-t border-white/10 pt-8 mt-8 relative">
+                    {/* Background glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-blue-500/5 to-purple-500/5 rounded-2xl blur-3xl"></div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                      {/* Work with Lex Button - Enhanced */}
+                      <div className="group relative">
+                        {/* Button glow background */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-violet-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                        
+                        <Button
+                          onClick={() => {
+                            router.push(`/lex?topic=${encodeURIComponent(video.topicName || '')}&subject=${encodeURIComponent(video.subject || '')}`)
+                          }}
+                          className="relative w-full h-auto p-0 bg-transparent border-0 hover:bg-transparent"
+                        >
+                          <div className="w-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 hover:from-purple-400 hover:via-violet-400 hover:to-indigo-500 rounded-2xl p-6 shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 border border-purple-400/30 hover:border-purple-300/50 backdrop-blur-sm relative overflow-hidden group">
+                            {/* Animated background patterns */}
+                            <div className="absolute inset-0 opacity-20">
+                              <div className="absolute top-4 left-4 w-20 h-20 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+                              <div className="absolute bottom-4 right-4 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse delay-1000"></div>
+                            </div>
+                            
+                            {/* Shimmer effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                            
+                            <div className="relative flex items-center gap-4">
+                              {/* Enhanced Icon */}
+                              <div className="relative">
+                                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 border border-white/30">
+                                  <Target className="w-7 h-7 text-white drop-shadow-lg" />
+                                </div>
+                                {/* Icon glow */}
+                                <div className="absolute inset-0 w-14 h-14 bg-purple-300/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              </div>
+                              
+                              {/* Enhanced Text */}
+                              <div className="text-left flex-1">
+                                <div className="text-lg font-bold text-white mb-1 group-hover:text-purple-100 transition-colors">
+                                  Work with Lex
+                                </div>
+                                <div className="text-sm text-purple-100/80 font-medium">
+                                  🤖 AI tutor for this topic
+                                </div>
+                              </div>
+                              
+                              {/* Enhanced Arrow */}
+                              <div className="relative">
+                                <ChevronRight className="w-6 h-6 text-white/80 group-hover:translate-x-2 group-hover:text-white transition-all duration-300" />
+                                <div className="absolute inset-0 w-6 h-6 bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </Button>
+                      </div>
+
+                      {/* Next Video Button - Enhanced */}
+                      {nextVideo ? (
+                        <div className="group relative">
+                          {/* Button glow background */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                          
+                          <Button
+                            onClick={() => {
+                              router.push(`/topic-vault/video/${nextVideo.id}`)
+                            }}
+                            className="relative w-full h-auto p-0 bg-transparent border-0 hover:bg-transparent"
+                          >
+                            <div className="w-full bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-600 hover:from-blue-400 hover:via-cyan-400 hover:to-teal-500 rounded-2xl p-6 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 border border-blue-400/30 hover:border-blue-300/50 backdrop-blur-sm relative overflow-hidden group">
+                              {/* Animated background patterns */}
+                              <div className="absolute inset-0 opacity-20">
+                                <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-pulse delay-500"></div>
+                                <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse delay-1500"></div>
+                              </div>
+                              
+                              {/* Shimmer effect */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                              
+                              <div className="relative flex items-center gap-4">
+                                {/* Enhanced Icon */}
+                                <div className="relative">
+                                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 border border-white/30">
+                                    <Play className="w-7 h-7 text-white drop-shadow-lg ml-1" />
+                                  </div>
+                                  {/* Icon glow */}
+                                  <div className="absolute inset-0 w-14 h-14 bg-blue-300/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                </div>
+                                
+                                {/* Enhanced Text */}
+                                <div className="text-left flex-1 min-w-0">
+                                  <div className="text-lg font-bold text-white mb-1 group-hover:text-blue-100 transition-colors">
+                                    Next Video
+                                  </div>
+                                  <div className="text-sm text-blue-100/80 font-medium truncate">
+                                    🎬 {nextVideo.videoName}
+                                  </div>
+                                </div>
+                                
+                                {/* Enhanced Arrow */}
+                                <div className="relative flex-shrink-0">
+                                  <ChevronRight className="w-6 h-6 text-white/80 group-hover:translate-x-2 group-hover:text-white transition-all duration-300" />
+                                  <div className="absolute inset-0 w-6 h-6 bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="w-full bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-2xl p-6 shadow-xl border border-slate-600/30 backdrop-blur-sm relative overflow-hidden">
+                            {/* Subtle pattern for disabled state */}
+                            <div className="absolute inset-0 opacity-10">
+                              <div className="absolute top-4 left-4 w-16 h-16 bg-white/5 rounded-full blur-xl"></div>
+                            </div>
+                            
+                            <div className="relative flex items-center gap-4">
+                              <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+                                <Play className="w-7 h-7 text-slate-400" />
+                              </div>
+                              
+                              <div className="text-left flex-1">
+                                <div className="text-lg font-bold text-slate-300 mb-1">
+                                  No More Videos
+                                </div>
+                                <div className="text-sm text-slate-400 font-medium">
+                                  🏁 You've reached the end
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Enhanced Progress Info */}
+                    {allVideos.length > 1 && (
+                      <div className="mt-8 text-center">
+                        <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <p className="text-sm text-slate-300 font-medium">
+                            Video {allVideos.findIndex(v => v.id === videoId) + 1} of {allVideos.length} in this topic
+                          </p>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-500"></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

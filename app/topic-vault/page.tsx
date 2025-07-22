@@ -394,13 +394,8 @@ export default function StudentTopicVaultPage() {
           ) : (
             // Topic Content View (when subject is selected)
             <div className="space-y-8">
-              {/* Recommended Subtopic Videos - Moved to Top */}
+              {/* Recommended Subtopic Videos */}
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                  <Star className="w-6 h-6 text-yellow-400 fill-current" />
-                  Recommended Subtopic Videos
-                </h2>
-                
                 {allVideos.slice(0, 3).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {allVideos.slice(0, 3).map((video, index) => (
@@ -435,8 +430,18 @@ export default function StudentTopicVaultPage() {
                              {/* Dark gradient overlay for text readability */}
                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                              
+                             {/* Recommended Badge - Top Left */}
+                             <div className="absolute top-3 left-3 z-20">
+                               <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2.5 py-1 rounded-full shadow-lg border border-yellow-400/30">
+                                 <div className="flex items-center gap-1 text-xs font-bold">
+                                   <Star className="w-3 h-3 fill-current" />
+                                   Recommended
+                                 </div>
+                               </div>
+                             </div>
+
                              {/* Type Badge */}
-                             <div className="absolute top-3 left-3">
+                             <div className="absolute top-3 right-3 z-10">
                                <Badge className={`${getTypeColor(video.type)} border text-xs px-2 py-1 font-semibold`}>
                                  {video.type}
                                </Badge>
@@ -444,7 +449,7 @@ export default function StudentTopicVaultPage() {
                              
                              {/* Duration Badge */}
                              {video.duration && (
-                               <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
+                               <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg z-10">
                                  <div className="flex items-center gap-1 text-white text-xs font-medium">
                                    <Clock className="w-3 h-3" />
                                    {video.duration}
