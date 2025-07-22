@@ -1218,13 +1218,8 @@ export default function TopicVaultPage() {
                                         <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
                                           <GripVertical className="w-4 h-4 text-slate-400 hover:text-white" />
                                         </div>
-                                        <div className="flex flex-col items-center gap-1">
-                                          <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
-                                            {index + 1}
-                                          </div>
-                                          <div className="text-xs text-slate-500">
-                                            Order
-                                          </div>
+                                        <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400">
+                                          {index + 1}
                                         </div>
                                         <Video className="w-4 h-4 text-purple-400" />
                                         <div>
