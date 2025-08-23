@@ -62,6 +62,20 @@ const predefinedColors = [
   "#F97316", // Orange
   "#EC4899", // Pink
   "#6366F1", // Indigo
+  "#14B8A6", // Teal
+  "#F472B6", // Hot Pink
+  "#A855F7", // Violet
+  "#22C55E", // Green
+  "#FB7185", // Rose
+  "#06B6D4", // Sky
+  "#FBBF24", // Yellow
+  "#8B5A2B", // Brown
+  "#6B7280", // Gray
+  "#1F2937", // Dark Gray
+  "#DC2626", // Bright Red
+  "#2563EB", // Bright Blue
+  "#059669", // Dark Green
+  "#7C3AED", // Deep Purple
 ]
 
 export default function SubjectsPage() {
@@ -726,8 +740,8 @@ function SubjectCard({
                   {subject.isActive ? "Active" : "Inactive"}
                 </Badge>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 border border-purple-400/20 rounded-full backdrop-blur-sm">
-                  <BookOpen className="w-3 h-3 text-purple-400" />
-                  <span className="text-xs font-medium text-purple-300">
+                  <BookOpen className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                  <span className="text-xs font-medium text-purple-300 whitespace-nowrap">
                     {subject.programs.length} {subject.programs.length === 1 ? 'Program' : 'Programs'}
                   </span>
                 </div>
@@ -806,18 +820,15 @@ function SubjectCard({
                    {/* Main content area */}
                    <div className="flex items-start justify-between mb-4">
                      <div className="flex items-start gap-4 flex-1 min-w-0">
-                       {/* Program number badge */}
+                       {/* Program color strip */}
                        <div className="relative flex-shrink-0">
                          <div 
-                           className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-sm backdrop-blur-sm shadow-lg"
+                           className="w-1 h-16 rounded-full shadow-md"
                            style={{ 
                              backgroundColor: program.color,
-                             boxShadow: `0 4px 20px ${program.color}30`
+                             boxShadow: `0 2px 8px ${program.color}40`
                            }}
-                         >
-                           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl"></div>
-                           <span className="relative z-10">{(index + 1).toString().padStart(2, '0')}</span>
-                         </div>
+                         />
                        </div>
                        
                        {/* Program details */}
@@ -835,8 +846,8 @@ function SubjectCard({
                                )}
                              </div>
                              
-                             {/* Metadata row */}
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                                           {/* Metadata row */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-12">
                                <div className="flex items-center gap-1.5 text-xs bg-gradient-to-r from-blue-500/10 to-blue-500/5 px-2.5 py-1.5 rounded-lg border border-blue-400/20">
                                  <Calendar className="w-3 h-3 text-blue-400 flex-shrink-0" />
                                  <span className="text-blue-300 font-medium whitespace-nowrap">
@@ -862,7 +873,7 @@ function SubjectCard({
                            </div>
                            
                            {/* Action buttons - positioned at top right */}
-                           <div className="flex items-start gap-1.5 flex-shrink-0 ml-4">
+                           <div className="flex items-start gap-1.5 flex-shrink-0 ml-6 mt-5">
                              <Button
                                size="sm"
                                variant="ghost"
@@ -1029,13 +1040,13 @@ function SubjectDialog({
               </div>
               
               <div className="p-4 bg-white/[0.02] border border-white/10 rounded-xl">
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {predefinedColors.map((color) => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setForm({ ...form, color })}
-                      className={`w-12 h-12 rounded-xl border-2 transition-all duration-200 hover:scale-105 flex items-center justify-center ${
+                      className={`w-8 h-8 rounded-lg border-2 transition-all duration-200 hover:scale-105 flex items-center justify-center ${
                         form.color === color ? 'border-white scale-110 shadow-lg' : 'border-white/30 hover:border-white/50'
                       }`}
                       style={{ backgroundColor: color }}
@@ -1279,13 +1290,13 @@ function ProgramDialog({
               </div>
               
               <div className="p-4 bg-white/[0.02] border border-white/10 rounded-xl">
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {predefinedColors.map((color) => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setForm({ ...form, color })}
-                      className={`w-12 h-12 rounded-xl border-2 transition-all duration-200 hover:scale-105 flex items-center justify-center ${
+                      className={`w-8 h-8 rounded-lg border-2 transition-all duration-200 hover:scale-105 flex items-center justify-center ${
                         form.color === color ? 'border-white scale-110 shadow-lg' : 'border-white/30 hover:border-white/50'
                       }`}
                       style={{ backgroundColor: color }}

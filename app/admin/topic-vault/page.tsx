@@ -142,13 +142,13 @@ const groupTopics = (topics: Topic[], groupBy: 'none' | 'subject' | 'program' | 
     let key = ''
     switch (groupBy) {
       case 'subject':
-        key = topic.subject || 'Unknown Subject'
+        key = topic.subject || 'No Subject Assigned'
         break
       case 'program':
-        key = topic.program || 'Unknown Program'
+        key = topic.program || 'No Program Assigned'
         break
       case 'subject-program':
-        key = `${topic.subject || 'Unknown Subject'} - ${topic.program || 'Unknown Program'}`
+        key = `${topic.subject || 'No Subject Assigned'} - ${topic.program || 'No Program Assigned'}`
         break
       default:
         key = 'All Topics'
@@ -168,8 +168,8 @@ const createHierarchicalGroups = (topics: Topic[]) => {
   const hierarchical: Record<string, Record<string, Topic[]>> = {}
   
   topics.forEach(topic => {
-    const subject = topic.subject || 'Unknown Subject'
-    const program = topic.program || 'Unknown Program'
+    const subject = topic.subject || 'No Subject Assigned'
+    const program = topic.program || 'No Program Assigned'
     
     if (!hierarchical[subject]) {
       hierarchical[subject] = {}
