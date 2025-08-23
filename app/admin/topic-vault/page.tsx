@@ -989,6 +989,24 @@ export default function TopicVaultPage() {
       <div className="absolute inset-0 z-10 overflow-y-auto">
         <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-14 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
 
+          {/* Notification Banner for Deleted Subjects */}
+          {topics.some(topic => !topic.subject || (topic.subject && !adminSubjects.find(s => s.name === topic.subject))) && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-medium">Topics Missing Subject Information</h3>
+                  <p className="text-sm text-red-300 mt-1">
+                    Some topics have no subject assigned or are associated with deleted subjects. These topics have been automatically set to draft status.
+                    Please update them with valid subjects to make them active again.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Enhanced Header */}
           <div className="mb-6 lg:mb-12 text-center">
             <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
@@ -1507,8 +1525,15 @@ export default function TopicVaultPage() {
                               <div className="flex-1">
                                 <h3 className="text-white font-medium">{topic.topicName}</h3>
                                 <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
-                                  <span>{topic.subject}</span>
-                                  <span>{topic.program}</span>
+                                  <span className={!topic.subject || !adminSubjects.find(s => s.name === topic.subject) ? "text-red-400" : ""}>
+                                    {topic.subject || "No Subject"}
+                                    {topic.subject && !adminSubjects.find(s => s.name === topic.subject) && (
+                                      <span className="ml-1 text-xs text-red-400">(deleted)</span>
+                                    )}
+                                  </span>
+                                  <span className={!topic.program ? "text-orange-400" : ""}>
+                                    {topic.program || "No Program"}
+                                  </span>
                                   <Badge 
                                     className={`px-2 py-1 text-xs ${getStatusColor(topic.status)}`}
                                   >

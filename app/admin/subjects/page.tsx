@@ -494,6 +494,98 @@ export default function SubjectsPage() {
             </CardContent>
           </Card>
 
+          {/* Delete Subject Section */}
+          {subjects.length > 0 && (
+            <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl lg:rounded-3xl mb-4 lg:mb-8 overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-transparent to-orange-500/5"></div>
+              <CardContent className="relative p-3 sm:p-4 lg:p-8">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 pb-2">
+                    <div className="w-6 h-6 bg-red-500/20 rounded-lg flex items-center justify-center">
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                    </div>
+                    <h3 className="text-sm font-medium text-white/90">Delete Subject</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Select 
+                      value=""
+                      onValueChange={(value) => {
+                        const subject = subjects.find(s => s.id === value)
+                        if (subject) {
+                          setSelectedSubject(subject)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="bg-white/[0.03] border-2 border-white/20 rounded-xl text-white 
+                                             hover:bg-white/[0.05] hover:border-white/30
+                                             focus:border-red-400/80 focus:ring-4 focus:ring-red-400/20 
+                                             transition-all duration-300 ease-in-out
+                                             focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-400/20
+                                             h-11">
+                        <SelectValue placeholder="Select a subject to delete" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border border-white/20 rounded-xl z-[999999]">
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id} className="hover:bg-white/10 text-white cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: subject.color }}
+                              />
+                              <span>{subject.name}</span>
+                              <span className="text-slate-400 text-xs ml-1">
+                                ({subject.programs.length} programs)
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          disabled={!selectedSubject}
+                          className="w-full bg-red-500/10 border border-red-400/30 text-red-400 
+                                   hover:bg-red-500/20 hover:border-red-400/50 
+                                   focus:ring-2 focus:ring-red-400/20 focus:border-red-400/60
+                                   rounded-xl transition-all duration-200 backdrop-blur-sm h-11 text-sm font-medium
+                                   disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Selected Subject
+                        </Button>
+                      </AlertDialogTrigger>
+                      {selectedSubject && (
+                        <AlertDialogContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-2xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-white">Delete Subject</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">
+                              This will permanently delete "{selectedSubject.name}" and all its {selectedSubject.programs.length} programs. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-slate-700/80 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => {
+                                handleDeleteSubject(selectedSubject.id)
+                                setSelectedSubject(null)
+                              }}
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      )}
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Enhanced Subjects Grid */}
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-slate-800/20 to-purple-900/20 rounded-2xl blur-2xl"></div>
@@ -652,7 +744,7 @@ function SubjectCard({
             </div>
           </div>
           
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="ghost"

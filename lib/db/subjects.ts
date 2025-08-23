@@ -104,11 +104,93 @@ class SubjectService {
   }
 
   async deleteSubject(id: string): Promise<boolean> {
+    const client = await clientPromise
+    const db = client.db(process.env.DB_NAME || "proacademics")
+    
     const subjectsCollection = await this.getSubjectsCollection()
     const programsCollection = await this.getProgramsCollection()
     
+    // Get the subject to be deleted
+    const subject = await subjectsCollection.findOne({ id })
+    if (!subject) return false
+    
+    // Get all programs for this subject to handle program references
+    const subjectPrograms = await programsCollection.find({ subjectId: id }).toArray()
+    const programNames = subjectPrograms.map(p => p.name)
+    
     // Delete all programs associated with this subject
     await programsCollection.deleteMany({ subjectId: id })
+    
+    // Update related collections to handle the deleted subject
+    // 1. Update topics collection (used by Topic Vault admin) - remove subject/program references
+    const topicsCollection = db.collection("topics")
+    await topicsCollection.updateMany(
+      { subject: subject.name },
+      { 
+        $set: { 
+          subject: "",
+          program: "",
+          status: 'draft',
+          updatedAt: new Date() 
+        }
+      }
+    )
+    
+    // Also update topics that reference any of the deleted programs
+    if (programNames.length > 0) {
+      await topicsCollection.updateMany(
+        { program: { $in: programNames } },
+        { 
+          $set: { 
+            program: "",
+            status: 'draft',
+            updatedAt: new Date() 
+          }
+        }
+      )
+    }
+    
+    // 2. Update topic vault entries (student-facing)
+    const topicVaultCollection = db.collection("topicVault")
+    await topicVaultCollection.updateMany(
+      { subject: subject.name },
+      { 
+        $set: { 
+          subject: "",
+          program: "",
+          status: 'draft',
+          updatedAt: new Date() 
+        }
+      }
+    )
+    
+    // 3. Update lessons - remove subject/program references
+    const lessonsCollection = db.collection("lessons")
+    await lessonsCollection.updateMany(
+      { subject: subject.name },
+      { 
+        $set: { 
+          subject: "",
+          program: "",
+          needsReview: true,
+          updatedAt: new Date() 
+        }
+      }
+    )
+    
+    // 4. Update past papers - remove subject/program references
+    const pastPapersCollection = db.collection("pastPapers")
+    await pastPapersCollection.updateMany(
+      { subject: subject.name },
+      { 
+        $set: { 
+          subject: "",
+          program: "",
+          status: 'draft',
+          updatedAt: new Date() 
+        }
+      }
+    )
     
     // Delete the subject
     const result = await subjectsCollection.deleteOne({ id })
