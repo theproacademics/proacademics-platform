@@ -284,14 +284,19 @@ export default function LessonsPage() {
     fetchLessons()
   }, [currentPage, searchTerm, selectedSubject, selectedTeacher, selectedStatus, scheduledDateFrom, scheduledDateTo, createdDateFrom, createdDateTo])
 
-  useEffect(() => {
-    fetchFilterOptions()
-  }, [])
-
   // Function to refresh subject-program mapping specifically
-  const refreshSubjectPrograms = async () => {
+  const refreshSubjectPrograms = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/subjects/programs-map')
+      console.log('Refreshing subject-program mapping...')
+      const timestamp = Date.now()
+      const response = await fetch(`/api/admin/subjects/programs-map?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
@@ -300,12 +305,61 @@ export default function LessonsPage() {
           setSubjectPrograms(data.subjectPrograms || {})
           setSubjectColors(data.subjectColors || {})
           console.log('Refreshed SUBJECT_PROGRAMS:', SUBJECT_PROGRAMS)
+          
+          // Also refresh admin subjects for the dropdown
+          const adminSubjectsRes = await fetch('/api/admin/subjects', {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          })
+          if (adminSubjectsRes.ok) {
+            const adminSubjectsData = await adminSubjectsRes.json()
+            if (adminSubjectsData.success) {
+              setAdminSubjects(adminSubjectsData.subjects || [])
+              console.log('Refreshed admin subjects:', adminSubjectsData.subjects)
+            }
+          }
         }
       }
     } catch (error) {
       console.error('Error refreshing subject programs:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchFilterOptions()
+    
+    // Add window focus event to refresh data when switching back from subjects page
+    const handleFocus = () => {
+      console.log('Window focused, refreshing subject-program mapping...')
+      refreshSubjectPrograms()
+    }
+    
+    // Add periodic refresh every 30 seconds when the page is visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshSubjectPrograms()
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // Set up interval to refresh data every 30 seconds
+    const refreshInterval = setInterval(() => {
+      if (!document.hidden) {
+        console.log('Periodic refresh of subject-program mapping...')
+        refreshSubjectPrograms()
+      }
+    }, 30000)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(refreshInterval)
+    }
+  }, [refreshSubjectPrograms])
 
   // CRUD Operations with optimized error handling
   const handleCreateLesson = useCallback(async () => {
