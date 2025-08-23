@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,7 +24,8 @@ import {
   Search,
   Filter,
   MoreVertical,
-  Settings
+  Settings,
+  Calendar
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -92,6 +93,8 @@ export default function SubjectsPage() {
   useEffect(() => {
     fetchSubjects()
   }, [])
+
+
 
   const fetchSubjects = async () => {
     try {
@@ -600,10 +603,21 @@ export default function SubjectsPage() {
                       Subjects & Programs ({filteredSubjects.length})
                     </CardTitle>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
                     {filteredSubjects.length > 0 && (
-                      <div className="flex items-center space-x-2 text-sm text-slate-400">
-                        <span>Total: {filteredSubjects.length}</span>
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-400/20 rounded-lg backdrop-blur-sm">
+                          <Tags className="w-3 h-3 text-blue-400" />
+                          <span className="text-xs font-medium text-blue-300">
+                            {filteredSubjects.length} Subject{filteredSubjects.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-400/20 rounded-lg backdrop-blur-sm">
+                          <BookOpen className="w-3 h-3 text-purple-400" />
+                          <span className="text-xs font-medium text-purple-300">
+                            {filteredSubjects.reduce((total, subject) => total + subject.programs.length, 0)} Program{filteredSubjects.reduce((total, subject) => total + subject.programs.length, 0) !== 1 ? 's' : ''}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -677,81 +691,58 @@ function SubjectCard({
   onDeleteProgram: (id: string) => void
 }) {
   return (
-    <Card className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-500 group relative overflow-hidden shadow-2xl">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <Card className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 hover:border-white/20 transition-all duration-500 group relative overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.5)] rounded-3xl">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
       
       {/* Modern Subject Header */}
-      <CardHeader className="p-6 relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4 flex-1">
+      <CardHeader className="p-6 pb-4 relative z-10">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4 flex-1">
             <div className="relative group/icon">
               <div 
-                className="w-16 h-16 rounded-3xl shadow-2xl flex items-center justify-center border-2 border-white/20 relative overflow-hidden"
-                style={{ backgroundColor: subject.color }}
+                className="w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center relative overflow-hidden backdrop-blur-xl"
+                style={{ 
+                  backgroundColor: subject.color,
+                  boxShadow: `0 4px 20px ${subject.color}40`
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                <div className="relative z-10">
-                  <div 
-                    className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
-                  >
-                    <Tags className="w-5 h-5 text-white" />
-                  </div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent"></div>
+                <Tags className="w-7 h-7 text-white relative z-10" />
               </div>
-              <div 
-                className="absolute inset-0 w-16 h-16 rounded-3xl blur-xl opacity-40 group-hover/icon:opacity-60 transition-opacity duration-500"
-                style={{ backgroundColor: subject.color }}
-              />
             </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-3">
-                <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors duration-300 capitalize truncate">
-                  {subject.name}
-                </h3>
+              <h3 className="text-xl font-semibold text-white group-hover:text-blue-200 transition-colors duration-300 capitalize mb-1">
+                {subject.name}
+              </h3>
+              <div className="flex items-center gap-3">
                 <Badge 
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full border ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded-full border backdrop-blur-sm ${
                     subject.isActive 
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-400/30" 
-                      : "bg-gray-500/15 text-gray-400 border-gray-400/30"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-400/20" 
+                      : "bg-gray-500/10 text-gray-400 border-gray-400/20"
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full mr-2 ${
-                    subject.isActive ? "bg-emerald-400" : "bg-gray-400"
-                  }`} />
                   {subject.isActive ? "Active" : "Inactive"}
                 </Badge>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="text-sm font-medium">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 border border-purple-400/20 rounded-full backdrop-blur-sm">
+                  <BookOpen className="w-3 h-3 text-purple-400" />
+                  <span className="text-xs font-medium text-purple-300">
                     {subject.programs.length} {subject.programs.length === 1 ? 'Program' : 'Programs'}
                   </span>
                 </div>
-                
-                <Button
-                  size="sm"
-                  onClick={() => onAddProgram(subject.id)}
-                  className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 border border-blue-400/30 hover:border-blue-400/50 h-8 px-3 text-xs rounded-xl transition-all duration-200 font-medium"
-                >
-                  <Plus className="w-3 h-3 mr-1.5" />
-                  Add Program
-                </Button>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onEdit(subject)}
-              className="w-10 h-10 p-0 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-400/30"
+              className="w-8 h-8 p-0 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 rounded-lg transition-all duration-200"
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-3.5 h-3.5" />
             </Button>
             
             <AlertDialog>
@@ -759,9 +750,9 @@ function SubjectCard({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="w-10 h-10 p-0 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
+                  className="w-8 h-8 p-0 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg transition-all duration-200"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-2xl">
@@ -785,111 +776,159 @@ function SubjectCard({
           </div>
         </div>
         
-        {/* Programs Grid */}
+        {/* Add Program Button */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <Button
+            size="sm"
+            onClick={() => onAddProgram(subject.id)}
+            className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-400/20 hover:border-blue-400/30 h-9 rounded-xl transition-all duration-200 font-medium backdrop-blur-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Program
+          </Button>
+        </div>
+      </CardHeader>
+        
+      
+      {/* Programs Section */}
+      <CardContent className="p-6 pt-0">
         {subject.programs.length > 0 ? (
           <div className="space-y-3">
             {subject.programs.map((program, index) => (
               <div
                 key={program.id}
-                className="group/program bg-gradient-to-r from-white/[0.03] to-white/[0.01] border border-white/10 rounded-2xl p-4 hover:from-white/[0.06] hover:to-white/[0.03] hover:border-white/20 transition-all duration-300"
+                className="group/program bg-gradient-to-br from-white/[0.03] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-gradient-to-br hover:from-white/[0.06] hover:to-white/[0.02] hover:border-white/20 transition-all duration-300 relative overflow-hidden"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="relative">
-                      <div 
-                        className="w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center border border-white/20"
-                        style={{ backgroundColor: program.color }}
-                      >
-                        <span className="text-white font-bold text-sm">
-                          {(index + 1).toString().padStart(2, '0')}
-                        </span>
-                      </div>
-                      <div 
-                        className="absolute inset-0 w-12 h-12 rounded-2xl blur-lg opacity-30"
-                        style={{ backgroundColor: program.color }}
-                      />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h4 className="text-white font-semibold text-base truncate group-hover/program:text-blue-200 transition-colors capitalize">
-                          {program.name}
-                        </h4>
-                        {!program.isActive && (
-                          <Badge className="bg-gray-500/15 text-gray-400 border border-gray-400/30 px-2 py-0.5 text-xs rounded-full">
-                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5" />
-                            Inactive
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-slate-400 text-sm">
-                        Program #{index + 1} • Created for {subject.name}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 opacity-0 group-hover/program:opacity-100 transition-all duration-300">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onEditProgram(program)}
-                      className="w-9 h-9 p-0 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-xl transition-all duration-200"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="w-9 h-9 p-0 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-xl transition-all duration-200"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-2xl">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-white">Delete Program</AlertDialogTitle>
-                          <AlertDialogDescription className="text-slate-400">
-                            This will permanently delete "{program.name}". This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="bg-slate-700/80 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => onDeleteProgram(program.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
+                {/* Subtle background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/[0.02] via-transparent to-blue-500/[0.02] opacity-0 group-hover/program:opacity-100 transition-opacity duration-500"></div>
+                
+                <div className="relative flex flex-col h-full">
+                   {/* Main content area */}
+                   <div className="flex items-start justify-between mb-4">
+                     <div className="flex items-start gap-4 flex-1 min-w-0">
+                       {/* Program number badge */}
+                       <div className="relative flex-shrink-0">
+                         <div 
+                           className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-sm backdrop-blur-sm shadow-lg"
+                           style={{ 
+                             backgroundColor: program.color,
+                             boxShadow: `0 4px 20px ${program.color}30`
+                           }}
+                         >
+                           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl"></div>
+                           <span className="relative z-10">{(index + 1).toString().padStart(2, '0')}</span>
+                         </div>
+                       </div>
+                       
+                       {/* Program details */}
+                       <div className="flex-1 min-w-0">
+                         <div className="flex items-start justify-between">
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-3 mb-3">
+                               <h4 className="text-white font-semibold text-base truncate">
+                                 {program.name}
+                               </h4>
+                               {!program.isActive && (
+                                 <Badge className="bg-red-500/10 text-red-400 border border-red-400/20 px-2 py-0.5 text-xs rounded-full font-medium">
+                                   Inactive
+                                 </Badge>
+                               )}
+                             </div>
+                             
+                             {/* Metadata row */}
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                               <div className="flex items-center gap-1.5 text-xs bg-gradient-to-r from-blue-500/10 to-blue-500/5 px-2.5 py-1.5 rounded-lg border border-blue-400/20">
+                                 <Calendar className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                                 <span className="text-blue-300 font-medium whitespace-nowrap">
+                                   {new Date(program.createdAt).toLocaleDateString('en-US', { 
+                                     month: 'short',
+                                     day: '2-digit',
+                                     year: '2-digit' 
+                                   })}
+                                 </span>
+                               </div>
+                               
+                               <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border ${
+                                 program.isActive 
+                                   ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-400/20'
+                                   : 'bg-gradient-to-r from-gray-500/10 to-gray-500/5 border-gray-400/20'
+                               }`}>
+                                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${program.isActive ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                                 <span className={`font-medium whitespace-nowrap ${program.isActive ? 'text-green-300' : 'text-gray-300'}`}>
+                                   {program.isActive ? 'Active' : 'Inactive'}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                           
+                           {/* Action buttons - positioned at top right */}
+                           <div className="flex items-start gap-1.5 flex-shrink-0 ml-4">
+                             <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={() => onEditProgram(program)}
+                               className="w-8 h-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-400/20 hover:border-blue-400/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                               title="Edit program (including changing subject)"
+                             >
+                               <Edit className="w-3.5 h-3.5" />
+                             </Button>
+                             
+                             <AlertDialog>
+                               <AlertDialogTrigger asChild>
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
+                                   className="w-8 h-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                                 >
+                                   <Trash2 className="w-3.5 h-3.5" />
+                                 </Button>
+                               </AlertDialogTrigger>
+                               <AlertDialogContent className="bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-2xl">
+                                 <AlertDialogHeader>
+                                   <AlertDialogTitle className="text-white">Delete Program</AlertDialogTitle>
+                                   <AlertDialogDescription className="text-slate-400">
+                                     This will permanently delete "{program.name}". This action cannot be undone.
+                                   </AlertDialogDescription>
+                                 </AlertDialogHeader>
+                                 <AlertDialogFooter>
+                                   <AlertDialogCancel className="bg-slate-700/80 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                   <AlertDialogAction 
+                                     onClick={() => onDeleteProgram(program.id)}
+                                     className="bg-red-600 hover:bg-red-700 text-white"
+                                   >
+                                     Delete
+                                   </AlertDialogAction>
+                                 </AlertDialogFooter>
+                               </AlertDialogContent>
+                             </AlertDialog>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 px-6">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 flex items-center justify-center">
-              <BookOpen className="w-10 h-10 text-slate-400 opacity-60" />
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-slate-400 opacity-60" />
             </div>
-            <h4 className="text-white font-semibold text-lg mb-2">No Programs Yet</h4>
-            <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
+            <h4 className="text-white font-medium text-base mb-2">No Programs Yet</h4>
+            <p className="text-slate-400 text-sm mb-4 max-w-xs mx-auto">
               Create your first program under this subject to get started with course organization.
             </p>
             <Button
               onClick={() => onAddProgram(subject.id)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-10 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-9 px-5 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-3.5 h-3.5 mr-2" />
               Create First Program
             </Button>
           </div>
         )}
-      </CardHeader>
+      </CardContent>
     </Card>
   )
 }
@@ -1129,38 +1168,78 @@ function ProgramDialog({
                   <Tags className="w-3 h-3 text-purple-400" />
                 </div>
                 <h3 className="text-sm font-medium text-white/90">Subject Assignment</h3>
+                {editMode && (
+                  <Badge className="ml-2 px-2 py-0.5 text-xs bg-blue-500/10 text-blue-400 border border-blue-400/20">
+                    Change Subject
+                  </Badge>
+                )}
               </div>
               
               <div className="space-y-2">
                 <label className="text-xs font-medium text-white/80 block">
-                  Parent Subject
+                  {editMode ? "Current Subject" : "Parent Subject"}
                 </label>
+                
+                {/* Show current subject info when editing */}
+                {editMode && form.subjectId && (
+                  <div className="p-3 bg-white/[0.02] border border-white/10 rounded-lg mb-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <span>Currently assigned to:</span>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: subjects.find(s => s.id === form.subjectId)?.color || '#666' }}
+                        />
+                        <span className="font-medium text-white">
+                          {subjects.find(s => s.id === form.subjectId)?.name || 'Unknown Subject'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <Select 
                   value={form.subjectId} 
-                  onValueChange={(value) => setForm({ ...form, subjectId: value })}
+                  onValueChange={(value) => {
+                    console.log('Select dropdown changed to:', value)
+                    setForm({ ...form, subjectId: value })
+                  }}
                   required
                 >
                   <SelectTrigger className="glass-select-trigger h-10 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
                                          rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
-                    <SelectValue placeholder="Select a subject" />
+                    <SelectValue placeholder={editMode ? "Select new subject" : "Select a subject"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl">
-                    {subjects
-                      .filter(subject => subject.isActive)
-                      .map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: subject.color }}
-                            />
-                            {subject.name}
-                          </div>
-                        </SelectItem>
-                      ))
-                    }
+                  <SelectContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl" style={{ zIndex: 999999 }}>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: subject.color }}
+                          />
+                          {subject.name}
+                          {!subject.isActive && (
+                            <span className="text-xs text-red-400 ml-1">(inactive)</span>
+                          )}
+                          {editMode && subject.id === form.subjectId && (
+                            <span className="text-xs text-blue-400 ml-1">(current)</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                
+
+                
+                {editMode && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    💡 You can change which subject this program belongs to. This will update all related content.
+                  </p>
+                )}
+                
+
               </div>
             </div>
 
