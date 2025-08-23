@@ -154,6 +154,8 @@ export default function LessonsPage() {
   
   // Add state for admin subjects and programs
   const [adminSubjects, setAdminSubjects] = useState<{id: string, name: string, color: string, isActive: boolean}[]>([])
+  const [subjectPrograms, setSubjectPrograms] = useState<Record<string, string[]>>({})
+  const [subjectColors, setSubjectColors] = useState<Record<string, string>>({})
 
   
   // Filter and pagination states
@@ -184,6 +186,16 @@ export default function LessonsPage() {
   
   // Form state
   const [formData, setFormData] = useState<LessonFormData>(createEmptyFormData())
+
+  // Memoized function to get available programs for a subject
+  const getAvailablePrograms = useMemo(() => {
+    if (!formData.subject) return []
+    
+    // Try state first, then fallback to global variable
+    const programs = subjectPrograms[formData.subject] || SUBJECT_PROGRAMS[formData.subject] || []
+    console.log('Getting programs for subject:', formData.subject, 'Programs:', programs)
+    return programs
+  }, [formData.subject, subjectPrograms])
 
   // Fetch lessons data
   const fetchLessons = async () => {
@@ -242,7 +254,14 @@ export default function LessonsPage() {
         if (subjectProgramsData.success) {
           SUBJECT_PROGRAMS = subjectProgramsData.subjectPrograms || {}
           SUBJECT_COLORS = subjectProgramsData.subjectColors || {}
+          setSubjectPrograms(subjectProgramsData.subjectPrograms || {})
+          setSubjectColors(subjectProgramsData.subjectColors || {})
+          console.log('Loaded SUBJECT_PROGRAMS:', SUBJECT_PROGRAMS)
+        } else {
+          console.error('Failed to load subject programs:', subjectProgramsData)
         }
+      } else {
+        console.error('Subject programs API request failed:', subjectProgramsRes.status, subjectProgramsRes.statusText)
       }
 
       if (adminSubjectsRes.ok) {
@@ -1674,7 +1693,7 @@ export default function LessonsPage() {
                             className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                             style={{ zIndex: 999999 }}
                           >
-                            {formData.subject && SUBJECT_PROGRAMS[formData.subject as keyof typeof SUBJECT_PROGRAMS]?.map((program) => (
+                            {getAvailablePrograms.map((program) => (
                               <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                                 {program}
                               </SelectItem>
@@ -2127,7 +2146,7 @@ export default function LessonsPage() {
                             className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl"
                             style={{ zIndex: 999999 }}
                           >
-                            {formData.subject && SUBJECT_PROGRAMS[formData.subject as keyof typeof SUBJECT_PROGRAMS]?.map((program) => (
+                            {getAvailablePrograms.map((program) => (
                               <SelectItem key={program} value={program} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm">
                                 {program}
                               </SelectItem>
