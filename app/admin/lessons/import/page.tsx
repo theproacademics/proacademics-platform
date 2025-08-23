@@ -490,8 +490,26 @@ export default function LessonsImportPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black">
+      {/* Animated Background Elements - Covers entire screen including nav area */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-4 -left-4 w-72 h-72 bg-gray-800/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/3 -right-8 w-96 h-96 bg-slate-700/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-8 left-1/3 w-80 h-80 bg-gray-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        
+        {/* Additional background elements for nav area */}
+        <div className="absolute top-10 left-10 w-64 h-64 bg-slate-800/4 rounded-full blur-3xl animate-pulse delay-3000"></div>
+        <div className="absolute top-1/2 left-5 w-48 h-48 bg-gray-700/4 rounded-full blur-3xl animate-pulse delay-4000"></div>
+        
+        {/* Extended background elements behind nav */}
+        <div className="absolute top-1/4 left-20 w-56 h-56 bg-slate-600/4 rounded-full blur-3xl animate-pulse delay-5000"></div>
+        <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-gray-800/4 rounded-full blur-3xl animate-pulse delay-6000"></div>
+      </div>
+      
+      {/* Scrollable Content Container */}
+      <div className="absolute inset-0 z-10 overflow-y-auto">
+        <div className="relative z-10 p-6 ml-0 lg:ml-64 min-h-screen">
+          <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <Link href="/admin/lessons">
@@ -1008,6 +1026,8 @@ export default function LessonsImportPage() {
             </CardContent>
           </Card>
         )}
+          </div>
+        </div>
       </div>
     </div>
   )

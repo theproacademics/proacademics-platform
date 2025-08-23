@@ -816,14 +816,14 @@ function SubjectCard({
                 {/* Subtle background pattern */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/[0.02] via-transparent to-blue-500/[0.02] opacity-0 group-hover/program:opacity-100 transition-opacity duration-500"></div>
                 
-                <div className="relative flex flex-col h-full">
-                   {/* Main content area */}
-                   <div className="flex items-start justify-between mb-4">
+                <div className="relative">
+                   {/* Top section with program name and action buttons */}
+                   <div className="flex items-start justify-between mb-6">
                      <div className="flex items-start gap-4 flex-1 min-w-0">
                        {/* Program color strip */}
                        <div className="relative flex-shrink-0">
                          <div 
-                           className="w-1 h-16 rounded-full shadow-md"
+                           className="w-1 h-12 rounded-full shadow-md"
                            style={{ 
                              backgroundColor: program.color,
                              boxShadow: `0 2px 8px ${program.color}40`
@@ -831,49 +831,16 @@ function SubjectCard({
                          />
                        </div>
                        
-                       {/* Program details */}
+                       {/* Program name */}
                        <div className="flex-1 min-w-0">
-                         <div className="flex items-start justify-between">
-                           <div className="flex-1 min-w-0">
-                             <div className="flex items-center gap-3 mb-3">
-                               <h4 className="text-white font-semibold text-base truncate">
-                                 {program.name}
-                               </h4>
-                               {!program.isActive && (
-                                 <Badge className="bg-red-500/10 text-red-400 border border-red-400/20 px-2 py-0.5 text-xs rounded-full font-medium">
-                                   Inactive
-                                 </Badge>
-                               )}
-                             </div>
-                             
-                                                           {/* Metadata row */}
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-12">
-                               <div className="flex items-center gap-1.5 text-xs bg-gradient-to-r from-blue-500/10 to-blue-500/5 px-2.5 py-1.5 rounded-lg border border-blue-400/20">
-                                 <Calendar className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                                 <span className="text-blue-300 font-medium whitespace-nowrap">
-                                   {new Date(program.createdAt).toLocaleDateString('en-US', { 
-                                     month: 'short',
-                                     day: '2-digit',
-                                     year: '2-digit' 
-                                   })}
-                                 </span>
-                               </div>
-                               
-                               <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border ${
-                                 program.isActive 
-                                   ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-400/20'
-                                   : 'bg-gradient-to-r from-gray-500/10 to-gray-500/5 border-gray-400/20'
-                               }`}>
-                                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${program.isActive ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                                 <span className={`font-medium whitespace-nowrap ${program.isActive ? 'text-green-300' : 'text-gray-300'}`}>
-                                   {program.isActive ? 'Active' : 'Inactive'}
-                                 </span>
-                               </div>
-                             </div>
-                           </div>
-                           
-                           {/* Action buttons - positioned at top right */}
-                           <div className="flex items-start gap-1.5 flex-shrink-0 ml-6 mt-5">
+                         <h4 className="text-white font-bold text-xl truncate leading-tight">
+                           {program.name}
+                         </h4>
+                       </div>
+                     </div>
+                     
+                     {/* Action buttons */}
+                     <div className="flex items-center gap-1.5 flex-shrink-0">
                              <Button
                                size="sm"
                                variant="ghost"
@@ -912,9 +879,31 @@ function SubjectCard({
                                  </AlertDialogFooter>
                                </AlertDialogContent>
                              </AlertDialog>
-                           </div>
-                         </div>
-                       </div>
+                     </div>
+                   </div>
+                   
+                   {/* Bottom section with date and status */}
+                   <div className="flex items-center gap-3">
+                     <div className="flex items-center gap-1.5 text-xs bg-gradient-to-r from-blue-500/10 to-blue-500/5 px-2.5 py-1.5 rounded-lg border border-blue-400/20">
+                       <Calendar className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                       <span className="text-blue-300 font-medium whitespace-nowrap">
+                         {new Date(program.createdAt).toLocaleDateString('en-US', { 
+                           month: 'short',
+                           day: '2-digit',
+                           year: '2-digit' 
+                         })}
+                       </span>
+                     </div>
+                     
+                     <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border ${
+                       program.isActive 
+                         ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-400/20'
+                         : 'bg-gradient-to-r from-gray-500/10 to-gray-500/5 border-gray-400/20'
+                     }`}>
+                       <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${program.isActive ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                       <span className={`font-medium whitespace-nowrap ${program.isActive ? 'text-green-300' : 'text-gray-300'}`}>
+                         {program.isActive ? 'Active' : 'Inactive'}
+                       </span>
                      </div>
                    </div>
                  </div>
