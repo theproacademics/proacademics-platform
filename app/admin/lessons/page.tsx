@@ -288,6 +288,25 @@ export default function LessonsPage() {
     fetchFilterOptions()
   }, [])
 
+  // Function to refresh subject-program mapping specifically
+  const refreshSubjectPrograms = async () => {
+    try {
+      const response = await fetch('/api/admin/subjects/programs-map')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          SUBJECT_PROGRAMS = data.subjectPrograms || {}
+          SUBJECT_COLORS = data.subjectColors || {}
+          setSubjectPrograms(data.subjectPrograms || {})
+          setSubjectColors(data.subjectColors || {})
+          console.log('Refreshed SUBJECT_PROGRAMS:', SUBJECT_PROGRAMS)
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing subject programs:', error)
+    }
+  }
+
   // CRUD Operations with optimized error handling
   const handleCreateLesson = useCallback(async () => {
     try {
@@ -1447,7 +1466,13 @@ export default function LessonsPage() {
           )}
 
       {/* Enhanced Create Lesson Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        if (open) {
+          // Refresh subject-program mapping when dialog opens
+          refreshSubjectPrograms()
+        }
+        setIsCreateDialogOpen(open)
+      }}>
                <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] bg-slate-900/80 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-y-auto [&>button]:!hidden">
                 <style jsx global>{`
                   [data-radix-select-content] {
@@ -1900,7 +1925,13 @@ export default function LessonsPage() {
           </Dialog>
 
       {/* Enhanced Edit Lesson Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        if (open) {
+          // Refresh subject-program mapping when dialog opens
+          refreshSubjectPrograms()
+        }
+        setIsEditDialogOpen(open)
+      }}>
         <DialogContent className="w-[95vw] max-w-4xl bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto [&>button]:!hidden">
           <style jsx global>{`
             [data-radix-select-content] {
