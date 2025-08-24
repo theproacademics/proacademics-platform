@@ -248,6 +248,32 @@ class SubjectService {
     return result.deletedCount > 0
   }
 
+  async checkProgramNameExists(name: string, excludeId?: string): Promise<boolean> {
+    const collection = await this.getProgramsCollection()
+    const query: any = { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+    
+    // If excludeId is provided (for updates), exclude that program from the check
+    if (excludeId) {
+      query.id = { $ne: excludeId }
+    }
+    
+    const existingProgram = await collection.findOne(query)
+    return existingProgram !== null
+  }
+
+  async checkSubjectNameExists(name: string, excludeId?: string): Promise<boolean> {
+    const collection = await this.getSubjectsCollection()
+    const query: any = { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+    
+    // If excludeId is provided (for updates), exclude that subject from the check
+    if (excludeId) {
+      query.id = { $ne: excludeId }
+    }
+    
+    const existingSubject = await collection.findOne(query)
+    return existingSubject !== null
+  }
+
   // Combined operations
   async getAllSubjectsWithPrograms(): Promise<SubjectWithPrograms[]> {
     const subjects = await this.getAllSubjects()

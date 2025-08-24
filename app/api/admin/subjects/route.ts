@@ -43,9 +43,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if subject name already exists
+    const nameExists = await subjectService.checkSubjectNameExists(name.trim())
+    if (nameExists) {
+      console.log(`Duplicate subject name detected: "${name.trim()}"`)
+      return NextResponse.json(
+        { success: false, error: "A subject with this name already exists. Please choose a different name." },
+        { status: 409 }
+      )
+    }
+
     const subjectData = {
       id: uuidv4(),
-      name,
+      name: name.trim(),
       color,
       isActive
     }

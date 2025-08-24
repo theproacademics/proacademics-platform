@@ -25,7 +25,8 @@ import {
   Filter,
   MoreVertical,
   Settings,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -103,6 +104,10 @@ export default function SubjectsPage() {
   const [subjectDialogOpen, setSubjectDialogOpen] = useState(false)
   const [programDialogOpen, setProgramDialogOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  
+  // Error states
+  const [subjectError, setSubjectError] = useState("")
+  const [programError, setProgramError] = useState("")
 
   useEffect(() => {
     fetchSubjects()
@@ -151,9 +156,18 @@ export default function SubjectsPage() {
         toast.success(editMode ? "Subject updated successfully" : "Subject created successfully")
         setSubjectDialogOpen(false)
         resetSubjectForm()
+        setSubjectError("")
         fetchSubjects()
       } else {
-        toast.error(data.error || "Failed to save subject")
+        // Handle different error cases
+        if (response.status === 409) {
+          // Conflict - duplicate name
+          setSubjectError(data.error || "A subject with this name already exists")
+          toast.error(data.error || "A subject with this name already exists")
+        } else {
+          setSubjectError(data.error || "Failed to save subject")
+          toast.error(data.error || "Failed to save subject")
+        }
       }
     } catch (error) {
       console.error("Error saving subject:", error)
@@ -178,14 +192,26 @@ export default function SubjectsPage() {
       })
       
       const data = await response.json()
+      console.log('Program submit response:', { status: response.status, ok: response.ok, data })
       
-      if (data.success) {
+      // Check for success or handle specific error statuses
+      if (response.ok && data.success) {
         toast.success(editMode ? "Program updated successfully" : "Program created successfully")
         setProgramDialogOpen(false)
         resetProgramForm()
+        setProgramError("")
         fetchSubjects()
       } else {
-        toast.error(data.error || "Failed to save program")
+        // Handle different error cases
+        console.log('Program submit error:', { status: response.status, error: data.error })
+        if (response.status === 409) {
+          // Conflict - duplicate name
+          setProgramError(data.error || "A program with this name already exists")
+          toast.error(data.error || "A program with this name already exists")
+        } else {
+          setProgramError(data.error || "Failed to save program")
+          toast.error(data.error || "Failed to save program")
+        }
       }
     } catch (error) {
       console.error("Error saving program:", error)
@@ -262,6 +288,7 @@ export default function SubjectsPage() {
       isActive: subject.isActive
     })
     setEditMode(true)
+    setSubjectError("")
     setSubjectDialogOpen(true)
   }
 
@@ -274,11 +301,13 @@ export default function SubjectsPage() {
       isActive: program.isActive
     })
     setEditMode(true)
+    setProgramError("")
     setProgramDialogOpen(true)
   }
 
   const openNewProgram = (subjectId?: string) => {
     resetProgramForm()
+    setProgramError("")
     if (subjectId) {
       setProgramForm(prev => ({ ...prev, subjectId }))
     }
@@ -482,6 +511,7 @@ export default function SubjectsPage() {
                   onSubmit={handleSubjectSubmit}
                   editMode={editMode}
                   onClose={() => setSubjectDialogOpen(false)}
+                  error={subjectError}
                 />
               </Dialog>
               
@@ -505,6 +535,7 @@ export default function SubjectsPage() {
                     editMode={editMode}
                     subjects={subjects}
                     onClose={() => setProgramDialogOpen(false)}
+                    error={programError}
                   />
                 </Dialog>
               </div>
@@ -668,6 +699,7 @@ export default function SubjectsPage() {
                       <Button 
                         onClick={() => {
                           resetSubjectForm()
+                          setSubjectError("")
                           setSubjectDialogOpen(true)
                         }}
                         className="bg-blue-600 hover:bg-blue-700"
@@ -939,13 +971,15 @@ function SubjectDialog({
   setForm, 
   onSubmit, 
   editMode, 
-  onClose 
+  onClose,
+  error
 }: {
   form: any
   setForm: any
   onSubmit: (e: React.FormEvent) => void
   editMode: boolean
   onClose: () => void
+  error: string
 }) {
   return (
     <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl overflow-y-auto [&>button]:!hidden">
@@ -1014,6 +1048,14 @@ function SubjectDialog({
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10"
                   required
                 />
+                {error && (
+                  <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <p className="text-sm text-red-400 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </p>
+                  </div>
+                )}
               </div>
               
 
@@ -1107,7 +1149,8 @@ function ProgramDialog({
   onSubmit, 
   editMode, 
   subjects, 
-  onClose 
+  onClose,
+  error
 }: {
   form: any
   setForm: any
@@ -1115,6 +1158,7 @@ function ProgramDialog({
   editMode: boolean
   subjects: Subject[]
   onClose: () => void
+  error: string
 }) {
   return (
     <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl overflow-y-auto [&>button]:!hidden">
@@ -1264,6 +1308,14 @@ function ProgramDialog({
                            rounded-lg text-sm transition-all duration-200 hover:bg-white/10"
                   required
                 />
+                {error && (
+                  <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <p className="text-sm text-red-400 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </p>
+                  </div>
+                )}
               </div>
               
 

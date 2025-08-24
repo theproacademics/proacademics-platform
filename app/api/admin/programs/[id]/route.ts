@@ -43,7 +43,16 @@ export async function PUT(
       )
     }
 
-    const updateData = { name, subjectId, color, isActive }
+    // Check if program name already exists (excluding current program)
+    const nameExists = await subjectService.checkProgramNameExists(name.trim(), params.id)
+    if (nameExists) {
+      return NextResponse.json(
+        { success: false, error: "A program with this name already exists. Please choose a different name." },
+        { status: 409 }
+      )
+    }
+
+    const updateData = { name: name.trim(), subjectId, color, isActive }
     const updatedProgram = await subjectService.updateProgram(params.id, updateData)
     
     if (!updatedProgram) {

@@ -51,9 +51,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if program name already exists
+    const nameExists = await subjectService.checkProgramNameExists(name.trim())
+    if (nameExists) {
+      console.log(`Duplicate program name detected: "${name.trim()}"`)
+      return NextResponse.json(
+        { success: false, error: "A program with this name already exists. Please choose a different name." },
+        { status: 409 }
+      )
+    }
+
     const programData = {
       id: uuidv4(),
-      name,
+      name: name.trim(),
       subjectId,
       color,
       isActive

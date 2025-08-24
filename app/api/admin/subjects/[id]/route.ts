@@ -43,7 +43,16 @@ export async function PUT(
       )
     }
 
-    const updateData = { name, color, isActive }
+    // Check if subject name already exists (excluding current subject)
+    const nameExists = await subjectService.checkSubjectNameExists(name.trim(), params.id)
+    if (nameExists) {
+      return NextResponse.json(
+        { success: false, error: "A subject with this name already exists. Please choose a different name." },
+        { status: 409 }
+      )
+    }
+
+    const updateData = { name: name.trim(), color, isActive }
     const updatedSubject = await subjectService.updateSubject(params.id, updateData)
     
     if (!updatedSubject) {
