@@ -743,49 +743,49 @@ export default function LessonsPage() {
                   key={lesson.id}
                   className="group p-3 sm:p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
                 >
-                  {/* Glass-style Subject Color Accent */}
+                  {/* Glass-style Subject Color Accent - Mobile Optimized */}
                   {lesson.subject && (
                     <>
-                      {/* Full height glass border */}
+                      {/* Full height glass border - Responsive */}
                       <div 
-                        className="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 backdrop-blur-sm"
+                        className="absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 transition-all duration-300 group-hover:w-1.5 sm:group-hover:w-2 backdrop-blur-sm"
                         style={{ 
                           backgroundColor: getSubjectBorderColor(lesson.subject),
-                          borderRadius: '0 12px 12px 0',
+                          borderRadius: '0 8px 8px 0',
                           boxShadow: `
-                            0 0 20px ${getSubjectBorderColor(lesson.subject)}, 
-                            inset 0 1px 0 rgba(255,255,255,0.4),
-                            inset 0 -1px 0 rgba(255,255,255,0.2)
+                            0 0 10px ${getSubjectBorderColor(lesson.subject)}, 
+                            inset 0 1px 0 rgba(255,255,255,0.3),
+                            inset 0 -1px 0 rgba(255,255,255,0.1)
                           `,
-                          border: `1px solid rgba(255,255,255,0.3)`,
+                          border: `1px solid rgba(255,255,255,0.2)`,
                           borderLeft: 'none'
                         }}
                       />
                       
-                      {/* Glass reflection effect */}
+                      {/* Glass reflection effect - Mobile Optimized */}
                       <div 
-                        className="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2"
+                        className="absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 transition-all duration-300 group-hover:w-1.5 sm:group-hover:w-2"
                         style={{ 
                           background: `linear-gradient(135deg, 
-                            rgba(255,255,255,0.4) 0%, 
+                            rgba(255,255,255,0.3) 0%, 
                             rgba(255,255,255,0.1) 50%, 
                             transparent 100%)`,
-                          borderRadius: '0 12px 12px 0',
+                          borderRadius: '0 8px 8px 0',
                           mixBlendMode: 'overlay'
                         }}
                       />
                       
-                      {/* Enhanced glow without opacity */}
+                      {/* Enhanced glow - Reduced on mobile */}
                       <div 
-                        className="absolute left-1.5 top-0 bottom-0 w-8 transition-all duration-300 group-hover:w-12 group-hover:left-2"
+                        className="absolute left-1 sm:left-1.5 top-0 bottom-0 w-4 sm:w-8 transition-all duration-300 group-hover:w-6 sm:group-hover:w-12 group-hover:left-1.5 sm:group-hover:left-2"
                         style={{ 
                           background: `linear-gradient(90deg, 
                             ${getSubjectBorderColor(lesson.subject)} 0%, 
-                            ${getSubjectBorderColor(lesson.subject)}80 30%, 
-                            ${getSubjectBorderColor(lesson.subject)}40 60%, 
+                            ${getSubjectBorderColor(lesson.subject)}60 30%, 
+                            ${getSubjectBorderColor(lesson.subject)}30 60%, 
                             transparent 100%)`,
-                          filter: 'blur(8px)',
-                          borderRadius: '0 20px 20px 0'
+                          filter: 'blur(4px)',
+                          borderRadius: '0 12px 12px 0'
                         }}
                       />
                     </>
