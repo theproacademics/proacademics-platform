@@ -379,11 +379,11 @@ export default function LessonPage() {
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(139,92,246,0.3),rgba(255,255,255,0))] pointer-events-none" />
       
       {/* Floating 3D elements */}
-      <div className="fixed inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-32 left-16 w-40 h-40 border border-purple-400/40 rounded-full animate-pulse shadow-2xl shadow-purple-500/20"></div>
-        <div className="absolute top-60 right-32 w-28 h-28 border border-blue-400/40 rotate-45 animate-pulse delay-1000 shadow-xl shadow-blue-500/20"></div>
-        <div className="absolute bottom-60 left-1/3 w-24 h-24 border border-indigo-400/40 rounded-lg animate-pulse delay-2000 shadow-lg shadow-indigo-500/20"></div>
-        <div className="absolute top-1/2 right-1/4 w-16 h-16 border border-violet-400/40 rounded-full animate-pulse delay-3000"></div>
+      <div className="fixed inset-0 pointer-events-none opacity-15 sm:opacity-20">
+        <div className="absolute top-32 left-2 sm:left-16 w-16 h-16 sm:w-40 sm:h-40 border border-purple-400/40 rounded-full animate-pulse shadow-2xl shadow-purple-500/20"></div>
+        <div className="absolute top-60 right-4 sm:right-32 w-12 h-12 sm:w-28 sm:h-28 border border-blue-400/40 rotate-45 animate-pulse delay-1000 shadow-xl shadow-blue-500/20"></div>
+        <div className="absolute bottom-60 left-1/4 sm:left-1/3 w-10 h-10 sm:w-24 sm:h-24 border border-indigo-400/40 rounded-lg animate-pulse delay-2000 shadow-lg shadow-indigo-500/20"></div>
+        <div className="absolute top-1/2 right-1/5 sm:right-1/4 w-8 h-8 sm:w-16 sm:h-16 border border-violet-400/40 rounded-full animate-pulse delay-3000"></div>
       </div>
       
       {/* Premium Purple Particles */}
@@ -442,39 +442,39 @@ export default function LessonPage() {
       <Navigation />
 
       <main className="lg:ml-72 min-h-screen relative z-10">
-        <ResponsiveContainer padding="lg" animated>
-          <div className="space-y-6 pb-16">
+        <ResponsiveContainer padding="md" animated>
+          <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20 px-2 sm:px-0">
 
             {/* Lesson Card */}
-            <Card className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group">
+            <Card className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 relative overflow-hidden group">
               {/* Enhanced card background effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-pulse opacity-30" />
               
-              <CardHeader className="pb-4 relative z-10">
+              <CardHeader className="pb-2 sm:pb-4 relative z-10 px-4 sm:px-6 pt-4 sm:pt-6">
               </CardHeader>
               
-              <CardContent className="relative z-10">
+              <CardContent className="relative z-10 p-4 sm:p-6">
                 {/* Video Player Section */}
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-8">
                   {/* Video Player */}
                   <div>
                     {/* Back to Lessons Button Above Video */}
-                    <div className="mb-4">
+                    <div className="mb-4 sm:mb-6">
                       <Button 
                         variant="ghost" 
-                        className="text-white hover:text-purple-300 group rounded-full px-6 py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20"
+                        className="text-white hover:text-purple-300 group rounded-full px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-white/10 transition-all duration-200 border border-white/10 hover:border-white/20 text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
                         onClick={() => {
                           const backConfig = getBackButtonConfig()
                           window.location.href = backConfig.href
                         }}
                       >
-                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+                        <ArrowLeft className="w-4 h-4 sm:w-4 sm:h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                         <span className="font-medium">{getBackButtonConfig().text}</span>
                       </Button>
                     </div>
                     
-                    <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden relative transition-all duration-300">
+                    <div className="aspect-video w-full bg-black rounded-lg sm:rounded-2xl overflow-hidden relative transition-all duration-300">
                   {lesson.videoUrl ? (
                     <>
                           {/* Show video player or click-to-play overlay */}
@@ -533,14 +533,14 @@ export default function LessonPage() {
                               
                               {/* Centered Lock Icon */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-6">
-                                  <div className="bg-white/10 border border-white/30 rounded-full p-4 shadow-2xl group-hover:bg-white/20 transition-all duration-300">
-                                    <Lock className="w-8 h-8 text-white" />
+                                <div className="flex flex-col items-center gap-4 sm:gap-6">
+                                  <div className="bg-white/10 border border-white/30 rounded-full p-3 sm:p-4 shadow-2xl group-hover:bg-white/20 transition-all duration-300">
+                                    <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                                   </div>
                                   
                                   {/* Watch Now Button - Badge Style */}
-                                  <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-blue-400/30 hover:border-blue-400/50 flex items-center gap-2 text-sm">
-                                    <Play className="w-4 h-4 text-white" fill="currentColor" />
+                                  <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 sm:py-2 px-3 sm:px-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-blue-400/30 hover:border-blue-400/50 flex items-center gap-2 text-xs sm:text-sm">
+                                    <Play className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" />
                                     <span>Watch Now</span>
                                   </button>
                                 </div>
@@ -559,70 +559,70 @@ export default function LessonPage() {
                           <div className="text-center relative z-10">
                             <div className="relative">
                               <div className="absolute inset-0 bg-purple-500/30 rounded-full blur-xl animate-pulse"></div>
-                              <Video className="w-16 h-16 text-purple-300 mx-auto mb-4 relative" />
+                              <Video className="w-12 h-12 sm:w-16 sm:h-16 text-purple-300 mx-auto mb-3 sm:mb-4 relative" />
                             </div>
-                            <p className="text-gray-300 text-base font-medium">Video content available soon</p>
+                            <p className="text-gray-300 text-sm sm:text-base font-medium">Video content available soon</p>
                           </div>
                         </div>
                       )}
                   </div>
 
                     {/* Separator Line */}
-                    <div className="border-t border-white/20 my-8 relative">
+                    <div className="border-t border-white/20 my-6 sm:my-8 relative">
                       <div className="absolute inset-0 border-t border-purple-400/20"></div>
                     </div>
 
                     {/* Video Details - Below video */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {/* Lesson Title */}
-                      <h1 className="text-white text-2xl lg:text-3xl font-bold">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
+                      <h1 className="text-white text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">{lesson.lessonName || lesson.topic || 'Untitled Lesson'}</h1>
                       
                       {/* Lesson Tags */}
-                      <div className="flex items-center gap-2.5 flex-wrap">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         {lesson.topic && (
-                          <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-3 py-2 text-sm font-bold border rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
+                          <span className={`inline-flex items-center bg-gradient-to-r ${subjectColors[lesson.subject as keyof typeof subjectColors] || 'from-gray-500/20 to-gray-600/20 border-gray-400/30 text-gray-300'} px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
                             {lesson.topic}
                           </span>
                         )}
                         {lesson.type && (
-                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-2 px-3 py-2 text-sm font-bold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
-                            {lesson.type === 'Lesson' && <GraduationCap className="w-4 h-4" />}
-                            {lesson.type === 'Tutorial' && <Video className="w-4 h-4" />}
-                            {lesson.type === 'Workshop' && <ExternalLink className="w-4 h-4" />}
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                            {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4" />}
+                            {lesson.type === 'Tutorial' && <Video className="w-3 h-3 sm:w-4 sm:h-4" />}
+                            {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />}
                             {lesson.type}
                           </span>
                         )}
                         {lesson.program && (
-                          <span className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 py-2 text-sm font-medium rounded-lg">
-                            <Target className="w-4 h-4 mr-2" />
+                          <span className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-lg">
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                             {lesson.program}
                           </span>
                         )}
                       </div>
 
                       {/* Lesson Info Pills */}
-                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                         {lesson.duration && (
-                          <div className="flex items-center bg-amber-500/15 px-3 py-2 rounded-lg border border-amber-400/25">
-                            <Clock className="w-4 h-4 mr-2 text-amber-400" />
+                          <div className="flex items-center bg-amber-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-amber-400/25">
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-amber-400" />
                             <span className="text-amber-200 font-medium">{lesson.duration}</span>
                           </div>
                         )}
                         {lesson.teacher && (
-                          <div className="flex items-center bg-blue-500/15 px-3 py-2 rounded-lg border border-blue-400/25">
-                            <User className="w-4 h-4 mr-2 text-blue-400" />
-                            <span className="text-blue-200 font-medium truncate max-w-[120px]">{lesson.teacher}</span>
+                          <div className="flex items-center bg-blue-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-blue-400/25">
+                            <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-blue-400" />
+                            <span className="text-blue-200 font-medium truncate max-w-[120px] sm:max-w-[140px]">{lesson.teacher}</span>
                           </div>
                         )}
                         {lesson.subject && (
-                          <div className="flex items-center bg-emerald-500/15 px-3 py-2 rounded-lg border border-emerald-400/25">
-                            <BookOpen className="w-4 h-4 mr-2 text-emerald-400" />
+                          <div className="flex items-center bg-emerald-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-emerald-400/25">
+                            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-emerald-400" />
                             <span className="text-emerald-200 font-medium">{lesson.subject}</span>
                           </div>
                         )}
                         {lesson.time && (
-                          <div className="flex items-center bg-purple-500/15 px-3 py-2 rounded-lg border border-purple-400/25">
-                            <Play className="w-4 h-4 mr-2 text-purple-400" />
+                          <div className="flex items-center bg-purple-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-purple-400/25">
+                            <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-purple-400" />
                             <span className="text-purple-200 font-medium">{lesson.time}</span>
                           </div>
                         )}
@@ -632,8 +632,8 @@ export default function LessonPage() {
                         const date = new Date(lesson.scheduledDate)
                         if (!isNaN(date.getTime())) {
                           return (
-                            <div className="inline-flex items-center bg-slate-500/15 px-3 py-2 rounded-lg border border-slate-400/25 text-sm">
-                              <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+                            <div className="inline-flex items-center bg-slate-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-400/25 text-xs sm:text-sm">
+                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-slate-400" />
                               <span className="text-slate-300 font-medium">
                               {date.toLocaleDateString('en-US', { 
                                 month: 'short', 
@@ -649,9 +649,9 @@ export default function LessonPage() {
 
                       {/* Lesson Description - Matching Other Badges */}
                       {lesson.description && (
-                        <div className="flex items-center bg-cyan-500/15 px-3 py-2 rounded-lg border border-cyan-400/25">
-                          <AlignLeft className="w-4 h-4 mr-2 text-cyan-400" />
-                          <span className="text-cyan-200 font-medium">
+                        <div className="flex items-start bg-cyan-500/15 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-cyan-400/25">
+                          <AlignLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-cyan-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-cyan-200 font-medium text-xs sm:text-sm leading-relaxed">
                             {lesson.description.length > 80 
                               ? lesson.description.substring(0, 80) + '...' 
                               : lesson.description
@@ -663,10 +663,10 @@ export default function LessonPage() {
                   </div>
 
                   {/* Actions Section - Now Below Video */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 sm:space-y-6">
                     <div>
-                      <h3 className="text-white font-semibold mb-4 text-xl">Actions</h3>
-                      <div className="flex flex-wrap gap-4">
+                      <h3 className="text-white font-semibold mb-4 sm:mb-6 text-lg sm:text-xl">Actions</h3>
+                      <div className="flex flex-col gap-4 sm:gap-4">
                         {lesson?.zoomLink && (
                                 <Button 
                                   onClick={() => {
@@ -674,9 +674,9 @@ export default function LessonPage() {
                                       window.open(lesson.zoomLink, '_blank')
                                     }
                                   }}
-                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30"
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 sm:py-5 px-6 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-green-400/30 text-base sm:text-lg w-full justify-center"
                           >
-                            <ExternalLink className="w-5 h-5 mr-2" />
+                            <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
                             Join Live Session
                                   </Button>
                             )}
@@ -686,17 +686,19 @@ export default function LessonPage() {
                               <Button 
                                 onClick={handleMarkAsFinished}
                                 disabled={isFinishing}
-                            className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30"
+                            className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-bold py-4 sm:py-5 px-6 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-amber-400/30 text-base sm:text-lg w-full justify-center"
                               >
                                 {isFinishing ? (
                                   <>
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                Completing Lesson...
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
+                                <span className="hidden sm:inline">Completing Lesson...</span>
+                                <span className="sm:hidden">Completing...</span>
                                   </>
                                 ) : (
                                   <>
-                                <Trophy className="w-5 h-5 mr-2" />
-                                    Complete & Earn XP
+                                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
+                                    <span className="hidden sm:inline">Complete & Earn XP</span>
+                                    <span className="sm:hidden">Complete Lesson</span>
                                   </>
                                 )}
                               </Button>
@@ -704,19 +706,19 @@ export default function LessonPage() {
 
                             {/* Completion Status */}
                             {isFinished && (
-                                <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-xl p-5 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden">
+                                <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-xl p-6 sm:p-8 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden w-full">
                                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 animate-pulse"></div>
                                   <div className="relative z-10">
-                                <div className="flex items-center justify-center gap-3 mb-2">
+                                <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                                       <div className="relative">
                                         <div className="absolute inset-0 bg-emerald-400/50 rounded-full blur-md animate-pulse"></div>
-                                        <CheckCircle className="w-6 h-6 text-emerald-300 relative" />
+                                        <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-300 relative" />
                                       </div>
-                                <span className="text-emerald-200 font-bold text-lg">Lesson Completed!</span>
+                                <span className="text-emerald-200 font-bold text-lg sm:text-xl">Lesson Completed!</span>
                                 </div>
-                                <div className="flex items-center justify-center gap-2">
-                                      <Trophy className="w-4 h-4 text-yellow-400" />
-                                <span className="text-yellow-300 font-bold text-base">+50 XP Earned</span>
+                                <div className="flex items-center justify-center gap-2 sm:gap-3">
+                                      <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+                                <span className="text-yellow-300 font-bold text-base sm:text-lg">+50 XP Earned</span>
                                     </div>
                                 </div>
                               </div>

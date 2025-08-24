@@ -414,7 +414,7 @@ export default function LessonsPage() {
       <Navigation />
 
       <main className="lg:ml-72 min-h-screen relative z-10">
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pt-16 sm:pt-4 lg:pt-8">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col gap-4 mb-6">
@@ -446,7 +446,7 @@ export default function LessonsPage() {
                         className="w-full flex-shrink-0"
                       >
                         {/* Full-width YouTube Thumbnail */}
-                        <div className="aspect-[16/7] relative overflow-hidden">
+                        <div className="aspect-[16/9] sm:aspect-[16/8] lg:aspect-[16/7] relative overflow-hidden">
                           {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
                             <img 
                               src={getVideoThumbnail(lesson.videoUrl)!}
@@ -470,82 +470,134 @@ export default function LessonsPage() {
                           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                           
-                          {/* Content overlaid on thumbnail */}
-                          <div className="absolute inset-0 p-6 lg:p-8 flex items-center">
-                            <div className="max-w-2xl space-y-4">
-                              {/* Recommended Badge */}
-                              <div className="flex items-start gap-4">
-                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-4 py-2 text-sm font-bold">
-                                  <Star className="w-4 h-4 mr-2 fill-current" />
-                                  Recommended
-                                </Badge>
-                              </div>
-                              
-                              {/* Comprehensive Info Badges */}
-                              <div className="flex flex-wrap items-center gap-2">
-                                {lesson.subject && (() => {
-                                  const subjectStyling = getSubjectStyle(lesson.subject)
-                                  return (
-                                    <span 
-                                      className={`inline-flex items-center px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200 ${subjectStyling.className || ''}`}
-                                      style={subjectStyling.style}
-                                    >
-                                      {lesson.subject}
+                          {/* Content overlaid on thumbnail - Mobile First Design */}
+                          <div className="absolute inset-0 p-3 sm:p-4 lg:p-6 xl:p-8 flex items-end sm:items-center">
+                            <div className="w-full max-w-2xl">
+                              {/* Mobile Layout - Minimal Info */}
+                              <div className="block sm:hidden space-y-1.5">
+                                {/* Mobile: Simple badges */}
+                                <div className="flex items-center gap-1.5">
+                                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-1.5 py-0.5 text-xs font-medium">
+                                    <Star className="w-2.5 h-2.5 mr-0.5 fill-current" />
+                                    Recommended
+                                  </Badge>
+                                  {lesson.duration && (
+                                    <span className="inline-flex items-center bg-gradient-to-r from-amber-500/30 to-amber-600/30 border-amber-400/50 text-amber-100 gap-0.5 px-1.5 py-0.5 text-xs font-medium border rounded backdrop-blur-sm">
+                                      <Clock className="w-2.5 h-2.5" />
+                                      {lesson.duration}
                                     </span>
-                                  )
-                                })()}
-                                {lesson.program && (
-                                  <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
-                                    {lesson.program}
-                                  </span>
-                                )}
-                                {lesson.type && (
-                                  <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-green-600/25 border-green-400/40 text-green-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
-                                    {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
-                                    {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
-                                    {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
-                                    {!['Lesson', 'Tutorial', 'Workshop'].includes(lesson.type) && <Video className="w-3 h-3" />}
-                                    {lesson.type}
-                                  </span>
-                                )}
-                                <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-amber-600/25 border-amber-400/40 text-amber-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
-                                  <Clock className="w-3 h-3" />
-                                  {lesson.duration}
-                                </span>
-                              </div>
-                              
-                              {/* Topic */}
-                              <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
-                                {lesson.topic}
-                              </h2>
-                              
-                              {/* Description */}
-                              <p className="text-white/90 text-lg leading-relaxed line-clamp-2 max-w-xl">
-                                {lesson.description}
-                              </p>
-                              
-                              {/* Teacher */}
-                              <div className="flex items-center gap-6 text-white/80">
-                                <div className="flex items-center gap-2">
-                                  <User className="w-4 h-4" />
-                                  <span className="font-medium">{lesson.teacher}</span>
+                                  )}
                                 </div>
-                  </div>
-                              
-                              {/* Watch Now Button */}
-                              <div className="pt-2">
+                                
+                                {/* Mobile: Title only */}
+                                <h2 className="text-base font-semibold text-white leading-tight break-words">
+                                  {lesson.topic || lesson.lessonName || 'Untitled Lesson'}
+                                </h2>
+                                
+                                {/* Mobile: Teacher only */}
+                                {lesson.teacher && (
+                                  <div className="flex items-center text-white/70">
+                                    <User className="w-2.5 h-2.5 mr-1" />
+                                    <span className="font-normal text-xs">{lesson.teacher}</span>
+                                  </div>
+                                )}
+                                
+                                {/* Mobile: Watch Now Button */}
                                 <Button 
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleLessonClick(lesson.id)
                                   }}
-                                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-3 text-lg font-semibold group-hover:scale-105 transition-all duration-300"
+                                  className="bg-gradient-to-r from-blue-600/40 to-purple-600/40 hover:from-blue-500/60 hover:to-purple-500/60 backdrop-blur-md border border-white/30 text-white px-2 py-1 text-xs font-medium transition-all duration-300 rounded-md"
                                 >
-                                  <Play className="w-5 h-5 mr-2" />
+                                  <Play className="w-2.5 h-2.5 mr-1" />
                                   Watch Now
-                                  <ArrowRight className="w-5 h-5 ml-2" />
+                                  <ArrowRight className="w-2.5 h-2.5 ml-1" />
                                 </Button>
-                  </div>
+                              </div>
+
+                              {/* Desktop Layout - Full Info */}
+                              <div className="hidden sm:block space-y-3 lg:space-y-4">
+                                {/* Recommended Badge */}
+                                <div className="flex items-start gap-4">
+                                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-4 py-2 text-sm font-bold">
+                                    <Star className="w-4 h-4 mr-2 fill-current" />
+                                    Recommended
+                                  </Badge>
+                                </div>
+                                
+                                {/* Comprehensive Info Badges */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {lesson.subject && (() => {
+                                    const subjectStyling = getSubjectStyle(lesson.subject)
+                                    return (
+                                      <span 
+                                        className={`inline-flex items-center px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200 ${subjectStyling.className || ''}`}
+                                        style={subjectStyling.style}
+                                      >
+                                        {lesson.subject}
+                                      </span>
+                                    )
+                                  })()}
+                                  {lesson.program && (
+                                    <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                                      {lesson.program}
+                                    </span>
+                                  )}
+                                  {lesson.type && (
+                                    <span className="inline-flex items-center bg-gradient-to-r from-green-500/25 to-green-600/25 border-green-400/40 text-green-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                                      {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
+                                      {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
+                                      {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
+                                      {!['Lesson', 'Tutorial', 'Workshop'].includes(lesson.type) && <Video className="w-3 h-3" />}
+                                      {lesson.type}
+                                    </span>
+                                  )}
+                                  <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-amber-600/25 border-amber-400/40 text-amber-100 gap-1.5 px-2.5 py-1.5 text-xs font-bold border rounded-md shadow-sm hover:shadow-md transition-all duration-200">
+                                    <Clock className="w-3 h-3" />
+                                    {lesson.duration}
+                                  </span>
+                                </div>
+                                
+                                {/* Topic */}
+                                <div className="space-y-2">
+                                  <h2 className="text-lg lg:text-2xl xl:text-3xl font-bold text-white leading-tight break-words max-w-lg">
+                                    {lesson.topic || lesson.lessonName || 'Untitled Lesson'}
+                                  </h2>
+                                  
+                                  {/* Description */}
+                                  {lesson.description && (
+                                    <p className="text-white/80 text-sm lg:text-base leading-relaxed line-clamp-2 max-w-md break-words">
+                                      {lesson.description}
+                                    </p>
+                                  )}
+                                </div>
+                                
+                                {/* Teacher */}
+                                {lesson.teacher && (
+                                  <div className="flex items-center text-white/70">
+                                    <div className="flex items-center gap-2">
+                                      <User className="w-4 h-4" />
+                                      <span className="font-medium text-sm">{lesson.teacher}</span>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Watch Now Button */}
+                                <div className="pt-2">
+                                  <Button 
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleLessonClick(lesson.id)
+                                    }}
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base xl:text-lg font-semibold group-hover:scale-105 transition-all duration-300 w-auto"
+                                  >
+                                    <Play className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
+                                    Watch Now
+                                    <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 ml-2" />
+                                  </Button>
+                                </div>
+                              </div>
                   </div>
                 </div>
                 
@@ -618,9 +670,9 @@ export default function LessonsPage() {
                       </div>
                     </div>
               
-              <div className="flex gap-3">
-                                            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-full sm:w-36 h-9 sm:h-10 bg-white/5 border-white/10 text-white text-sm">
                           <SelectValue placeholder="Subject" />
                         </SelectTrigger>
                         <SelectContent>
@@ -633,7 +685,7 @@ export default function LessonsPage() {
                       </Select>
 
                        <Select value={selectedProgram} onValueChange={setSelectedProgram}>
-                         <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
+                         <SelectTrigger className="w-full sm:w-36 h-9 sm:h-10 bg-white/5 border-white/10 text-white text-sm">
                            <SelectValue placeholder="Program" />
                          </SelectTrigger>
                          <SelectContent>
@@ -647,7 +699,7 @@ export default function LessonsPage() {
 
                       <Button
                         variant="outline"
-                        className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 px-4 py-2 whitespace-nowrap"
+                        className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap w-full sm:w-auto text-sm"
                       >
                         Sort by Recent
                       </Button>
@@ -663,7 +715,7 @@ export default function LessonsPage() {
           </div>
 
           {/* Lessons List - Enhanced UI with Time/Date Left and Thumbnails */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {filteredLessons.map((lesson) => {
               // Parse scheduled date and time
               const scheduledDate = lesson.scheduledDate ? new Date(lesson.scheduledDate) : new Date()
@@ -689,7 +741,7 @@ export default function LessonsPage() {
               return (
                 <div
                   key={lesson.id}
-                  className="group p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
+                  className="group p-3 sm:p-4 lg:p-5 rounded-xl bg-white/8 backdrop-blur-2xl hover:bg-white/12 transition-all duration-300 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl relative overflow-hidden hover:scale-[1.01]"
                 >
                   {/* Glass-style Subject Color Accent */}
                   {lesson.subject && (
@@ -742,61 +794,104 @@ export default function LessonsPage() {
                   {/* Subtle hover gradient effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
-                  <div className="flex items-center gap-4 relative z-10">
-                    {/* Left: Date and Time */}
-                    <div className="flex-shrink-0 text-center min-w-[80px]">
-                      <div className="text-2xl font-bold text-white leading-tight">
-                        {dateString}
+                  {/* Mobile-first responsive layout */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 relative z-10">
+                    {/* Top row on mobile: Date, Time, and Thumbnail */}
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Left: Date and Time */}
+                      <div className="flex-shrink-0 text-center min-w-[70px] sm:min-w-[80px]">
+                        <div className="text-xl sm:text-2xl font-bold text-white leading-tight">
+                          {dateString}
+                        </div>
+                        <div className="text-xs sm:text-sm text-slate-400 font-medium">
+                          {timeString}
+                        </div>
                       </div>
-                      <div className="text-sm text-slate-400 font-medium">
-                        {timeString}
-                      </div>
-                    </div>
 
-                    {/* Separator Line */}
-                    <div className="flex-shrink-0 h-16 lg:h-20 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                      {/* Separator Line - Only on desktop */}
+                      <div className="hidden sm:block flex-shrink-0 h-16 lg:h-20 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
 
-                    {/* Video Thumbnail */}
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative">
-                        {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
-                          <img 
-                            src={getVideoThumbnail(lesson.videoUrl)!}
-                            alt={lesson.lessonName || lesson.topic}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
-                              if (youtubeId && !target.src.includes('mqdefault')) {
-                                target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Video className="w-8 h-8 text-slate-400" />
-                          </div>
-                        )}
-                        
-                        {/* Play overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <div className="w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                            <Play className="w-3 h-3 text-white ml-0.5" />
+                      {/* Video Thumbnail */}
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 relative shadow-lg">
+                          {lesson.videoUrl && getVideoThumbnail(lesson.videoUrl) ? (
+                            <img 
+                              src={getVideoThumbnail(lesson.videoUrl)!}
+                              alt={lesson.lessonName || lesson.topic || 'Video thumbnail'}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
+                                if (youtubeId && !target.src.includes('mqdefault')) {
+                                  target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                } else {
+                                  // Fallback to video icon if image fails completely
+                                  target.style.display = 'none'
+                                  const parent = target.parentElement
+                                  if (parent && !parent.querySelector('.fallback-icon')) {
+                                    const fallback = document.createElement('div')
+                                    fallback.className = 'fallback-icon w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800'
+                                    fallback.innerHTML = '<svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                    parent.appendChild(fallback)
+                                  }
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
+                              <Video className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                            </div>
+                          )}
+                          
+                          {/* Play overlay */}
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                              <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white ml-0.5" />
+                            </div>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Action Button - Moved to top row on mobile */}
+                      <div className="flex-shrink-0 sm:hidden ml-auto">
+                        {(() => {
+                          const lessonStatus = getLessonStatus(lesson)
+                          
+                          return (
+                            <Button 
+                              className={`${lessonStatus.buttonClass} transition-all duration-200 px-3 py-2 text-xs font-semibold whitespace-nowrap`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (lessonStatus.status === 'past') {
+                                  window.location.href = `/lesson/${lesson.id}?from=lessons`
+                                } else {
+                                  if (lesson.zoomLink) {
+                                    window.open(lesson.zoomLink, '_blank')
+                                  } else {
+                                    window.location.href = `/lesson/${lesson.id}?from=lessons`
+                                  }
+                                }
+                              }}
+                              disabled={lessonStatus.disabled}
+                            >
+                              {lessonStatus.buttonText}
+                            </Button>
+                          )
+                        })()}
                       </div>
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-2 sm:space-y-3">
                       {/* Header with Lesson Name and Status */}
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-white text-lg leading-tight">
+                          <h3 className="font-semibold text-white text-sm sm:text-base lg:text-lg leading-tight break-words line-clamp-2">
                             {lesson.lessonName || lesson.topic || 'Untitled Lesson'}
                           </h3>
-                          <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
-                            <span>{lesson.teacher}</span>
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 mt-1">
+                            <span className="truncate">{lesson.teacher}</span>
                           </div>
                         </div>
                         
@@ -804,7 +899,7 @@ export default function LessonsPage() {
                           const lessonStatus = getLessonStatus(lesson)
                           if (lessonStatus.status === 'live') {
                             return (
-                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold animate-pulse border shadow-lg rounded-lg backdrop-blur-sm">
+                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold animate-pulse border shadow-lg rounded-lg backdrop-blur-sm self-start">
                                 <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
                                 LIVE
                               </Badge>
@@ -816,19 +911,19 @@ export default function LessonsPage() {
 
                       {/* Program Badge */}
                       {lesson.program && (
-                        <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-3 py-1.5 text-xs font-semibold rounded-lg">
-                          <Target className="w-3 h-3 mr-1.5" />
+                        <div className="inline-flex items-center bg-indigo-500/15 text-indigo-200 border border-indigo-400/25 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold rounded-lg">
+                          <Target className="w-3 h-3 mr-1 sm:mr-1.5" />
                           {lesson.program}
                         </div>
                       )}
 
                       {/* Subject, Type, and Duration Tags */}
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         {lesson.subject && (() => {
                           const subjectStyling = getSubjectStyle(lesson.subject)
                           return (
                             <span 
-                              className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg border ${subjectStyling.className || ''}`}
+                              className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold rounded-lg border ${subjectStyling.className || ''}`}
                               style={subjectStyling.style}
                             >
                               {lesson.subject}
@@ -836,7 +931,7 @@ export default function LessonsPage() {
                           )
                         })()}
                         {lesson.type && (
-                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
+                          <span className="inline-flex items-center bg-gradient-to-r from-purple-500/25 to-indigo-500/25 border-purple-400/40 text-purple-100 gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-purple-500/35 hover:to-indigo-500/35 transition-all duration-200">
                             {lesson.type === 'Lesson' && <GraduationCap className="w-3 h-3" />}
                             {lesson.type === 'Tutorial' && <Video className="w-3 h-3" />}
                             {lesson.type === 'Workshop' && <ExternalLink className="w-3 h-3" />}
@@ -844,7 +939,7 @@ export default function LessonsPage() {
                           </span>
                         )}
                         {lesson.duration && (
-                          <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-amber-400/40 text-amber-100 gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-amber-500/35 hover:to-orange-500/35 transition-all duration-200">
+                          <span className="inline-flex items-center bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-amber-400/40 text-amber-100 gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold border rounded-lg shadow-sm hover:from-amber-500/35 hover:to-orange-500/35 transition-all duration-200">
                             <Clock className="w-3 h-3" />
                             {lesson.duration}
                           </span>
@@ -853,11 +948,11 @@ export default function LessonsPage() {
 
                       {/* Lesson Description */}
                       {lesson.description && (
-                        <div className="flex items-center bg-cyan-500/15 px-3 py-1.5 rounded-lg border border-cyan-400/25">
-                          <AlignLeft className="w-3 h-3 mr-1.5 text-cyan-400" />
-                          <span className="text-cyan-200 font-semibold text-xs truncate">
-                            {lesson.description.length > 60 
-                              ? lesson.description.substring(0, 60) + '...' 
+                        <div className="flex items-start bg-cyan-500/15 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-cyan-400/25">
+                          <AlignLeft className="w-3 h-3 mr-1 sm:mr-1.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-cyan-200 font-semibold text-xs leading-relaxed">
+                            {lesson.description.length > 50 
+                              ? lesson.description.substring(0, 50) + '...' 
                               : lesson.description
                             }
                           </span>
@@ -865,14 +960,14 @@ export default function LessonsPage() {
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex-shrink-0">
+                    {/* Action Button - Hidden on mobile (shown in top row) */}
+                    <div className="hidden sm:flex flex-shrink-0">
                       {(() => {
                         const lessonStatus = getLessonStatus(lesson)
                         
                         return (
                           <Button 
-                            className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-6 py-2.5 text-sm font-semibold`}
+                            className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap`}
                             onClick={(e) => {
                               e.stopPropagation()
                               // Simple logic: Past = watch lesson (video), Live/Future = join lesson (prefer zoom)
@@ -889,7 +984,7 @@ export default function LessonsPage() {
                               }
                             }}
                           >
-                            {lessonStatus.status === 'live' && <Play className="w-4 h-4 mr-2" />}
+                            {lessonStatus.status === 'live' && <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
                             {lessonStatus.buttonText}
                           </Button>
                         )
