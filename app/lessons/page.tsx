@@ -873,7 +873,6 @@ export default function LessonsPage() {
                                   }
                                 }
                               }}
-                              disabled={lessonStatus.disabled}
                             >
                               {lessonStatus.buttonText}
                             </Button>
