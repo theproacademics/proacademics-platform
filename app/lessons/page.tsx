@@ -131,6 +131,10 @@ const getLessonStatus = (lesson: Lesson) => {
   }
 }
 
+// Platform timezone configuration
+// Change this to set the business timezone for lesson availability
+const PLATFORM_TIMEZONE = 'UTC' // Options: 'UTC', 'Europe/London', 'America/New_York', etc.
+
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -305,8 +309,74 @@ export default function LessonsPage() {
                          (lesson.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSubject = selectedSubject === "all" || lesson.subject === selectedSubject
     const matchesProgram = selectedProgram === "all" || lesson.program === selectedProgram
+    
+    // Check if lesson should be visible based on scheduled date (timezone-aware)
+    const isDateAvailable = (() => {
+      if (!lesson.scheduledDate) {
+        // If no scheduled date, show the lesson (legacy lessons)
+        return true
+      }
+      
+      try {
+        const lessonDate = new Date(lesson.scheduledDate)
+        if (isNaN(lessonDate.getTime())) {
+          // If invalid date, show the lesson to avoid hiding lessons due to data issues
+          return true
+        }
+        
+        // Get current date in the platform's business timezone
+        const now = new Date()
+        let todayInBusinessTZ: Date
+        let lessonDateInBusinessTZ: Date
+        
+        if (PLATFORM_TIMEZONE === 'UTC') {
+          // Use UTC for consistent global behavior
+          todayInBusinessTZ = new Date(Date.UTC(
+            now.getUTCFullYear(), 
+            now.getUTCMonth(), 
+            now.getUTCDate()
+          ))
+          
+          lessonDateInBusinessTZ = new Date(Date.UTC(
+            lessonDate.getUTCFullYear(), 
+            lessonDate.getUTCMonth(), 
+            lessonDate.getUTCDate()
+          ))
+        } else {
+          // Use business timezone (e.g., UK time for UK-based platform)
+          const todayInTZ = new Date(now.toLocaleString('en-US', { timeZone: PLATFORM_TIMEZONE }))
+          todayInBusinessTZ = new Date(todayInTZ.getFullYear(), todayInTZ.getMonth(), todayInTZ.getDate())
+          
+          const lessonInTZ = new Date(lessonDate.toLocaleString('en-US', { timeZone: PLATFORM_TIMEZONE }))
+          lessonDateInBusinessTZ = new Date(lessonInTZ.getFullYear(), lessonInTZ.getMonth(), lessonInTZ.getDate())
+        }
+        
+        // Show lesson only if scheduled date is today or in the past (in business timezone)
+        const isAvailable = lessonDateInBusinessTZ <= todayInBusinessTZ
+        
+        // Debug logging to help understand timezone behavior
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Lesson date check:', {
+            lessonId: lesson.id,
+            lessonTitle: lesson.topic,
+            scheduledDate: lesson.scheduledDate,
+            lessonDateInBusinessTZ: lessonDateInBusinessTZ.toISOString(),
+            todayInBusinessTZ: todayInBusinessTZ.toISOString(),
+            platformTimezone: PLATFORM_TIMEZONE,
+            userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            isAvailable
+          })
+        }
+        
+        return isAvailable
+      } catch (error) {
+        console.warn('Error parsing lesson date:', lesson.scheduledDate, error)
+        // If error parsing date, show the lesson to be safe
+        return true
+      }
+    })()
 
-    return matchesSearch && matchesSubject && matchesProgram
+    return matchesSearch && matchesSubject && matchesProgram && isDateAvailable
   })
 
   const handleLessonClick = (lessonId: string) => {

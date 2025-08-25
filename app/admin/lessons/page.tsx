@@ -68,13 +68,119 @@ interface LessonFormData {
   zoomLink: string
   scheduledDate: string
   time: string
+  timezone: string
   status: 'draft' | 'active'
 }
 
+// Timezone utilities
+const getLocalTimezone = (): string => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+const getTimezoneOffset = (timezone: string): string => {
+  const now = new Date()
+  const utc = new Date(now.getTime() + (now.getTimezoneOffset() * 60000))
+  const targetTime = new Date(utc.toLocaleString("en-US", { timeZone: timezone }))
+  const offset = (targetTime.getTime() - utc.getTime()) / (1000 * 60 * 60)
+  return offset >= 0 ? `+${offset}` : `${offset}`
+}
+
+const combineDateTime = (date: string, time: string, timezone: string): string => {
+  if (!date || !time) return ''
+  
+  try {
+    // Clean up the time string and handle both formats: "2:30 PM" and "2:30pm"
+    const cleanTime = time.trim()
+    
+    // Extract AM/PM and time part
+    let timePart: string
+    let period: string
+    
+    if (cleanTime.includes(' ')) {
+      // Format: "2:30 PM"
+      [timePart, period] = cleanTime.split(' ')
+    } else {
+      // Format: "2:30pm" - extract AM/PM from the end
+      const ampmMatch = cleanTime.match(/(AM|PM)$/i)
+      if (ampmMatch) {
+        period = ampmMatch[1]
+        timePart = cleanTime.replace(/(AM|PM)$/i, '')
+      } else {
+        throw new Error('Invalid time format - missing AM/PM')
+      }
+    }
+    
+    // Parse hours and minutes
+    const [hours, minutes] = timePart.split(':')
+    if (!hours || !minutes) {
+      throw new Error('Invalid time format - missing hours or minutes')
+    }
+    
+    let hour24 = parseInt(hours)
+    const minutesParsed = parseInt(minutes)
+    
+    // Validate parsed values
+    if (isNaN(hour24) || isNaN(minutesParsed) || hour24 < 1 || hour24 > 12 || minutesParsed < 0 || minutesParsed > 59) {
+      throw new Error('Invalid time values')
+    }
+    
+    // Convert to 24-hour format
+    if (period?.toUpperCase() === 'PM' && hour24 !== 12) {
+      hour24 += 12
+    } else if (period?.toUpperCase() === 'AM' && hour24 === 12) {
+      hour24 = 0
+    }
+    
+    // Create a date object in the specified timezone
+    const dateTimeString = `${date}T${hour24.toString().padStart(2, '0')}:${minutesParsed.toString().padStart(2, '0')}:00`
+    const localDate = new Date(dateTimeString)
+    
+    // Validate the created date
+    if (isNaN(localDate.getTime())) {
+      throw new Error('Invalid date created from inputs')
+    }
+    
+    // Convert to UTC for storage
+    return localDate.toISOString()
+  } catch (error) {
+    console.error('Error in combineDateTime:', error, { date, time, timezone })
+    return '' // Return empty string on error
+  }
+}
+
+// Common timezones for the app
+const COMMON_TIMEZONES = [
+  { value: 'UTC', label: 'UTC (GMT+0)' },
+  { value: 'Europe/London', label: 'UK Time - London (GMT+0/+1)' },
+  { value: 'America/New_York', label: 'Eastern Time (GMT-5/-4)' },
+  { value: 'America/Chicago', label: 'Central Time (GMT-6/-5)' },
+  { value: 'America/Denver', label: 'Mountain Time (GMT-7/-6)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (GMT-8/-7)' },
+  { value: 'Europe/Paris', label: 'Paris (GMT+1/+2)' },
+  { value: 'Europe/Berlin', label: 'Berlin (GMT+1/+2)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (GMT+9)' },
+  { value: 'Asia/Shanghai', label: 'Shanghai (GMT+8)' },
+  { value: 'Asia/Dubai', label: 'Dubai (GMT+4)' },
+  { value: 'Asia/Kolkata', label: 'India (GMT+5:30)' },
+  { value: 'Australia/Sydney', label: 'Sydney (GMT+10/+11)' }
+]
+
 // Time validation utility function
 const isValidTimeFormat = (time: string): boolean => {
+  if (!time || time.trim() === '') return false;
+  
+  // More flexible regex to handle various formats:
+  // - Optional leading zero
+  // - Required colon
+  // - Two digits for minutes
+  // - Optional space before AM/PM
+  // - Case insensitive AM/PM
   const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*(AM|PM)$/i;
-  return timeRegex.test(time);
+  
+  // Also accept formats without space like "2:30pm"
+  const timeRegexNoSpace = /^(0?[1-9]|1[0-2]):[0-5][0-9](AM|PM)$/i;
+  
+  return timeRegex.test(time.trim()) || timeRegexNoSpace.test(time.trim());
 };
 
 // Utility functions
@@ -91,6 +197,7 @@ const createEmptyFormData = (): LessonFormData => ({
   zoomLink: "",
   scheduledDate: "",
   time: "",
+  timezone: getLocalTimezone(),
   status: "draft"
 })
 
@@ -364,13 +471,21 @@ export default function LessonsPage() {
   // CRUD Operations with optimized error handling
   const handleCreateLesson = useCallback(async () => {
     try {
+      // Combine date, time, and timezone into a proper ISO string
+      const scheduledDateTime = combineDateTime(formData.scheduledDate, formData.time, formData.timezone)
+      
+      if (!scheduledDateTime) {
+        toast.error('Invalid date/time format. Please check your inputs.')
+        return
+      }
+      
       const response = await fetch('/api/admin/lessons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           description: formData.description || '',
-          scheduledDate: formData.scheduledDate || '',
+          scheduledDate: scheduledDateTime, // Send as ISO string
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
         })
@@ -378,7 +493,16 @@ export default function LessonsPage() {
 
       if (!response.ok) throw new Error('Failed to create lesson')
       
-      toast.success('Lesson created successfully!')
+      toast.success(`Lesson created successfully! Scheduled for ${new Date(scheduledDateTime).toLocaleString('en-US', {
+        timeZone: formData.timezone,
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      })}`)
+      
       setIsCreateDialogOpen(false)
       setFormData(createEmptyFormData())
       
@@ -397,13 +521,21 @@ export default function LessonsPage() {
     if (!selectedLesson) return
     
     try {
+      // Combine date, time, and timezone into a proper ISO string
+      const scheduledDateTime = combineDateTime(formData.scheduledDate, formData.time, formData.timezone)
+      
+      if (!scheduledDateTime) {
+        toast.error('Invalid date/time format. Please check your inputs.')
+        return
+      }
+      
       const response = await fetch(`/api/admin/lessons/${selectedLesson.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           description: formData.description || '',
-          scheduledDate: formData.scheduledDate || '',
+          scheduledDate: scheduledDateTime, // Send as ISO string
           zoomLink: formData.zoomLink || '',
           status: formData.status || 'draft'
         })
@@ -411,7 +543,16 @@ export default function LessonsPage() {
 
       if (!response.ok) throw new Error('Failed to update lesson')
       
-      toast.success('Lesson updated successfully!')
+      toast.success(`Lesson updated successfully! Scheduled for ${new Date(scheduledDateTime).toLocaleString('en-US', {
+        timeZone: formData.timezone,
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      })}`)
+      
       setIsEditDialogOpen(false)
       setSelectedLesson(null)
       setFormData(createEmptyFormData())
@@ -500,6 +641,36 @@ export default function LessonsPage() {
 
   const handleEditLesson = useCallback((lesson: Lesson) => {
     setSelectedLesson(lesson)
+    
+    // Parse existing scheduledDate if it's an ISO string
+    let parsedDate = ''
+    let parsedTime = ''
+    let parsedTimezone = getLocalTimezone()
+    
+    if (lesson.scheduledDate) {
+      try {
+        const date = new Date(lesson.scheduledDate)
+        if (!isNaN(date.getTime())) {
+          // Extract date in local timezone
+          parsedDate = date.toISOString().split('T')[0]
+          // Extract time in local timezone
+          const timeString = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          })
+          parsedTime = timeString
+        }
+      } catch (e) {
+        console.warn('Could not parse scheduledDate:', lesson.scheduledDate)
+        parsedDate = lesson.scheduledDate
+        parsedTime = lesson.time || ''
+      }
+    } else {
+      parsedDate = lesson.scheduledDate || ''
+      parsedTime = lesson.time || ''
+    }
+    
     setFormData({
       lessonName: lesson.lessonName || "",
       title: lesson.topic || "", // Map "topic" from database to "title" in form
@@ -511,8 +682,9 @@ export default function LessonsPage() {
       duration: lesson.duration || "",
       videoUrl: lesson.videoUrl || "",
       zoomLink: lesson.zoomLink || "",
-      scheduledDate: lesson.scheduledDate || "",
-      time: lesson.time || "",
+      scheduledDate: parsedDate,
+      time: parsedTime,
+      timezone: parsedTimezone,
       status: lesson.status || "draft"
     })
 
@@ -1821,8 +1993,8 @@ export default function LessonsPage() {
                       <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
                   </div>
                     
-                    {/* Date and Time */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Date, Time, and Timezone */}
+                    <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Date
@@ -1849,7 +2021,76 @@ export default function LessonsPage() {
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
               </div>
+              
+              <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Timezone
+                        </label>
+                        <Select 
+                          value={formData.timezone} 
+                          onValueChange={(value) => setFormData({...formData, timezone: value})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl max-h-48 overflow-y-auto"
+                            style={{ zIndex: 999999 }}
+                          >
+                            {COMMON_TIMEZONES.map((tz) => (
+                              <SelectItem 
+                                key={tz.value} 
+                                value={tz.value} 
+                                className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm"
+                              >
+                                {tz.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
             </div>
+            
+            {/* Timezone Preview */}
+            {formData.scheduledDate && formData.time && formData.timezone && isValidTimeFormat(formData.time) && (() => {
+              try {
+                const combinedDateTime = combineDateTime(formData.scheduledDate, formData.time, formData.timezone)
+                if (!combinedDateTime) return null
+                
+                const previewDate = new Date(combinedDateTime)
+                if (isNaN(previewDate.getTime())) return null
+                
+                return (
+                  <div className="mt-2 p-3 bg-blue-500/10 border border-blue-400/20 rounded-lg">
+                    <div className="text-xs text-blue-200">
+                      <strong>Preview:</strong> {previewDate.toLocaleString('en-US', {
+                        timeZone: formData.timezone,
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                      })}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      UTC: {combinedDateTime}
+                    </div>
+                  </div>
+                )
+              } catch (error) {
+                console.error('Preview error:', error)
+                return (
+                  <div className="mt-2 p-3 bg-red-500/10 border border-red-400/20 rounded-lg">
+                    <div className="text-xs text-red-200">
+                      <strong>Error:</strong> Invalid time format. Please use format like "2:30 PM" or "2:30pm"
+                    </div>
+                  </div>
+                )
+              }
+            })()}
 
                     {/* Duration and Teacher */}
                     <div className="grid grid-cols-2 gap-4">
@@ -1969,7 +2210,26 @@ export default function LessonsPage() {
                              text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                              transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={handleCreateLesson}
-                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !isValidTimeFormat(formData.time) || !formData.duration || !formData.teacher}
+                    disabled={(() => {
+                      const missing = []
+                      if (!formData.lessonName) missing.push('lessonName')
+                      if (!formData.title) missing.push('title')
+                      if (!formData.subject) missing.push('subject')
+                      if (!formData.program) missing.push('program')
+                      if (!formData.scheduledDate) missing.push('scheduledDate')
+                      if (!formData.time) missing.push('time')
+                      if (!isValidTimeFormat(formData.time)) missing.push('validTime')
+                      if (!formData.duration) missing.push('duration')
+                      if (!formData.teacher) missing.push('teacher')
+                      if (!formData.timezone) missing.push('timezone')
+                      
+                      if (missing.length > 0) {
+                        console.log('Missing fields:', missing, 'Current formData:', formData)
+                      }
+                      
+                      return missing.length > 0
+                    })()
+                  }
               >
                     <Plus className="w-3 h-3 mr-1" />
                 Create Lesson
@@ -2280,8 +2540,8 @@ export default function LessonsPage() {
                       <h3 className="text-sm font-medium text-white/90">Schedule & Details</h3>
                   </div>
                     
-                    {/* Date and Time */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Date, Time, and Timezone */}
+                    <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                         <label className="text-xs font-medium text-white/80 block">
                           Date
@@ -2326,7 +2586,76 @@ export default function LessonsPage() {
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
             </div>
+            
+            <div className="space-y-2">
+                        <label className="text-xs font-medium text-white/80 block">
+                          Timezone
+                        </label>
+                        <Select 
+                          value={formData.timezone} 
+                          onValueChange={(value) => setFormData({...formData, timezone: value})}
+                        >
+                          <SelectTrigger className="glass-select-trigger h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white 
+                                                   rounded-lg text-sm transition-all duration-200 hover:bg-white/10">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl max-h-48 overflow-y-auto"
+                            style={{ zIndex: 999999 }}
+                          >
+                            {COMMON_TIMEZONES.map((tz) => (
+                              <SelectItem 
+                                key={tz.value} 
+                                value={tz.value} 
+                                className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer text-sm"
+                              >
+                                {tz.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
             </div>
+            
+            {/* Timezone Preview for Edit Dialog */}
+            {formData.scheduledDate && formData.time && formData.timezone && isValidTimeFormat(formData.time) && (() => {
+              try {
+                const combinedDateTime = combineDateTime(formData.scheduledDate, formData.time, formData.timezone)
+                if (!combinedDateTime) return null
+                
+                const previewDate = new Date(combinedDateTime)
+                if (isNaN(previewDate.getTime())) return null
+                
+                return (
+                  <div className="mt-2 p-3 bg-blue-500/10 border border-blue-400/20 rounded-lg">
+                    <div className="text-xs text-blue-200">
+                      <strong>Preview:</strong> {previewDate.toLocaleString('en-US', {
+                        timeZone: formData.timezone,
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                      })}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      UTC: {combinedDateTime}
+                    </div>
+                  </div>
+                )
+              } catch (error) {
+                console.error('Edit Preview error:', error)
+                return (
+                  <div className="mt-2 p-3 bg-red-500/10 border border-red-400/20 rounded-lg">
+                    <div className="text-xs text-red-200">
+                      <strong>Error:</strong> Invalid time format. Please use format like "2:30 PM" or "2:30pm"
+                    </div>
+                  </div>
+                )
+              }
+            })()}
 
                     {/* Duration and Teacher */}
             <div className="grid grid-cols-2 gap-4">
@@ -2446,7 +2775,26 @@ export default function LessonsPage() {
                              text-white disabled:opacity-50 disabled:cursor-not-allowed h-9 px-6 rounded-lg text-sm
                              transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                 onClick={handleUpdateLesson}
-                    disabled={!formData.lessonName || !formData.title || !formData.subject || !formData.program || !formData.scheduledDate || !formData.time || !isValidTimeFormat(formData.time) || !formData.duration || !formData.teacher}
+                    disabled={(() => {
+                      const missing = []
+                      if (!formData.lessonName) missing.push('lessonName')
+                      if (!formData.title) missing.push('title')
+                      if (!formData.subject) missing.push('subject')
+                      if (!formData.program) missing.push('program')
+                      if (!formData.scheduledDate) missing.push('scheduledDate')
+                      if (!formData.time) missing.push('time')
+                      if (!isValidTimeFormat(formData.time)) missing.push('validTime')
+                      if (!formData.duration) missing.push('duration')
+                      if (!formData.teacher) missing.push('teacher')
+                      if (!formData.timezone) missing.push('timezone')
+                      
+                      if (missing.length > 0) {
+                        console.log('Edit - Missing fields:', missing, 'Current formData:', formData)
+                      }
+                      
+                      return missing.length > 0
+                    })()
+                  }
               >
                     <Edit className="w-3 h-3 mr-1" />
                 Update Lesson

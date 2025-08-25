@@ -37,6 +37,23 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       description // Add description field
     } = body
 
+    // Parse the scheduled date if provided
+    let parsedScheduledDate = scheduledDate || ''
+    if (scheduledDate) {
+      try {
+        const date = new Date(scheduledDate)
+        if (!isNaN(date.getTime())) {
+          parsedScheduledDate = date.toISOString()
+        } else {
+          console.warn('Invalid scheduled date format:', scheduledDate)
+          parsedScheduledDate = scheduledDate // Keep original if invalid
+        }
+      } catch (e) {
+        console.warn('Could not parse scheduledDate:', scheduledDate)
+        parsedScheduledDate = scheduledDate // Keep original if error
+      }
+    }
+
     const updateData = {
       lessonName: title, // Use title as the main lesson name
       topic: title, // Map "title" from frontend to "topic" in database for compatibility
@@ -47,7 +64,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       duration: duration || '',
       videoUrl: videoUrl || '',
       zoomLink: zoomLink || '',
-      scheduledDate: scheduledDate || '',
+      scheduledDate: parsedScheduledDate,
       time: time || '',
       status: status || 'draft',
       description: description || '', // Include description in update

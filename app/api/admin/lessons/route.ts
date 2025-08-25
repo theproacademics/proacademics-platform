@@ -51,8 +51,8 @@ export async function POST(req: Request) {
       duration, 
       videoUrl, 
       zoomLink, 
-      scheduledDate, 
-      time, 
+      scheduledDate, // Now expects ISO string from timezone conversion
+      time,          // Keep for backward compatibility
       status 
     } = body
 
@@ -62,6 +62,21 @@ export async function POST(req: Request) {
 
     // Generate unique lesson ID
     const lessonId = `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+    // Parse the scheduled date if provided
+    let parsedScheduledDate = ""
+    if (scheduledDate) {
+      try {
+        const date = new Date(scheduledDate)
+        if (!isNaN(date.getTime())) {
+          parsedScheduledDate = date.toISOString()
+        } else {
+          console.warn('Invalid scheduled date format:', scheduledDate)
+        }
+      } catch (e) {
+        console.warn('Could not parse scheduledDate:', scheduledDate)
+      }
+    }
 
     const lesson: Lesson = {
       id: lessonId,
@@ -78,8 +93,8 @@ export async function POST(req: Request) {
       status: status || 'draft',
       createdAt: new Date(),
       updatedAt: new Date(),
-      scheduledDate: scheduledDate || "",
-      time: time || ""
+      scheduledDate: parsedScheduledDate,
+      time: time || "" // Keep for backward compatibility
     }
 
     const createdLesson = await lessonService.createLesson(lesson)
