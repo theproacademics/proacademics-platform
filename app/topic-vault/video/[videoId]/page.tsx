@@ -500,12 +500,6 @@ export default function TopicVideoPage() {
                             <span className="text-emerald-200 font-medium">{video.subject}</span>
                           </div>
                         )}
-                        {video.topicName && (
-                          <div className="flex items-center bg-purple-500/15 px-3 py-2 rounded-lg border border-purple-400/25">
-                            <Target className="w-4 h-4 mr-2 text-purple-400" />
-                            <span className="text-purple-200 font-medium">{video.topicName}</span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Video Description - Matching Other Badges */}
