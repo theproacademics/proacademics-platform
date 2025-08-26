@@ -239,12 +239,63 @@ export default function StudentTopicVaultPage() {
     return match ? match[1] : null
   }
 
+  // Vimeo helper functions
+  const getVimeoVideoId = (url: string): string | null => {
+    // Updated to handle private Vimeo URLs with hash: vimeo.com/VIDEO_ID/HASH
+    const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:\/\w+)?(?:$|\/|\?)/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+
+  const getVimeoHash = (url: string): string | null => {
+    // Extract hash from URLs like: vimeo.com/1112809441/daa2923fb3
+    const regex = /vimeo\.com\/\d+\/([a-zA-Z0-9]+)/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+
+  const isYouTubeUrl = (url: string): boolean => {
+    return url.includes('youtube.com') || url.includes('youtu.be')
+  }
+
+  const isVimeoUrl = (url: string): boolean => {
+    return url.includes('vimeo.com')
+  }
+
   const getVideoThumbnail = (videoUrl: string): string | null => {
     if (!videoUrl) return null
-    const youtubeId = getYouTubeVideoId(videoUrl)
-    if (youtubeId) {
-      return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+    
+    // Handle YouTube videos
+    if (isYouTubeUrl(videoUrl)) {
+      const youtubeId = getYouTubeVideoId(videoUrl)
+      if (youtubeId) {
+        return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+      }
     }
+    
+    // Handle Vimeo videos
+    if (isVimeoUrl(videoUrl)) {
+      const vimeoId = getVimeoVideoId(videoUrl)
+      const hasHash = getVimeoHash(videoUrl)
+      
+      console.log('🎥 Processing Vimeo URL:', videoUrl)
+      console.log('🆔 Extracted ID:', vimeoId)
+      console.log('🔐 Has hash:', hasHash)
+      
+      if (vimeoId) {
+        // For private videos with hash, try vumbnail service first as it works better
+        if (hasHash) {
+          console.log('🔒 Private Vimeo video - using vumbnail service')
+          return `https://vumbnail.com/${vimeoId}.jpg`
+        }
+        
+        // For public videos, try vumbnail service first (more reliable)
+        console.log('🌍 Public Vimeo video - using vumbnail service')
+        console.log('🔗 Thumbnail URL will be:', `https://vumbnail.com/${vimeoId}.jpg`)
+        return `https://vumbnail.com/${vimeoId}.jpg`
+      }
+    }
+    
     return null
   }
 
@@ -418,7 +469,38 @@ export default function StudentTopicVaultPage() {
                                  alt={video.videoName}
                                  className="w-full h-full object-cover"
                                  onError={(e) => {
-                                   e.currentTarget.style.display = 'none'
+                                   const target = e.currentTarget
+                                   console.log('❌ Thumbnail FAILED to load:', target.src)
+                                   console.log('🖼️ Video URL:', video.videoEmbedLink)
+                                   const vimeoId = isVimeoUrl(video.videoEmbedLink) ? getVimeoVideoId(video.videoEmbedLink) : null
+                                   const youtubeId = isYouTubeUrl(video.videoEmbedLink) ? getYouTubeVideoId(video.videoEmbedLink) : null
+                                   
+                                   // Try Vimeo fallbacks
+                                   if (vimeoId) {
+                                     if (target.src.includes('vumbnail.com') && target.src.includes('.jpg') && !target.src.includes('_large')) {
+                                       console.log('🔄 Vumbnail failed, trying CDN thumbnail')
+                                       target.src = `https://i.vimeocdn.com/video/${vimeoId}_640x360.jpg`
+                                     } else if (target.src.includes('i.vimeocdn.com') && target.src.includes('640x360')) {
+                                       console.log('🔄 CDN 640x360 failed, trying smaller size')
+                                       target.src = `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`
+                                     } else if (target.src.includes('295x166')) {
+                                       console.log('🔄 Small CDN failed, trying vumbnail large')
+                                       target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                     } else {
+                                       console.log('❌ All Vimeo thumbnail options failed for video:', vimeoId)
+                                       target.style.display = 'none'
+                                     }
+                                   }
+                                   // Try YouTube fallback
+                                   else if (youtubeId && !target.src.includes('mqdefault')) {
+                                     console.log('🔄 Trying YouTube fallback thumbnail')
+                                     target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                   }
+                                   // Hide if all fallbacks fail
+                                   else {
+                                     console.log('❌ All thumbnail options failed')
+                                     target.style.display = 'none'
+                                   }
                                  }}
                                />
                              ) : (
@@ -635,7 +717,35 @@ export default function StudentTopicVaultPage() {
                                     alt={video.videoName}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
+                                      console.log('🖼️ List thumbnail failed, trying fallback for:', video.videoEmbedLink)
+                                      const target = e.currentTarget
+                                      const vimeoId = isVimeoUrl(video.videoEmbedLink) ? getVimeoVideoId(video.videoEmbedLink) : null
+                                      const youtubeId = isYouTubeUrl(video.videoEmbedLink) ? getYouTubeVideoId(video.videoEmbedLink) : null
+                                      
+                                      // Try Vimeo fallbacks for list view
+                                      if (vimeoId) {
+                                        console.log('❌ List thumbnail FAILED:', target.src)
+                                        if (target.src.includes('vumbnail.com') && !target.src.includes('_large')) {
+                                          console.log('🔄 List vumbnail failed, trying CDN')
+                                          target.src = `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`
+                                        } else if (target.src.includes('i.vimeocdn.com')) {
+                                          console.log('🔄 List CDN failed, trying vumbnail large')
+                                          target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                        } else {
+                                          console.log('❌ All list Vimeo thumbnail options failed')
+                                          target.style.display = 'none'
+                                        }
+                                      }
+                                      // Try YouTube fallback
+                                      else if (youtubeId && !target.src.includes('mqdefault')) {
+                                        console.log('🔄 Trying YouTube fallback for list view')
+                                        target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                      }
+                                      // Hide if all fallbacks fail
+                                      else {
+                                        console.log('❌ All list thumbnail options failed')
+                                        target.style.display = 'none'
+                                      }
                                     }}
                                   />
                                 ) : (

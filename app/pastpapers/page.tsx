@@ -121,25 +121,64 @@ export default function PastPapersPage() {
     waitForFonts: true 
   })
 
-  // Extract video thumbnail URL
+  // Helper functions for video processing
+  const getYouTubeVideoId = (url: string): string | null => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+
+  const getVimeoVideoId = (url: string): string | null => {
+    const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:\/\w+)?(?:$|\/|\?)/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+
+  const getVimeoHash = (url: string): string | null => {
+    const regex = /vimeo\.com\/\d+\/([a-zA-Z0-9]+)/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+
+  const isYouTubeUrl = (url: string): boolean => {
+    return url.includes('youtube.com') || url.includes('youtu.be')
+  }
+
+  const isVimeoUrl = (url: string): boolean => {
+    return url.includes('vimeo.com')
+  }
+
+  // Extract video thumbnail URL with full Vimeo support
   const getVideoThumbnail = (videoUrl: string): string | null => {
     try {
       if (!videoUrl) return null
       
-      // YouTube URL patterns
-      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-      const youtubeMatch = videoUrl.match(youtubeRegex)
-      
-      if (youtubeMatch && youtubeMatch[1]) {
-        return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
+      // Handle YouTube videos
+      if (isYouTubeUrl(videoUrl)) {
+        const youtubeId = getYouTubeVideoId(videoUrl)
+        if (youtubeId) {
+          return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+        }
       }
       
-      // Vimeo URL patterns
-      const vimeoRegex = /vimeo\.com\/(?:.*\/)?(\d+)/
-      const vimeoMatch = videoUrl.match(vimeoRegex)
-      
-      if (vimeoMatch && vimeoMatch[1]) {
-        return null // Could implement Vimeo API call here
+      // Handle Vimeo videos
+      if (isVimeoUrl(videoUrl)) {
+        const vimeoId = getVimeoVideoId(videoUrl)
+        const hasHash = getVimeoHash(videoUrl)
+        
+        console.log('🎥 Processing Vimeo URL on pastpapers page:', videoUrl)
+        console.log('🆔 Extracted ID:', vimeoId)
+        console.log('🔐 Has hash:', hasHash)
+        
+        if (vimeoId) {
+          // Use vumbnail service for both private and public videos
+          if (hasHash) {
+            console.log('🔒 Private Vimeo video - using vumbnail service')
+          } else {
+            console.log('🌍 Public Vimeo video - using vumbnail service')
+          }
+          return `https://vumbnail.com/${vimeoId}.jpg`
+        }
       }
       
       return null
@@ -733,7 +772,33 @@ export default function PastPapersPage() {
                                                 alt={`${question.questionName} thumbnail`}
                                                 className="absolute inset-0 w-full h-full object-cover"
                                                 onError={(e) => {
-                                                  e.currentTarget.style.display = 'none'
+                                                  const target = e.currentTarget
+                                                  console.log('❌ Pastpapers thumbnail FAILED to load:', target.src)
+                                                  console.log('🖼️ Video URL:', question.videoEmbedLink)
+                                                  const youtubeId = question.videoEmbedLink ? getYouTubeVideoId(question.videoEmbedLink) : null
+                                                  const vimeoId = question.videoEmbedLink ? getVimeoVideoId(question.videoEmbedLink) : null
+                                                  
+                                                  // Enhanced Vimeo fallbacks
+                                                  if (vimeoId) {
+                                                    if (target.src.includes('vumbnail.com') && !target.src.includes('_large')) {
+                                                      console.log('🔄 Pastpapers vumbnail failed, trying CDN')
+                                                      target.src = `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`
+                                                    } else if (target.src.includes('i.vimeocdn.com')) {
+                                                      console.log('🔄 Pastpapers CDN failed, trying vumbnail large')
+                                                      target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                                    } else {
+                                                      console.log('❌ All pastpapers Vimeo options failed')
+                                                      target.style.display = 'none'
+                                                    }
+                                                  }
+                                                  // YouTube fallback
+                                                  else if (youtubeId && !target.src.includes('mqdefault')) {
+                                                    console.log('🔄 Pastpapers trying YouTube fallback')
+                                                    target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                                  } else {
+                                                    console.log('❌ All pastpapers thumbnail options failed')
+                                                    target.style.display = 'none'
+                                                  }
                                                 }}
                                               />
                                             )}

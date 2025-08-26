@@ -37,10 +37,115 @@ const getYouTubeVideoId = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+const getVimeoVideoId = (url: string): string | null => {
+  // Updated to handle private Vimeo URLs with hash: vimeo.com/VIDEO_ID/HASH
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:\/\w+)?(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+// New function to extract Vimeo hash from private URLs
+const getVimeoHash = (url: string): string | null => {
+  // Extract hash from URLs like: vimeo.com/1112809441/daa2923fb3
+  const regex = /vimeo\.com\/\d+\/([a-zA-Z0-9]+)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
+}
+
 // Helper function to get YouTube thumbnail
 const getYouTubeThumbnail = (url: string): string | null => {
   const videoId = getYouTubeVideoId(url)
   return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null
+}
+
+// Helper function to check if Vimeo video is embeddable
+const checkVimeoEmbeddable = async (url: string): Promise<{ embeddable: boolean; thumbnailUrl?: string; error?: string }> => {
+  const videoId = getVimeoVideoId(url)
+  if (!videoId) return { embeddable: false, error: 'Invalid video ID' }
+  
+  try {
+    // For private videos with hash, try the original URL first, then fall back to basic URL
+    let apiUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`
+    
+    console.log('Checking Vimeo embeddability with URL:', apiUrl)
+    let response = await fetch(apiUrl)
+    
+    // If private URL fails, try without hash
+    if (!response.ok && getVimeoHash(url)) {
+      console.log('Private URL failed, trying public URL format')
+      apiUrl = `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}`
+      response = await fetch(apiUrl)
+    }
+    
+    if (response.status === 403) {
+      console.log('Vimeo API returned 403 - video is private or embedding disabled')
+      return { embeddable: false, error: 'Video is private or embedding is disabled' }
+    }
+    
+    if (response.status === 404) {
+      console.log('Vimeo API returned 404 - video not found')
+      return { embeddable: false, error: 'Video not found' }
+    }
+    
+    if (!response.ok) {
+      console.log(`Vimeo API returned ${response.status}: ${response.statusText}`)
+      return { embeddable: false, error: `HTTP ${response.status}: ${response.statusText}` }
+    }
+    
+    const data = await response.json()
+    
+    // Check if the response contains error
+    if (data.error) {
+      console.log('Vimeo API returned error in response:', data.error)
+      return { embeddable: false, error: data.error }
+    }
+    
+    console.log('Vimeo video is embeddable')
+    return { 
+      embeddable: true, 
+      thumbnailUrl: data.thumbnail_url 
+    }
+  } catch (error) {
+    console.error('Error checking Vimeo embeddability:', error)
+    return { embeddable: false, error: error instanceof Error ? error.message : 'Network error' }
+  }
+}
+
+// Helper function to get Vimeo thumbnail (requires API call)
+const getVimeoThumbnail = async (url: string): Promise<string | null> => {
+  const result = await checkVimeoEmbeddable(url)
+  return result.thumbnailUrl || null
+}
+
+// Helper function to get video thumbnail (YouTube or Vimeo)
+// For private Vimeo videos, this will return null and we'll fetch via API
+const getVideoThumbnail = (url: string): string | null => {
+  if (isYouTubeUrl(url)) {
+    return getYouTubeThumbnail(url)
+  }
+  // For Vimeo, only use direct thumbnail for public videos
+  // Private videos with hash need API-fetched thumbnails
+  if (isVimeoUrl(url)) {
+    const videoId = getVimeoVideoId(url)
+    const hasHash = getVimeoHash(url)
+    
+    // If it has a hash (private video), don't use direct thumbnail URL
+    if (hasHash) {
+      return null // Will be handled by API fetch
+    }
+    
+    // For public videos, try direct thumbnail
+    return videoId ? `https://i.vimeocdn.com/video/${videoId}_640x360.jpg` : null
+  }
+  return null
 }
 
 const getTypeColor = (type: string) => {
@@ -73,6 +178,9 @@ export default function TopicVideoPage() {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [allVideos, setAllVideos] = useState<SubtopicVideo[]>([])
   const [nextVideo, setNextVideo] = useState<SubtopicVideo | null>(null)
+  const [vimeoError, setVimeoError] = useState(false)
+  const [vimeoEmbeddable, setVimeoEmbeddable] = useState<boolean | null>(null)
+  const [vimeoThumbnail, setVimeoThumbnail] = useState<string | null>(null)
 
   const { showPreloader, mounted: preloaderMounted } = usePreloader({ 
     delay: 1200,
@@ -219,6 +327,122 @@ export default function TopicVideoPage() {
         }
         
         setVideo(foundVideo)
+        
+        // Debug: Log the video data
+        console.log('Found video data:', foundVideo)
+        console.log('Video embed link:', foundVideo.videoEmbedLink)
+        console.log('Is Vimeo URL?', isVimeoUrl(foundVideo.videoEmbedLink))
+        
+        // Check Vimeo embeddability
+        if (foundVideo.videoEmbedLink && isVimeoUrl(foundVideo.videoEmbedLink)) {
+          console.log('Vimeo URL detected:', foundVideo.videoEmbedLink)
+          const vimeoId = getVimeoVideoId(foundVideo.videoEmbedLink)
+          console.log('Extracted Vimeo ID:', vimeoId)
+          console.log('Expected embed URL:', `https://player.vimeo.com/video/${vimeoId}`)
+          
+          // Check if video is embeddable via API (now supporting private URLs with hash)
+          console.log('🎥 Checking Vimeo video embeddability with private URL support')
+          console.log('🔗 Video URL:', foundVideo.videoEmbedLink)
+          
+          // Let's try a different approach - directly test the oEmbed API
+          const testApiUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(foundVideo.videoEmbedLink)}`
+          console.log('🌐 Testing API URL:', testApiUrl)
+          
+          fetch(testApiUrl)
+            .then(response => {
+              console.log('📡 API Response status:', response.status, response.statusText)
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+              }
+              return response.json()
+            })
+            .then(data => {
+              console.log('📊 API Response data:', data)
+              if (data.thumbnail_url) {
+                console.log('🖼️ Found thumbnail in API response:', data.thumbnail_url)
+                setVimeoThumbnail(data.thumbnail_url)
+                setVimeoEmbeddable(true)
+              } else {
+                console.log('❌ No thumbnail in API response')
+                setVimeoEmbeddable(true) // Still embeddable, just no thumbnail
+              }
+            })
+            .catch(apiErr => {
+              console.error('🚫 Direct API test failed:', apiErr)
+              
+              // For private videos, try a hardcoded approach
+              const vimeoId = getVimeoVideoId(foundVideo.videoEmbedLink)
+              const hasHash = getVimeoHash(foundVideo.videoEmbedLink)
+              
+              if (hasHash && vimeoId) {
+                console.log('🔐 Private video - trying alternative thumbnail methods')
+                
+                // Try different Vimeo thumbnail URLs for private videos
+                const possibleThumbnails = [
+                  `https://i.vimeocdn.com/video/${vimeoId}_640x360.jpg`,
+                  `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`,
+                  `https://vumbnail.com/${vimeoId}.jpg`,
+                  `https://vumbnail.com/${vimeoId}_large.jpg`
+                ]
+                
+                console.log('🔍 Trying alternative thumbnail URLs:', possibleThumbnails)
+                
+                // Try to load the first thumbnail to see if it works
+                const testImg = new Image()
+                testImg.onload = () => {
+                  console.log('✅ Alternative thumbnail loaded successfully:', possibleThumbnails[0])
+                  setVimeoThumbnail(possibleThumbnails[0])
+                  setVimeoEmbeddable(true)
+                }
+                testImg.onerror = () => {
+                  console.log('❌ Alternative thumbnail failed, trying next option')
+                  // Try vumbnail service
+                  const testImg2 = new Image()
+                  testImg2.onload = () => {
+                    console.log('✅ Vumbnail thumbnail loaded successfully:', possibleThumbnails[2])
+                    setVimeoThumbnail(possibleThumbnails[2])
+                    setVimeoEmbeddable(true)
+                  }
+                  testImg2.onerror = () => {
+                    console.log('❌ All thumbnail options failed - video embeddable but no thumbnail')
+                    setVimeoEmbeddable(true)
+                  }
+                  testImg2.src = possibleThumbnails[2]
+                }
+                testImg.src = possibleThumbnails[0]
+              }
+              
+              // Fallback to original embeddability check
+              checkVimeoEmbeddable(foundVideo.videoEmbedLink).then(result => {
+                console.log('🔍 Fallback embeddability check:', result)
+                setVimeoEmbeddable(result.embeddable)
+                
+                // Store thumbnail if available
+                if (result.thumbnailUrl) {
+                  console.log('🖼️ Setting Vimeo thumbnail from fallback API:', result.thumbnailUrl)
+                  setVimeoThumbnail(result.thumbnailUrl)
+                }
+                
+                if (!result.embeddable) {
+                  setVimeoError(true)
+                  console.warn('⚠️ Vimeo video cannot be embedded:', result.error)
+                }
+              }).catch(err => {
+                console.error('💥 Error in fallback embeddability check:', err)
+                // For private videos, we'll assume they're embeddable if we have a hash
+                const hasHash = getVimeoHash(foundVideo.videoEmbedLink)
+                if (hasHash) {
+                  console.log('🔐 Private video with hash detected - assuming embeddable')
+                  setVimeoEmbeddable(true)
+                } else {
+                  console.log('🚫 No hash found - assuming not embeddable')
+                  setVimeoEmbeddable(false)
+                  setVimeoError(true)
+                }
+              })
+            })
+        }
+        
         // Auto-unlock the video like in lesson page
         setShowVideoPlayer(true)
         setDataReady(true)
@@ -237,7 +461,21 @@ export default function TopicVideoPage() {
     }
   }, [videoId])
 
-
+  // Force check for Vimeo videos when video state changes (now supports private URLs)
+  useEffect(() => {
+    if (video && video.videoEmbedLink && isVimeoUrl(video.videoEmbedLink)) {
+      const vimeoId = getVimeoVideoId(video.videoEmbedLink)
+      const vimeoHash = getVimeoHash(video.videoEmbedLink)
+      console.log('Force checking video on state change:', vimeoId, 'Hash:', vimeoHash)
+      
+      // For private videos with hash, assume they're embeddable
+      if (vimeoHash) {
+        console.log('Private Vimeo video with hash detected - should be embeddable')
+        setVimeoEmbeddable(true)
+        setVimeoError(false)
+      }
+    }
+  }, [video])
 
   const handleBack = () => {
     router.back()
@@ -377,42 +615,165 @@ export default function TopicVideoPage() {
                           {showVideoPlayer ? (
                             // Actual Video Player
                             <>
-                              {isStreamingUrl(video.videoEmbedLink) && getYouTubeVideoId(video.videoEmbedLink) ? (
+                              {isYouTubeUrl(video.videoEmbedLink) && getYouTubeVideoId(video.videoEmbedLink) ? (
                                 // Handle YouTube URLs
                                 <iframe
                                   src={`https://www.youtube.com/embed/${getYouTubeVideoId(video.videoEmbedLink)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                                                                     title={video.videoName || 'Video'}
-                                   className="w-full h-full"
-                                   allowFullScreen
-                                   frameBorder="0"
-                                   sandbox="allow-same-origin allow-scripts allow-presentation"
-                                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                                 />
+                                  title={video.videoName || 'YouTube Video'}
+                                  className="w-full h-full"
+                                  allowFullScreen
+                                  frameBorder="0"
+                                  sandbox="allow-same-origin allow-scripts allow-presentation"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                />
+                              ) : isVimeoUrl(video.videoEmbedLink) && getVimeoVideoId(video.videoEmbedLink) && vimeoEmbeddable !== false ? (
+                                // Handle Vimeo URLs (only if embeddable or unknown)
+                                (() => {
+                                  const vimeoId = getVimeoVideoId(video.videoEmbedLink)
+                                  const vimeoHash = getVimeoHash(video.videoEmbedLink)
+                                  
+                                  // Build embed URL with hash if available (for private videos)
+                                  let embedUrl = `https://player.vimeo.com/video/${vimeoId}`
+                                  const params = new URLSearchParams({
+                                    badge: '0',
+                                    autopause: '0',
+                                    player_id: '0',
+                                    app_id: '58479'
+                                  })
+                                  
+                                  if (vimeoHash) {
+                                    params.set('h', vimeoHash)
+                                  }
+                                  
+                                  embedUrl += '?' + params.toString()
+                                  
+                                  console.log('Generated Vimeo embed URL:', embedUrl)
+                                  
+                                  return (
+                                    <iframe
+                                      src={embedUrl}
+                                      title={video.videoName || 'Vimeo Video'}
+                                      className="w-full h-full"
+                                      allowFullScreen
+                                      frameBorder="0"
+                                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                      referrerPolicy="strict-origin-when-cross-origin"
+                                      onError={(e) => {
+                                        console.error('Vimeo iframe failed to load:', e)
+                                        setVimeoError(true)
+                                      }}
+                                      onLoad={() => {
+                                        console.log('Vimeo iframe loaded successfully')
+                                      }}
+                                    />
+                                  )
+                                })()
+                              ) : isVimeoUrl(video.videoEmbedLink) && vimeoEmbeddable === false ? (
+                                // Show error immediately for non-embeddable Vimeo videos
+                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-red-900/30 to-slate-900/70 flex items-center justify-center">
+                                  <div className="text-center p-6">
+                                    <Video className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                                    <h3 className="text-white text-lg font-semibold mb-2">Video Cannot Be Embedded</h3>
+                                    <p className="text-gray-300 text-sm mb-4">This Vimeo video has privacy settings that prevent embedding on external sites.</p>
+                                    <div className="space-y-3">
+                                      <a 
+                                        href={video.videoEmbedLink} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                      >
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        Watch on Vimeo
+                                      </a>
+                                      <p className="text-xs text-gray-400">
+                                        💡 Admin tip: Change video privacy to "Anyone" and enable "Allow embedding" in Vimeo settings
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
                               ) : (
-                                                                 // Handle direct video files
-                                 <video
-                                   src={video.videoEmbedLink}
-                                   controls
-                                   className="w-full h-full"
-                                   poster="/video-placeholder.jpg"
-                                 />
+                                // Handle direct video files
+                                <video
+                                  src={video.videoEmbedLink}
+                                  controls
+                                  className="w-full h-full"
+                                  poster="/video-placeholder.jpg"
+                                />
+                              )}
+                              
+                              {/* Vimeo Error Overlay */}
+                              {vimeoError && isVimeoUrl(video.videoEmbedLink) && (
+                                <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                                  <div className="text-center p-6">
+                                    <Video className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                                    <h3 className="text-white text-lg font-semibold mb-2">Video Unavailable</h3>
+                                    <p className="text-gray-300 text-sm mb-4">This Vimeo video cannot be embedded due to privacy settings.</p>
+                                    <a 
+                                      href={video.videoEmbedLink} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                    >
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                      Watch on Vimeo
+                                    </a>
+                                  </div>
+                                </div>
                               )}
                             </>
                           ) : (
                             // Click-to-Play Overlay with Lock
                             <div className="w-full h-full relative cursor-pointer group" onClick={handleWatchNow}>
                               {/* Video Thumbnail with Heavy Blur */}
-                              {isStreamingUrl(video.videoEmbedLink) && getYouTubeThumbnail(video.videoEmbedLink) ? (
-                                <img 
-                                  src={getYouTubeThumbnail(video.videoEmbedLink)!}
-                                  alt={video.videoName || 'Video Thumbnail'}
-                                  className="w-full h-full object-cover blur-lg group-hover:blur-md transition-all duration-500"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500">
-                                  <Video className="w-16 h-16 text-purple-300" />
-                                </div>
-                              )}
+                              {(() => {
+                                // Determine which thumbnail to use
+                                let thumbnailUrl = null
+                                
+                                if (isVimeoUrl(video.videoEmbedLink)) {
+                                  // For Vimeo, prefer API-fetched thumbnail, fallback to direct URL
+                                  thumbnailUrl = vimeoThumbnail || getVideoThumbnail(video.videoEmbedLink)
+                                  console.log('🖼️ Thumbnail decision for Vimeo:')
+                                  console.log('   - API thumbnail (vimeoThumbnail):', vimeoThumbnail)
+                                  console.log('   - Direct thumbnail:', getVideoThumbnail(video.videoEmbedLink))
+                                  console.log('   - Final choice:', thumbnailUrl)
+                                } else if (isStreamingUrl(video.videoEmbedLink)) {
+                                  // For other videos (YouTube, etc.)
+                                  thumbnailUrl = getVideoThumbnail(video.videoEmbedLink)
+                                  console.log('🖼️ Non-Vimeo thumbnail:', thumbnailUrl)
+                                }
+                                
+                                return thumbnailUrl ? (
+                                  <img 
+                                    src={thumbnailUrl}
+                                    alt={video.videoName || 'Video Thumbnail'}
+                                    className="w-full h-full object-cover blur-lg group-hover:blur-md transition-all duration-500"
+                                    onError={(e) => {
+                                      // Fallback if thumbnail fails to load
+                                      const target = e.currentTarget
+                                      const vimeoId = video.videoEmbedLink ? getVimeoVideoId(video.videoEmbedLink) : null
+                                      const youtubeId = video.videoEmbedLink ? getYouTubeVideoId(video.videoEmbedLink) : null
+                                      
+                                      if (vimeoId && !target.src.includes('vumbnail')) {
+                                        target.src = `https://vumbnail.com/${vimeoId}.jpg`
+                                      } else if (youtubeId && !target.src.includes('mqdefault')) {
+                                        target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                      } else {
+                                        target.style.display = 'none'
+                                        target.nextElementSibling?.classList.remove('hidden')
+                                      }
+                                    }}
+                                  />
+                                ) : null
+                              })()}
+                              <div className={`w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500 ${(() => {
+                                // Hide fallback if we have a thumbnail (API-fetched or direct)
+                                const hasThumbnail = isVimeoUrl(video.videoEmbedLink) 
+                                  ? (vimeoThumbnail || getVideoThumbnail(video.videoEmbedLink))
+                                  : (isStreamingUrl(video.videoEmbedLink) && getVideoThumbnail(video.videoEmbedLink))
+                                return hasThumbnail ? 'hidden' : ''
+                              })()}`}>
+                                <Video className="w-16 h-16 text-purple-300" />
+                              </div>
                               
                               {/* Heavy dark overlay */}
                               <div className="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition-all duration-500"></div>

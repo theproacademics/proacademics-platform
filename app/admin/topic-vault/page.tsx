@@ -75,6 +75,71 @@ interface PaginatedTopics {
   totalPages: number
 }
 
+// Video utility functions
+const getYouTubeVideoId = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const getVimeoVideoId = (url: string): string | null => {
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
+}
+
+  // Function to extract URL from iframe embed code or return the original URL
+  const extractUrlFromIframe = (input: string): string => {
+    if (!input) return input
+    
+    // Check if input is an iframe
+    const iframeSrcMatch = input.match(/src=["']([^"']+)["']/i)
+    if (iframeSrcMatch) {
+      const embedUrl = iframeSrcMatch[1]
+      console.log('🎬 Extracted embed URL from iframe:', embedUrl)
+      
+      // Convert embed URLs back to regular URLs
+      // YouTube embed -> regular URL
+      const youtubeEmbedMatch = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)
+      if (youtubeEmbedMatch) {
+        const regularUrl = `https://www.youtube.com/watch?v=${youtubeEmbedMatch[1]}`
+        console.log('📺 Converted YouTube embed to regular URL:', regularUrl)
+        return regularUrl
+      }
+      
+      // Vimeo embed -> regular URL
+      const vimeoEmbedMatch = embedUrl.match(/player\.vimeo\.com\/video\/(\d+)/)
+      if (vimeoEmbedMatch) {
+        const videoId = vimeoEmbedMatch[1]
+        // Check for hash parameter (for private videos)
+        const hashMatch = embedUrl.match(/[?&]h=([^&]+)/)
+        const regularUrl = hashMatch 
+          ? `https://vimeo.com/${videoId}/${hashMatch[1]}`
+          : `https://vimeo.com/${videoId}`
+        console.log('🎥 Converted Vimeo embed to regular URL:', regularUrl)
+        return regularUrl
+      }
+      
+      // If it's already a valid embed URL, return as is
+      return embedUrl
+    }
+    
+    // If not an iframe, return the original input (assume it's already a URL)
+    return input
+  }
+
+  const isValidVideoUrl = (url: string): boolean => {
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
+  }
+
 // Utility functions
 const createEmptyTopicFormData = (): TopicFormData => ({
   topicName: "",
@@ -2373,9 +2438,12 @@ export default function TopicVaultPage() {
                       Video Embed Link *
                   </label>
                   <Input 
-                    placeholder="Enter video embed link (required)" 
+                    placeholder="URL: https://vimeo.com/123 or Embed: <iframe src=...>"
                       value={subtopicFormData.videoEmbedLink}
-                      onChange={(e) => setSubtopicFormData({...subtopicFormData, videoEmbedLink: e.target.value})}
+                      onChange={(e) => {
+                        const extractedUrl = extractUrlFromIframe(e.target.value)
+                        setSubtopicFormData({...subtopicFormData, videoEmbedLink: extractedUrl})
+                      }}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />
@@ -2991,9 +3059,12 @@ export default function TopicVaultPage() {
                     Video Embed Link *
                   </label>
                   <Input 
-                    placeholder="https://youtube.com/watch?v=... or embed URL" 
+                    placeholder="URL: https://vimeo.com/123 or Embed: <iframe src=...>"
                     value={subtopicFormData.videoEmbedLink}
-                    onChange={(e) => setSubtopicFormData({...subtopicFormData, videoEmbedLink: e.target.value})}
+                    onChange={(e) => {
+                      const extractedUrl = extractUrlFromIframe(e.target.value)
+                      setSubtopicFormData({...subtopicFormData, videoEmbedLink: extractedUrl})
+                    }}
                     className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                              rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                   />

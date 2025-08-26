@@ -12,6 +12,71 @@ import { ArrowLeft, Plus, Edit, Trash2, PlayCircle, X, FileTextIcon } from "luci
 import { toast } from "sonner"
 import { PastPaper, QuestionVideo, QuestionVideoFormData } from "@/types"
 
+// Video utility functions
+const getYouTubeVideoId = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const getVimeoVideoId = (url: string): string | null => {
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
+}
+
+  // Function to extract URL from iframe embed code or return the original URL
+  const extractUrlFromIframe = (input: string): string => {
+    if (!input) return input
+    
+    // Check if input is an iframe
+    const iframeSrcMatch = input.match(/src=["']([^"']+)["']/i)
+    if (iframeSrcMatch) {
+      const embedUrl = iframeSrcMatch[1]
+      console.log('🎬 Extracted embed URL from iframe:', embedUrl)
+      
+      // Convert embed URLs back to regular URLs
+      // YouTube embed -> regular URL
+      const youtubeEmbedMatch = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)
+      if (youtubeEmbedMatch) {
+        const regularUrl = `https://www.youtube.com/watch?v=${youtubeEmbedMatch[1]}`
+        console.log('📺 Converted YouTube embed to regular URL:', regularUrl)
+        return regularUrl
+      }
+      
+      // Vimeo embed -> regular URL
+      const vimeoEmbedMatch = embedUrl.match(/player\.vimeo\.com\/video\/(\d+)/)
+      if (vimeoEmbedMatch) {
+        const videoId = vimeoEmbedMatch[1]
+        // Check for hash parameter (for private videos)
+        const hashMatch = embedUrl.match(/[?&]h=([^&]+)/)
+        const regularUrl = hashMatch 
+          ? `https://vimeo.com/${videoId}/${hashMatch[1]}`
+          : `https://vimeo.com/${videoId}`
+        console.log('🎥 Converted Vimeo embed to regular URL:', regularUrl)
+        return regularUrl
+      }
+      
+      // If it's already a valid embed URL, return as is
+      return embedUrl
+    }
+    
+    // If not an iframe, return the original input (assume it's already a URL)
+    return input
+  }
+
+  const isValidVideoUrl = (url: string): boolean => {
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
+  }
+
 // Utility function to ensure URLs have proper protocol
 const ensureUrlProtocol = (url: string): string => {
   if (!url) return ""
@@ -660,11 +725,14 @@ function QuestionDialog({
               </div>
               
               <div className="md:col-span-2">
-                <label className="text-white text-sm font-medium mb-2 block">Video Embed Link *</label>
+                <label className="text-white text-sm font-medium mb-2 block">Video URL (YouTube or Vimeo) *</label>
                 <Input
-                  placeholder="https://www.youtube.com/embed/..."
+                  placeholder="URL: https://vimeo.com/123 or Embed: <iframe src=...>"
                   value={formData.videoEmbedLink}
-                  onChange={(e) => setFormData({...formData, videoEmbedLink: e.target.value})}
+                  onChange={(e) => {
+                    const extractedUrl = extractUrlFromIframe(e.target.value)
+                    setFormData({...formData, videoEmbedLink: extractedUrl})
+                  }}
                   className="bg-white/10 border-white/20 text-white focus:border-blue-400/50"
                 />
               </div>

@@ -19,14 +19,61 @@ const getYouTubeVideoId = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+// Helper function to get Vimeo video ID
+const getVimeoVideoId = (url: string): string | null => {
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+// Helper function to check if URL is YouTube
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+// Helper function to check if URL is Vimeo
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
+}
+
+// Helper function to extract Vimeo hash from private URLs
+const getVimeoHash = (url: string): string | null => {
+  const regex = /vimeo\.com\/\d+\/([a-zA-Z0-9]+)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
 // Helper function to get video thumbnail
 const getVideoThumbnail = (videoUrl: string): string | null => {
   if (!videoUrl) return null
   
   // For YouTube videos, get thumbnail
-  const youtubeId = getYouTubeVideoId(videoUrl)
-  if (youtubeId) {
-    return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+  if (isYouTubeUrl(videoUrl)) {
+    const youtubeId = getYouTubeVideoId(videoUrl)
+    if (youtubeId) {
+      return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+    }
+  }
+  
+  // For Vimeo videos, get thumbnail
+  if (isVimeoUrl(videoUrl)) {
+    const vimeoId = getVimeoVideoId(videoUrl)
+    const hasHash = getVimeoHash(videoUrl)
+    
+    console.log('🎥 Processing Vimeo URL on lessons page:', videoUrl)
+    console.log('🆔 Extracted ID:', vimeoId)
+    console.log('🔐 Has hash:', hasHash)
+    
+    if (vimeoId) {
+      // For both private and public videos, use vumbnail service (most reliable)
+      if (hasHash) {
+        console.log('🔒 Private Vimeo video - using vumbnail service')
+        return `https://vumbnail.com/${vimeoId}.jpg`
+      } else {
+        console.log('🌍 Public Vimeo video - using vumbnail service')
+        return `https://vumbnail.com/${vimeoId}.jpg`
+      }
+    }
   }
   
   // For other video URLs, return null (will show placeholder)
@@ -524,8 +571,30 @@ export default function LessonsPage() {
                               className="w-full h-full object-cover object-center"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement
+                                console.log('❌ Banner thumbnail FAILED to load:', target.src)
+                                console.log('🖼️ Video URL:', lesson.videoUrl)
                                 const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
-                                if (youtubeId && !target.src.includes('mqdefault')) {
+                                const vimeoId = lesson.videoUrl ? getVimeoVideoId(lesson.videoUrl) : null
+                                
+                                // Enhanced Vimeo fallbacks
+                                if (vimeoId) {
+                                  if (target.src.includes('vumbnail.com') && !target.src.includes('_large')) {
+                                    console.log('🔄 Banner vumbnail failed, trying CDN')
+                                    target.src = `https://i.vimeocdn.com/video/${vimeoId}_640x360.jpg`
+                                  } else if (target.src.includes('i.vimeocdn.com') && target.src.includes('640x360')) {
+                                    console.log('🔄 Banner CDN failed, trying smaller size')
+                                    target.src = `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`
+                                  } else if (target.src.includes('295x166')) {
+                                    console.log('🔄 Banner small CDN failed, trying vumbnail large')
+                                    target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                  } else {
+                                    console.log('❌ All banner Vimeo options failed')
+                                    // Don't hide banner completely, just leave it
+                                  }
+                                }
+                                // YouTube fallback
+                                else if (youtubeId && !target.src.includes('mqdefault')) {
+                                  console.log('🔄 Banner trying YouTube fallback')
                                   target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
                                 }
                               }}
@@ -892,11 +961,39 @@ export default function LessonsPage() {
                               loading="lazy"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement
+                                console.log('❌ Card thumbnail FAILED to load:', target.src)
+                                console.log('🖼️ Video URL:', lesson.videoUrl)
                                 const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
-                                if (youtubeId && !target.src.includes('mqdefault')) {
+                                const vimeoId = lesson.videoUrl ? getVimeoVideoId(lesson.videoUrl) : null
+                                
+                                // Enhanced Vimeo fallbacks
+                                if (vimeoId) {
+                                  if (target.src.includes('vumbnail.com') && !target.src.includes('_large')) {
+                                    console.log('🔄 Card vumbnail failed, trying CDN')
+                                    target.src = `https://i.vimeocdn.com/video/${vimeoId}_295x166.jpg`
+                                  } else if (target.src.includes('i.vimeocdn.com')) {
+                                    console.log('🔄 Card CDN failed, trying vumbnail large')
+                                    target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                  } else {
+                                    console.log('❌ All card Vimeo options failed')
+                                    // Fallback to video icon
+                                    target.style.display = 'none'
+                                    const parent = target.parentElement
+                                    if (parent && !parent.querySelector('.fallback-icon')) {
+                                      const fallback = document.createElement('div')
+                                      fallback.className = 'fallback-icon w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800'
+                                      fallback.innerHTML = '<svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                      parent.appendChild(fallback)
+                                    }
+                                  }
+                                }
+                                // YouTube fallback
+                                else if (youtubeId && !target.src.includes('mqdefault')) {
+                                  console.log('🔄 Card trying YouTube fallback')
                                   target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
                                 } else {
-                                  // Fallback to video icon if image fails completely
+                                  console.log('❌ All card thumbnail options failed')
+                                  // Fallback to video icon
                                   target.style.display = 'none'
                                   const parent = target.parentElement
                                   if (parent && !parent.querySelector('.fallback-icon')) {

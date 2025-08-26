@@ -204,6 +204,46 @@ const createEmptyFormData = (): LessonFormData => ({
 
 
 // Helper functions for video handling
+// Function to extract URL from iframe embed code or return the original URL
+const extractUrlFromIframe = (input: string): string => {
+  if (!input) return input
+  
+  // Check if input is an iframe
+  const iframeSrcMatch = input.match(/src=["']([^"']+)["']/i)
+  if (iframeSrcMatch) {
+    const embedUrl = iframeSrcMatch[1]
+    console.log('🎬 Extracted embed URL from iframe:', embedUrl)
+    
+    // Convert embed URLs back to regular URLs
+    // YouTube embed -> regular URL
+    const youtubeEmbedMatch = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)
+    if (youtubeEmbedMatch) {
+      const regularUrl = `https://www.youtube.com/watch?v=${youtubeEmbedMatch[1]}`
+      console.log('📺 Converted YouTube embed to regular URL:', regularUrl)
+      return regularUrl
+    }
+    
+    // Vimeo embed -> regular URL
+    const vimeoEmbedMatch = embedUrl.match(/player\.vimeo\.com\/video\/(\d+)/)
+    if (vimeoEmbedMatch) {
+      const videoId = vimeoEmbedMatch[1]
+      // Check for hash parameter (for private videos)
+      const hashMatch = embedUrl.match(/[?&]h=([^&]+)/)
+      const regularUrl = hashMatch 
+        ? `https://vimeo.com/${videoId}/${hashMatch[1]}`
+        : `https://vimeo.com/${videoId}`
+      console.log('🎥 Converted Vimeo embed to regular URL:', regularUrl)
+      return regularUrl
+    }
+    
+    // If it's already a valid embed URL, return as is
+    return embedUrl
+  }
+  
+  // If not an iframe, return the original input (assume it's already a URL)
+  return input
+}
+
 const isValidVideoUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')
 }
@@ -212,6 +252,20 @@ const getYouTubeVideoId = (url: string): string | null => {
   const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
   const match = url.match(regex)
   return match ? match[1] : null
+}
+
+const getVimeoVideoId = (url: string): string | null => {
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
 }
 
 const generateUniqueId = (): string => `lesson-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -2168,13 +2222,21 @@ export default function LessonsPage() {
                         <label className="text-xs font-medium text-white/80 block">
                           Video URL
                         </label>
-                <Input 
-                          placeholder="https://youtube.com/watch?v=..." 
+                                        <Input 
+                          placeholder="URL: https://vimeo.com/123 or Embed: <iframe src=...>" 
                   value={formData.videoUrl}
-                  onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                  onChange={(e) => {
+                    const extractedUrl = extractUrlFromIframe(e.target.value)
+                    setFormData({...formData, videoUrl: extractedUrl})
+                  }}
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
+                {formData.videoUrl && isVimeoUrl(formData.videoUrl) && (
+                  <p className="text-xs text-amber-400 mt-1">
+                    💡 Supports URLs (vimeo.com/123/abc123) and iframe embed codes. Automatically converts embed codes to URLs.
+                  </p>
+                )}
                 </div>
               </div>
 
@@ -2733,13 +2795,21 @@ export default function LessonsPage() {
                         <label className="text-xs font-medium text-white/80 block">
                           Video URL
                         </label>
-                <Input 
-                          placeholder="https://youtube.com/watch?v=..." 
+                                        <Input 
+                          placeholder="URL: https://vimeo.com/123 or Embed: <iframe src=...>" 
                   value={formData.videoUrl}
-                  onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                  onChange={(e) => {
+                    const extractedUrl = extractUrlFromIframe(e.target.value)
+                    setFormData({...formData, videoUrl: extractedUrl})
+                  }}
                           className="glass-input h-9 bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 
                                    rounded-lg text-sm transition-all duration-200 hover:bg-white/10" 
                 />
+                {formData.videoUrl && isVimeoUrl(formData.videoUrl) && (
+                  <p className="text-xs text-amber-400 mt-1">
+                    💡 Supports URLs (vimeo.com/123/abc123) and iframe embed codes. Automatically converts embed codes to URLs.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -3057,7 +3127,7 @@ export default function LessonsPage() {
                   </div>
 
               {/* Video Content Preview Section - Only show if there's a valid video URL */}
-              {selectedLesson.videoUrl && isValidVideoUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) && (
+              {selectedLesson.videoUrl && isValidVideoUrl(selectedLesson.videoUrl) && (getYouTubeVideoId(selectedLesson.videoUrl) || getVimeoVideoId(selectedLesson.videoUrl)) && (
                 <div className="space-y-4">
                     <div className="flex items-center space-x-2 pb-2">
                       <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -3069,13 +3139,23 @@ export default function LessonsPage() {
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-white/80 block">Video Content</label>
                       <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/20">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
-                            title="Lesson Video"
-                            className="w-full h-full"
-                            allowFullScreen
-                            frameBorder="0"
-                          />
+                          {isYouTubeUrl(selectedLesson.videoUrl) && getYouTubeVideoId(selectedLesson.videoUrl) ? (
+                            <iframe
+                              src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedLesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1`}
+                              title="YouTube Video"
+                              className="w-full h-full"
+                              allowFullScreen
+                              frameBorder="0"
+                            />
+                          ) : isVimeoUrl(selectedLesson.videoUrl) && getVimeoVideoId(selectedLesson.videoUrl) ? (
+                            <iframe
+                              src={`https://player.vimeo.com/video/${getVimeoVideoId(selectedLesson.videoUrl)}?color=ffffff&title=0&byline=0&portrait=0`}
+                              title="Vimeo Video"
+                              className="w-full h-full"
+                              allowFullScreen
+                              frameBorder="0"
+                            />
+                          ) : null}
                         </div>
                         </div>
                     </div>

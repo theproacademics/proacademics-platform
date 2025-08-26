@@ -53,10 +53,67 @@ const getYouTubeVideoId = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+const getVimeoVideoId = (url: string): string | null => {
+  // Updated to handle private Vimeo URLs with hash: vimeo.com/VIDEO_ID/HASH
+  const regex = /(?:vimeo\.com\/)(?:channels\/\w+\/|groups\/\w+\/videos\/|album\/\d+\/video\/|video\/|)(\d+)(?:\/\w+)?(?:$|\/|\?)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+// Helper function to extract Vimeo hash from private URLs
+const getVimeoHash = (url: string): string | null => {
+  const regex = /vimeo\.com\/\d+\/([a-zA-Z0-9]+)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
+const isVimeoUrl = (url: string): boolean => {
+  return url.includes('vimeo.com')
+}
+
 // Helper function to get YouTube thumbnail
 const getYouTubeThumbnail = (url: string): string | null => {
   const videoId = getYouTubeVideoId(url)
   return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null
+}
+
+// Helper function to get video thumbnail (YouTube or Vimeo)
+const getVideoThumbnail = (videoUrl: string): string | null => {
+  if (!videoUrl) return null
+  
+  // Handle YouTube videos
+  if (isYouTubeUrl(videoUrl)) {
+    const youtubeId = getYouTubeVideoId(videoUrl)
+    if (youtubeId) {
+      return `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+    }
+  }
+  
+  // Handle Vimeo videos
+  if (isVimeoUrl(videoUrl)) {
+    const vimeoId = getVimeoVideoId(videoUrl)
+    const hasHash = getVimeoHash(videoUrl)
+    
+    console.log('🎥 Processing Vimeo URL on lesson detail page:', videoUrl)
+    console.log('🆔 Extracted ID:', vimeoId)
+    console.log('🔐 Has hash:', hasHash)
+    
+    if (vimeoId) {
+      // Use vumbnail service for both private and public videos
+      if (hasHash) {
+        console.log('🔒 Private Vimeo video - using vumbnail service')
+      } else {
+        console.log('🌍 Public Vimeo video - using vumbnail service')
+      }
+      return `https://vumbnail.com/${vimeoId}.jpg`
+    }
+  }
+  
+  return null
 }
 
 export default function LessonPage() {
@@ -319,6 +376,25 @@ export default function LessonPage() {
           throw new Error(data.error)
         }
         
+        console.log('🎯 Lesson data loaded:', data.lesson)
+        console.log('🎬 Video URL:', data.lesson?.videoUrl)
+        
+        // Check if it's a Vimeo URL and what type
+        if (data.lesson?.videoUrl && isVimeoUrl(data.lesson.videoUrl)) {
+          console.log('🎥 Vimeo URL detected in lesson!')
+          console.log('🔗 Full URL:', data.lesson.videoUrl)
+          console.log('🆔 Vimeo ID:', getVimeoVideoId(data.lesson.videoUrl))
+          console.log('🔐 Vimeo Hash:', getVimeoHash(data.lesson.videoUrl))
+          
+          // Test if it's a private video
+          const hasHash = getVimeoHash(data.lesson.videoUrl)
+          if (hasHash) {
+            console.log('🔒 Private Vimeo video detected in lesson - thumbnails may not work with direct URLs')
+          } else {
+            console.log('🌍 Public Vimeo video detected in lesson')
+          }
+        }
+        
         setLesson(data.lesson)
         setDataReady(true)
       } catch (error) {
@@ -481,11 +557,11 @@ export default function LessonPage() {
                           {showVideoPlayer ? (
                             // Actual Video Player
                             <>
-                              {isStreamingUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
+                              {isYouTubeUrl(lesson.videoUrl) && getYouTubeVideoId(lesson.videoUrl) ? (
                               // Handle YouTube URLs
                             <iframe
                                 src={`https://www.youtube.com/embed/${getYouTubeVideoId(lesson.videoUrl)}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&disablekb=0&autohide=1&color=white&controls=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                              title={lesson.lessonName || lesson.topic || 'Lesson'}
+                              title={lesson.lessonName || lesson.topic || 'YouTube Lesson'}
                               className="w-full h-full"
                               allowFullScreen
                               frameBorder="0"
@@ -495,6 +571,64 @@ export default function LessonPage() {
                                 setTimeout(() => setVideoWatched(true), 30000)
                               }}
                             />
+                          ) : isVimeoUrl(lesson.videoUrl) && getVimeoVideoId(lesson.videoUrl) ? (
+                            // Handle Vimeo URLs (supports private videos with hash)
+                            (() => {
+                              const vimeoId = getVimeoVideoId(lesson.videoUrl)
+                              const vimeoHash = getVimeoHash(lesson.videoUrl)
+                              
+                              // Build embed URL with hash if available (for private videos)
+                              let embedUrl = `https://player.vimeo.com/video/${vimeoId}`
+                              const params = new URLSearchParams({
+                                badge: '0',
+                                autopause: '0',
+                                player_id: '0',
+                                app_id: '58479'
+                              })
+                              
+                              if (vimeoHash) {
+                                params.set('h', vimeoHash)
+                              }
+                              
+                              embedUrl += '?' + params.toString()
+                              
+                              return (
+                                <iframe
+                                  src={embedUrl}
+                                  title={lesson.lessonName || lesson.topic || 'Vimeo Lesson'}
+                                  className="w-full h-full"
+                                  allowFullScreen
+                                  frameBorder="0"
+                                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                  referrerPolicy="strict-origin-when-cross-origin"
+                                  onLoad={() => {
+                                    setTimeout(() => setVideoWatched(true), 30000)
+                                  }}
+                                  onError={(e) => {
+                                    console.error('Vimeo iframe failed to load:', e)
+                                    // Fallback for Vimeo embed failures
+                                    const iframe = e.currentTarget
+                                    const fallbackHtml = `
+                                      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #1e293b 0%, #7c3aed 50%, #1e293b 100%); color: white; text-align: center; padding: 2rem; border-radius: 0.5rem;">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎥</div>
+                                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Video Cannot Be Embedded</h3>
+                                        <p style="margin-bottom: 1.5rem; opacity: 0.8;">This video cannot be played in the embedded player.</p>
+                                        <a href="${lesson.videoUrl}" target="_blank" rel="noopener noreferrer" style="background: #3b82f6; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                          <span>Watch on Vimeo</span>
+                                          <span style="font-size: 0.875rem;">↗</span>
+                                        </a>
+                                      </div>
+                                    `
+                                    
+                                    // Replace iframe with fallback content
+                                    const wrapper = iframe.parentNode as HTMLElement
+                                    if (wrapper) {
+                                      wrapper.innerHTML = fallbackHtml
+                                    }
+                                  }}
+                                />
+                              )
+                            })()
                           ) : (
                                                       // Handle direct video files
                             <video
@@ -516,17 +650,67 @@ export default function LessonPage() {
                             // Click-to-Play Overlay with Lock
                             <div className="w-full h-full relative cursor-pointer group" onClick={handleWatchNow}>
                               {/* Video Thumbnail with Heavy Blur */}
-                              {isStreamingUrl(lesson.videoUrl) && getYouTubeThumbnail(lesson.videoUrl) ? (
-                                <img 
-                                  src={getYouTubeThumbnail(lesson.videoUrl)!}
-                                  alt={lesson.lessonName || lesson.topic || 'Video Thumbnail'}
-                                  className="w-full h-full object-cover blur-lg group-hover:blur-md transition-all duration-500"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500">
-                                  <Video className="w-16 h-16 text-purple-300" />
-                          </div>
-                              )}
+                              {(() => {
+                                const thumbnailUrl = getVideoThumbnail(lesson.videoUrl)
+                                console.log('🖼️ Lesson detail thumbnail URL:', thumbnailUrl)
+                                
+                                return thumbnailUrl ? (
+                                  <img 
+                                    src={thumbnailUrl}
+                                    alt={lesson.lessonName || lesson.topic || 'Video Thumbnail'}
+                                    className="w-full h-full object-cover blur-lg group-hover:blur-md transition-all duration-500"
+                                    onError={(e) => {
+                                      const target = e.currentTarget
+                                      console.log('❌ Lesson detail thumbnail FAILED to load:', target.src)
+                                      console.log('🖼️ Video URL:', lesson.videoUrl)
+                                      const youtubeId = lesson.videoUrl ? getYouTubeVideoId(lesson.videoUrl) : null
+                                      const vimeoId = lesson.videoUrl ? getVimeoVideoId(lesson.videoUrl) : null
+                                      
+                                      // Enhanced Vimeo fallbacks
+                                      if (vimeoId) {
+                                        if (target.src.includes('vumbnail.com') && !target.src.includes('_large')) {
+                                          console.log('🔄 Lesson detail vumbnail failed, trying CDN')
+                                          target.src = `https://i.vimeocdn.com/video/${vimeoId}_640x360.jpg`
+                                        } else if (target.src.includes('i.vimeocdn.com')) {
+                                          console.log('🔄 Lesson detail CDN failed, trying vumbnail large')
+                                          target.src = `https://vumbnail.com/${vimeoId}_large.jpg`
+                                        } else {
+                                          console.log('❌ All lesson detail Vimeo options failed')
+                                          target.style.display = 'none'
+                                          // Show fallback gradient
+                                          const parent = target.parentElement
+                                          if (parent) {
+                                            const fallback = document.createElement('div')
+                                            fallback.className = 'w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500'
+                                            fallback.innerHTML = '<svg class="w-16 h-16 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                            parent.appendChild(fallback)
+                                          }
+                                        }
+                                      }
+                                      // YouTube fallback
+                                      else if (youtubeId && !target.src.includes('mqdefault')) {
+                                        console.log('🔄 Lesson detail trying YouTube fallback')
+                                        target.src = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+                                      } else {
+                                        console.log('❌ All lesson detail thumbnail options failed')
+                                        target.style.display = 'none'
+                                        // Show fallback gradient
+                                        const parent = target.parentElement
+                                        if (parent) {
+                                          const fallback = document.createElement('div')
+                                          fallback.className = 'w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500'
+                                          fallback.innerHTML = '<svg class="w-16 h-16 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                          parent.appendChild(fallback)
+                                        }
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-slate-900/70 via-purple-900/30 to-slate-900/70 flex items-center justify-center blur-sm group-hover:blur-none transition-all duration-500">
+                                    <Video className="w-16 h-16 text-purple-300" />
+                                  </div>
+                                )
+                              })()}
                               
                               {/* Heavy dark overlay */}
                               <div className="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition-all duration-500"></div>
