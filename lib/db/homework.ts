@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb"
 export class HomeworkService {
   private async getCollection() {
     const db = await getDatabase()
-    return db.collection<HomeworkAssignment>("homeworkAssignments")
+    return db.collection<HomeworkAssignment>("homework")
   }
 
   async createHomework(

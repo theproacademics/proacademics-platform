@@ -111,72 +111,53 @@ const AnimatedBackground = () => {
 
 
 
-// Mock homework data with proper types
-const mockHomework = [
-  {
-    id: 1,
-    title: "Quadratic Functions Practice",
-    subject: "Mathematics",
-    dueDate: "2024-01-16",
-    status: "pending",
-    progress: 60,
-    totalQuestions: 15,
-    completedQuestions: 9,
-    estimatedTime: 25,
-    difficulty: "medium" as const,
-    xpReward: 150,
-  },
-  {
-    id: 2,
-    title: "Trigonometry Review",
-    subject: "Mathematics",
-    dueDate: "2024-01-18",
-    status: "not_started",
-    progress: 0,
-    totalQuestions: 20,
-    completedQuestions: 0,
-    estimatedTime: 35,
-    difficulty: "hard" as const,
-    xpReward: 200,
-  },
-  {
-    id: 3,
-    title: "Statistics Analysis",
-    subject: "Mathematics",
-    dueDate: "2024-01-14",
-    status: "completed",
-    progress: 100,
-    totalQuestions: 12,
-    completedQuestions: 12,
-    score: 92,
-    timeTaken: 28,
-    xpEarned: 180,
-    difficulty: "medium" as const,
-    xpReward: 180,
-  },
-  {
-    id: 4,
-    title: "Algebra Fundamentals",
-    subject: "Mathematics",
-    dueDate: "2024-01-12",
-    status: "overdue",
-    progress: 40,
-    totalQuestions: 18,
-    completedQuestions: 7,
-    estimatedTime: 30,
-    difficulty: "easy" as const,
-    xpReward: 120,
-  },
-]
+// Homework assignment interface
+interface HomeworkAssignment {
+  _id: string
+  assignmentId: string
+  homeworkName: string
+  subject: string
+  program: string
+  topic: string
+  subtopic: string
+  level: 'easy' | 'medium' | 'hard'
+  teacher: string
+  dateAssigned: string
+  dueDate: string
+  estimatedTime: number
+  xpAwarded: number
+  questionSet: Array<{
+    questionId: string
+    topic: string
+    subtopic: string
+    level: 'easy' | 'medium' | 'hard'
+    question: string
+    markScheme: string
+    image?: string
+  }>
+  status: 'draft' | 'active'
+  totalQuestions: number
+  createdAt: string
+  updatedAt: string
+  // Student progress fields
+  completionStatus?: "not_started" | "in_progress" | "completed" | "overdue"
+  completedQuestions?: number
+  score?: number
+  xpEarned?: number
+  timeTaken?: number
+  progress?: number
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
     case "completed":
       return "bg-green-100 text-green-800 border-green-200"
-    case "pending":
+    case "in_progress":
       return "bg-blue-100 text-blue-800 border-blue-200"
     case "overdue":
       return "bg-red-100 text-red-800 border-red-200"
+    case "not_started":
+      return "bg-gray-100 text-gray-800 border-gray-200"
     default:
       return "bg-gray-100 text-gray-800 border-gray-200"
   }
@@ -198,6 +179,10 @@ const getDifficultyColor = (difficulty: string) => {
 export default function HomeworkPage() {
   const [selectedTab, setSelectedTab] = useState("all")
   const [dataReady, setDataReady] = useState(false)
+  const [homework, setHomework] = useState<HomeworkAssignment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   const { showPreloader, mounted } = usePreloader({ 
     delay: 1200,
     dependencies: [dataReady],
@@ -205,32 +190,82 @@ export default function HomeworkPage() {
     waitForFonts: true 
   })
 
-  // Simulate data loading and mark as ready
+  // Fetch homework data
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDataReady(true)
-    }, 500)
-    return () => clearTimeout(timer)
+    const fetchHomework = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Fetch only active homework assignments
+        const response = await fetch('/api/admin/homework?status=active&limit=50')
+        const data = await response.json()
+        
+        if (data.success) {
+          // Transform homework data to match the expected format
+          const transformedHomework = data.data.homework.map((hw: any) => ({
+            ...hw,
+            completionStatus: hw.completionStatus || "not_started",
+            completedQuestions: hw.completedQuestions || 0,
+            progress: hw.totalQuestions > 0 ? Math.round((hw.completedQuestions || 0) / hw.totalQuestions * 100) : 0,
+            // Convert date to readable format
+            dueDate: new Date(hw.dueDate).toISOString().split('T')[0]
+          }))
+          
+          setHomework(transformedHomework)
+        } else {
+          setError('Failed to fetch homework assignments')
+        }
+      } catch (err) {
+        console.error('Error fetching homework:', err)
+        setError('Error loading homework assignments')
+      } finally {
+        setLoading(false)
+        setDataReady(true)
+      }
+    }
+
+    fetchHomework()
   }, [])
 
   const filterHomework = (status?: string) => {
-    if (!status || status === "all") return mockHomework
-    return mockHomework.filter((hw) => hw.status === status)
+    if (!status || status === "all") return homework
+    if (status === "not_started") return homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "not_started")
+    if (status === "pending") return homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "in_progress")
+    return homework.filter((hw: HomeworkAssignment) => hw.completionStatus === status)
   }
 
   const stats = {
-    total: mockHomework.length,
-    completed: mockHomework.filter((hw) => hw.status === "completed").length,
-    pending: mockHomework.filter((hw) => hw.status === "pending").length,
-    overdue: mockHomework.filter((hw) => hw.status === "overdue").length,
+    total: homework.length,
+    completed: homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "completed").length,
+    pending: homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "in_progress").length,
+    overdue: homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "overdue").length,
     avgScore:
-      mockHomework.filter((hw) => hw.status === "completed").reduce((sum, hw) => sum + (hw.score || 0), 0) /
-        mockHomework.filter((hw) => hw.status === "completed").length || 0,
+      homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "completed").reduce((sum: number, hw: HomeworkAssignment) => sum + (hw.score || 0), 0) /
+        homework.filter((hw: HomeworkAssignment) => hw.completionStatus === "completed").length || 0,
   }
 
   // Show preloader
   if (showPreloader) {
     return <Preloader isVisible={showPreloader} colorScheme="blue" loadingText="Loading homework assignments" />
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative flex items-center justify-center">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+          <div className="text-red-400 text-xl mb-4">Error loading homework</div>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -374,7 +409,7 @@ export default function HomeworkPage() {
                     All ({stats.total})
                   </TabsTrigger>
                   <TabsTrigger value="pending" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                    Pending ({stats.pending})
+                    In Progress ({stats.pending})
                   </TabsTrigger>
                   <TabsTrigger value="not_started" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                     Not Started
@@ -390,18 +425,18 @@ export default function HomeworkPage() {
                 <TabsContent value={selectedTab} className="mt-8">
                   <div className="space-y-4">
                     {filterHomework(selectedTab === "all" ? undefined : selectedTab).map((homework) => (
-                      <div key={homework.id} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 group">
+                      <div key={homework._id} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 group">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-4">
                               <h3 className="text-xl font-semibold text-white group-hover:text-blue-300 transition-colors">
-                                {homework.title}
+                                {homework.homeworkName}
                               </h3>
-                              <Badge className={getStatusColor(homework.status)}>
-                                {homework.status.replace("_", " ")}
+                              <Badge className={getStatusColor(homework.completionStatus || "not_started")}>
+                                {(homework.completionStatus || "not_started").replace("_", " ")}
                               </Badge>
-                              <Badge variant="outline" className={getDifficultyColor(homework.difficulty)}>
-                                {homework.difficulty}
+                              <Badge variant="outline" className={getDifficultyColor(homework.level)}>
+                                {homework.level}
                               </Badge>
                             </div>
 
@@ -413,7 +448,7 @@ export default function HomeworkPage() {
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4" />
                                 <span>
-                                  {homework.status === "completed"
+                                  {homework.completionStatus === "completed"
                                     ? `Completed in ${homework.timeTaken}min`
                                     : `Est. ${homework.estimatedTime}min`}
                                 </span>
@@ -421,9 +456,9 @@ export default function HomeworkPage() {
                               <div className="flex items-center gap-2">
                                 <Award className="h-4 w-4" />
                                 <span>
-                                  {homework.status === "completed"
+                                  {homework.completionStatus === "completed"
                                     ? `${homework.xpEarned} XP earned`
-                                    : `${homework.xpReward} XP reward`}
+                                    : `${homework.xpAwarded} XP reward`}
                                 </span>
                               </div>
                             </div>
@@ -443,7 +478,7 @@ export default function HomeworkPage() {
                                   />
                                 </div>
                               </div>
-                              {homework.status === "completed" && homework.score && (
+                              {homework.completionStatus === "completed" && homework.score && (
                                 <div className="text-center bg-green-500/20 rounded-xl p-3">
                                   <div className="text-2xl font-bold text-green-300">{homework.score}%</div>
                                   <div className="text-xs text-green-200">Score</div>
@@ -455,16 +490,16 @@ export default function HomeworkPage() {
                           <div className="ml-6">
                             <Button
                               className={
-                                homework.status === "completed"
+                                homework.completionStatus === "completed"
                                   ? "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                                  : homework.status === "overdue"
+                                  : homework.completionStatus === "overdue"
                                     ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white border-0 shadow-lg"
                                     : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
                               }
                             >
-                              {homework.status === "completed"
+                              {homework.completionStatus === "completed"
                                 ? "Review"
-                                : homework.status === "not_started"
+                                : homework.completionStatus === "not_started"
                                   ? "Start"
                                   : "Continue"}
                               <ChevronRight className="w-4 h-4 ml-2" />
@@ -537,23 +572,23 @@ export default function HomeworkPage() {
                   <span className="text-green-100">XP Earned</span>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Star className="w-4 h-4 text-yellow-400" />
-                    {mockHomework
-                      .filter((hw) => hw.status === "completed")
-                      .reduce((sum, hw) => sum + (hw.xpEarned || 0), 0)} XP
+                    {homework
+                      .filter((hw: HomeworkAssignment) => hw.completionStatus === "completed")
+                      .reduce((sum: number, hw: HomeworkAssignment) => sum + (hw.xpEarned || 0), 0)} XP
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-green-100">Potential XP</span>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Target className="w-4 h-4 text-blue-400" />
-                    {mockHomework.filter((hw) => hw.status !== "completed").reduce((sum, hw) => sum + (hw.xpReward || 0), 0)} XP
+                    {homework.filter((hw: HomeworkAssignment) => hw.completionStatus !== "completed").reduce((sum: number, hw: HomeworkAssignment) => sum + (hw.xpAwarded || 0), 0)} XP
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-green-100">Total Available</span>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-purple-400" />
-                    {mockHomework.reduce((sum, hw) => sum + (hw.xpEarned || hw.xpReward || 0), 0)} XP
+                    {homework.reduce((sum: number, hw: HomeworkAssignment) => sum + (hw.xpEarned || hw.xpAwarded || 0), 0)} XP
                   </span>
                 </div>
               </div>

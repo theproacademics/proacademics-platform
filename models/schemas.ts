@@ -133,17 +133,38 @@ export interface XPLog extends BaseDocument {
 
 export interface HomeworkAssignment extends BaseDocument {
   assignmentId: string
-  lessonId: ObjectId
-  studentId: ObjectId
-  questionSet: ObjectId[]
+  homeworkName: string
+  subject: string
+  program: string
+  lessonId?: ObjectId
+  studentId?: ObjectId
+  topic: string
+  subtopic: string
+  level: "easy" | "medium" | "hard"
+  teacher: string
+  dateAssigned: Date
+  dueDate: Date
+  estimatedTime: number // in minutes
+  xpAwarded: number
+  questionSet: HomeworkQuestion[]
   score?: number
   completionStatus: "not_started" | "in_progress" | "completed" | "overdue"
   dateSubmitted?: Date
-  dueDate: Date
   aiFeedback?: string
   xpEarned: number
   totalQuestions: number
   completedQuestions: number
+  status: "draft" | "active"
+}
+
+export interface HomeworkQuestion extends BaseDocument {
+  questionId: string
+  topic: string
+  subtopic: string
+  level: "easy" | "medium" | "hard"
+  question: string
+  markScheme: string
+  image?: string // URL or "n"
 }
 
 export interface LeaderboardEntry extends BaseDocument {
