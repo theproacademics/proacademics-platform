@@ -82,12 +82,13 @@ export default function SystemPage() {
   }
 
   return (
-    <div className="p-4 lg:p-8 lg:pt-20">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold gradient-text mb-2">System Management</h1>
-        <p className="text-muted-foreground">Monitor system health, manage settings, and control platform operations</p>
-      </div>
+    <div className="absolute inset-0 z-10 overflow-y-auto">
+      <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-14 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold gradient-text mb-2">System Management</h1>
+          <p className="text-muted-foreground">Monitor system health, manage settings, and control platform operations</p>
+        </div>
 
       {/* System Health Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -305,6 +306,7 @@ export default function SystemPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </div>

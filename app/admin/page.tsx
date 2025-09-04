@@ -77,7 +77,7 @@ function AdminDashboardContent() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([])
   const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   // Fetch admin statistics
   const fetchStats = async () => {
@@ -165,6 +165,8 @@ function AdminDashboardContent() {
 
   // Initial load and auto-refresh
   useEffect(() => {
+    // Set initial timestamp to prevent hydration mismatch
+    setLastUpdated(new Date())
     fetchAllData()
     
     // Auto-refresh every 5 seconds for more visible changes
@@ -227,17 +229,18 @@ function AdminDashboardContent() {
   }
 
   return (
-    <div className="p-4 lg:p-8 lg:pt-20">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+    <div className="absolute inset-0 z-10 overflow-y-auto">
+      <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-14 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold gradient-text mb-2">Admin Dashboard</h1>
             <p className="text-muted-foreground">Welcome back! Here's what's happening with ProAcademics today.</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-muted-foreground">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}
             </div>
             <Button 
               onClick={refreshData} 
@@ -249,8 +252,8 @@ function AdminDashboardContent() {
               <span>Refresh</span>
             </Button>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -585,6 +588,7 @@ function AdminDashboardContent() {
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </div>

@@ -114,9 +114,6 @@ export function AdminNavigation() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
                   <item.icon className={cn("mr-3 h-4 w-4 lg:h-5 lg:w-5 transition-colors relative z-10 flex-shrink-0", isActive && "text-blue-400")} />
                   <span className="relative z-10 truncate">{item.name}</span>
-                  {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 lg:w-2 lg:h-2 bg-blue-400 rounded-full animate-pulse relative z-10 flex-shrink-0" />
-                  )}
                 </Link>
               )
             })}
