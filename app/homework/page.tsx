@@ -294,91 +294,76 @@ export default function HomeworkPage() {
       <div className="lg:ml-80 relative z-10">
         <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-6xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-2xl">
-                <FileText className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="text-5xl font-bold text-white mb-4">
-                Homework Dashboard
-              </h1>
-              <p className="text-xl text-blue-100/80 mb-6">
-                Track your assignments and excel in your studies
-              </p>
-              <div className="flex items-center justify-center space-x-4">
-                <div className="flex items-center space-x-2 text-blue-100">
-                  <Trophy className="w-5 h-5" />
-                  <span className="font-medium">Academic Excellence</span>
-                </div>
-                <div className="w-1 h-1 bg-blue-300 rounded-full"></div>
-                <div className="flex items-center space-x-2 text-blue-100">
-                  <Target className="w-5 h-5" />
-                  <span className="font-medium">Goal Oriented</span>
-                </div>
-              </div>
+          {/* Compact Header */}
+          <div className="mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-white">Homework Dashboard</h1>
+              <p className="text-sm text-slate-400">Track your assignments and excel in your studies</p>
             </div>
           </div>
 
-          {/* Premium Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-300/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <FileText className="w-6 h-6 text-blue-300" />
+          {/* Compact Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-300/20 rounded-xl p-3 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-105 transition-transform duration-300">
+                  <FileText className="w-4 h-4 text-blue-300" />
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-white">{stats.total}</div>
-                  <div className="text-blue-200 text-sm">Total Assignments</div>
+                  <div className="text-xl font-bold text-white">{stats.total}</div>
+                  <div className="text-blue-200 text-xs">Total</div>
                 </div>
               </div>
-              <div className="h-2 bg-blue-900/30 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-blue-900/30 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse" style={{width: '100%'}} />
               </div>
             </div>
 
-            <div className="backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-300/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-green-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <CheckCircle className="w-6 h-6 text-green-300" />
+            <div className="backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-300/20 rounded-xl p-3 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-green-500/20 rounded-lg group-hover:scale-105 transition-transform duration-300">
+                  <CheckCircle className="w-4 h-4 text-green-300" />
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-white">{stats.completed}</div>
-                  <div className="text-green-200 text-sm">Completed</div>
+                  <div className="text-xl font-bold text-white">{stats.completed}</div>
+                  <div className="text-green-200 text-xs">Completed</div>
                 </div>
               </div>
-              <div className="h-2 bg-green-900/30 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-green-900/30 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full" style={{width: `${(stats.completed/stats.total)*100}%`}} />
               </div>
-              <div className="text-green-100 text-xs mt-2">Avg Score: {Math.round(stats.avgScore)}%</div>
+              <div className="text-green-100 text-xs mt-1">Avg: {Math.round(stats.avgScore)}%</div>
             </div>
 
-            <div className="backdrop-blur-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-300/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-orange-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="w-6 h-6 text-orange-300" />
+            <div className="backdrop-blur-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-300/20 rounded-xl p-3 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-orange-500/20 rounded-lg group-hover:scale-105 transition-transform duration-300">
+                  <Clock className="w-4 h-4 text-orange-300" />
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-white">{stats.pending}</div>
-                  <div className="text-orange-200 text-sm">Pending</div>
+                  <div className="text-xl font-bold text-white">{stats.pending}</div>
+                  <div className="text-orange-200 text-xs">Pending</div>
                 </div>
               </div>
-              <div className="h-2 bg-orange-900/30 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-orange-900/30 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-orange-400 to-amber-400 rounded-full animate-pulse" style={{width: `${(stats.pending/stats.total)*100}%`}} />
               </div>
             </div>
 
-            <div className="backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-300/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-red-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <AlertCircle className="w-6 h-6 text-red-300" />
+            <div className="backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-300/20 rounded-xl p-3 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-red-500/20 rounded-lg group-hover:scale-105 transition-transform duration-300">
+                  <AlertCircle className="w-4 h-4 text-red-300" />
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-white">{stats.overdue}</div>
-                  <div className="text-red-200 text-sm">Overdue</div>
+                  <div className="text-xl font-bold text-white">{stats.overdue}</div>
+                  <div className="text-red-200 text-xs">Overdue</div>
                 </div>
               </div>
-              <div className="h-2 bg-red-900/30 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-red-900/30 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-red-400 to-pink-400 rounded-full animate-pulse" style={{width: `${(stats.overdue/stats.total)*100}%`}} />
               </div>
             </div>
