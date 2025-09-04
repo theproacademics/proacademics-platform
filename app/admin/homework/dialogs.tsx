@@ -106,18 +106,18 @@ export function HomeworkDialogs({
     <>
       {/* Create Homework Dialog */}
       <Dialog open={isCreateHomeworkDialogOpen} onOpenChange={setIsCreateHomeworkDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Target className="w-6 h-6 text-blue-400" />
-              Create New Homework Assignment
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+              <span className="truncate">Create New Homework Assignment</span>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="homeworkName" className="text-white">Homework Name</Label>
+                <Label htmlFor="homeworkName" className="text-white text-sm sm:text-base">Homework Name</Label>
                 <Input
                   id="homeworkName"
                   value={homeworkFormData.homeworkName}
@@ -128,7 +128,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="teacher" className="text-white">Teacher</Label>
+                <Label htmlFor="teacher" className="text-white text-sm sm:text-base">Teacher</Label>
                 <Input
                   id="teacher"
                   value={homeworkFormData.teacher}
@@ -139,7 +139,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subject" className="text-white">Subject</Label>
+                <Label htmlFor="subject" className="text-white text-sm sm:text-base">Subject</Label>
                 {adminSubjects.length === 0 ? (
                   <div className="p-3 bg-amber-500/20 border border-amber-500/30 rounded-lg">
                     <div className="text-amber-300 text-sm flex items-center gap-2">
@@ -176,7 +176,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="program" className="text-white">Program</Label>
+                <Label htmlFor="program" className="text-white text-sm sm:text-base">Program</Label>
                 <Select
                   value={homeworkFormData.program}
                   onValueChange={(value) => setHomeworkFormData({ ...homeworkFormData, program: value })}
@@ -196,7 +196,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="topic" className="text-white">Topic</Label>
+                <Label htmlFor="topic" className="text-white text-sm sm:text-base">Topic</Label>
                 <Input
                   id="topic"
                   value={homeworkFormData.topic}
@@ -207,7 +207,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subtopic" className="text-white">Subtopic</Label>
+                <Label htmlFor="subtopic" className="text-white text-sm sm:text-base">Subtopic</Label>
                 <Input
                   id="subtopic"
                   value={homeworkFormData.subtopic}
@@ -218,7 +218,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="level" className="text-white">Level</Label>
+                <Label htmlFor="level" className="text-white text-sm sm:text-base">Level</Label>
                 <Select
                   value={homeworkFormData.level}
                   onValueChange={(value: '1' | '2' | '3') => setHomeworkFormData({ ...homeworkFormData, level: value })}
@@ -235,7 +235,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-white">Status</Label>
+                <Label htmlFor="status" className="text-white text-sm sm:text-base">Status</Label>
                 <Select
                   value={homeworkFormData.status}
                   onValueChange={(value: 'draft' | 'active') => setHomeworkFormData({ ...homeworkFormData, status: value })}
@@ -251,7 +251,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateAssigned" className="text-white flex items-center gap-2">
+                <Label htmlFor="dateAssigned" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Date Assigned
                 </Label>
@@ -265,7 +265,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dueDate" className="text-white flex items-center gap-2">
+                <Label htmlFor="dueDate" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Due Date
                 </Label>
@@ -279,9 +279,10 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="estimatedTime" className="text-white flex items-center gap-2">
+                <Label htmlFor="estimatedTime" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Estimated Time (minutes)
+                  <span className="hidden sm:inline">Estimated Time (minutes)</span>
+                  <span className="sm:hidden">Time (min)</span>
                 </Label>
                 <Input
                   id="estimatedTime"
@@ -294,7 +295,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="xpAwarded" className="text-white flex items-center gap-2">
+                <Label htmlFor="xpAwarded" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Award className="w-4 h-4" />
                   XP Awarded
                 </Label>
@@ -309,25 +310,26 @@ export function HomeworkDialogs({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/20">
               <Button
                 variant="outline"
                 onClick={() => {
                   setIsCreateHomeworkDialogOpen(false)
                   setHomeworkFormData(createEmptyHomeworkFormData())
                 }}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600 w-full sm:w-auto order-2 sm:order-1"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleCreateHomework}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto order-1 sm:order-2"
                 disabled={!homeworkFormData.homeworkName || !homeworkFormData.subject || !homeworkFormData.program}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Create Homework
+                <span className="hidden sm:inline">Create Homework</span>
+                <span className="sm:hidden">Create</span>
               </Button>
             </div>
           </div>
@@ -336,18 +338,18 @@ export function HomeworkDialogs({
 
       {/* Edit Homework Dialog */}
       <Dialog open={isEditHomeworkDialogOpen} onOpenChange={setIsEditHomeworkDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Target className="w-6 h-6 text-yellow-400" />
-              Edit Homework Assignment
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+              <span className="truncate">Edit Homework Assignment</span>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-homeworkName" className="text-white">Homework Name</Label>
+                <Label htmlFor="edit-homeworkName" className="text-white text-sm sm:text-base">Homework Name</Label>
                 <Input
                   id="edit-homeworkName"
                   value={homeworkFormData.homeworkName}
@@ -358,7 +360,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-teacher" className="text-white">Teacher</Label>
+                <Label htmlFor="edit-teacher" className="text-white text-sm sm:text-base">Teacher</Label>
                 <Input
                   id="edit-teacher"
                   value={homeworkFormData.teacher}
@@ -369,7 +371,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-subject" className="text-white">Subject</Label>
+                <Label htmlFor="edit-subject" className="text-white text-sm sm:text-base">Subject</Label>
                 <Select
                   value={homeworkFormData.subject}
                   onValueChange={(value) => setHomeworkFormData({ ...homeworkFormData, subject: value, program: '' })}
@@ -394,7 +396,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-program" className="text-white">Program</Label>
+                <Label htmlFor="edit-program" className="text-white text-sm sm:text-base">Program</Label>
                 <Select
                   value={homeworkFormData.program}
                   onValueChange={(value) => setHomeworkFormData({ ...homeworkFormData, program: value })}
@@ -414,7 +416,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-topic" className="text-white">Topic</Label>
+                <Label htmlFor="edit-topic" className="text-white text-sm sm:text-base">Topic</Label>
                 <Input
                   id="edit-topic"
                   value={homeworkFormData.topic}
@@ -425,7 +427,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-subtopic" className="text-white">Subtopic</Label>
+                <Label htmlFor="edit-subtopic" className="text-white text-sm sm:text-base">Subtopic</Label>
                 <Input
                   id="edit-subtopic"
                   value={homeworkFormData.subtopic}
@@ -436,7 +438,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-level" className="text-white">Level</Label>
+                <Label htmlFor="edit-level" className="text-white text-sm sm:text-base">Level</Label>
                 <Select
                   value={homeworkFormData.level}
                   onValueChange={(value: '1' | '2' | '3') => setHomeworkFormData({ ...homeworkFormData, level: value })}
@@ -453,7 +455,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-status" className="text-white">Status</Label>
+                <Label htmlFor="edit-status" className="text-white text-sm sm:text-base">Status</Label>
                 <Select
                   value={homeworkFormData.status}
                   onValueChange={(value: 'draft' | 'active') => setHomeworkFormData({ ...homeworkFormData, status: value })}
@@ -469,7 +471,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-dateAssigned" className="text-white flex items-center gap-2">
+                <Label htmlFor="edit-dateAssigned" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Date Assigned
                 </Label>
@@ -483,7 +485,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-dueDate" className="text-white flex items-center gap-2">
+                <Label htmlFor="edit-dueDate" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Due Date
                 </Label>
@@ -497,9 +499,10 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-estimatedTime" className="text-white flex items-center gap-2">
+                <Label htmlFor="edit-estimatedTime" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Estimated Time (minutes)
+                  <span className="hidden sm:inline">Estimated Time (minutes)</span>
+                  <span className="sm:hidden">Time (min)</span>
                 </Label>
                 <Input
                   id="edit-estimatedTime"
@@ -512,7 +515,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-xpAwarded" className="text-white flex items-center gap-2">
+                <Label htmlFor="edit-xpAwarded" className="text-white text-sm sm:text-base flex items-center gap-2">
                   <Award className="w-4 h-4" />
                   XP Awarded
                 </Label>
@@ -527,22 +530,23 @@ export function HomeworkDialogs({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/20">
               <Button
                 variant="outline"
                 onClick={() => setIsEditHomeworkDialogOpen(false)}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600 w-full sm:w-auto order-2 sm:order-1"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdateHomework}
-                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
+                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white w-full sm:w-auto order-1 sm:order-2"
                 disabled={!homeworkFormData.homeworkName || !homeworkFormData.subject || !homeworkFormData.program}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Update Homework
+                <span className="hidden sm:inline">Update Homework</span>
+                <span className="sm:hidden">Update</span>
               </Button>
             </div>
           </div>
@@ -551,18 +555,18 @@ export function HomeworkDialogs({
 
       {/* Add Question Dialog */}
       <Dialog open={isAddQuestionDialogOpen} onOpenChange={setIsAddQuestionDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Plus className="w-6 h-6 text-blue-400" />
-              Add New Question
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+              <span className="truncate">Add New Question</span>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="questionId" className="text-white">Question ID</Label>
+                <Label htmlFor="questionId" className="text-white text-sm sm:text-base">Question ID</Label>
                 <Input
                   id="questionId"
                   value={questionFormData.questionId}
@@ -573,7 +577,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="q-level" className="text-white">Level</Label>
+                <Label htmlFor="q-level" className="text-white text-sm sm:text-base">Level</Label>
                 <Select
                   value={questionFormData.level}
                   onValueChange={(value: '1' | '2' | '3') => setQuestionFormData({ ...questionFormData, level: value })}
@@ -590,7 +594,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="q-topic" className="text-white">Topic</Label>
+                <Label htmlFor="q-topic" className="text-white text-sm sm:text-base">Topic</Label>
                 <Input
                   id="q-topic"
                   value={questionFormData.topic}
@@ -601,7 +605,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="q-subtopic" className="text-white">Subtopic</Label>
+                <Label htmlFor="q-subtopic" className="text-white text-sm sm:text-base">Subtopic</Label>
                 <Input
                   id="q-subtopic"
                   value={questionFormData.subtopic}
@@ -612,7 +616,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="q-image" className="text-white">Image URL (optional)</Label>
+                <Label htmlFor="q-image" className="text-white text-sm sm:text-base">Image URL (optional)</Label>
                 <Input
                   id="q-image"
                   value={questionFormData.image}
@@ -625,7 +629,7 @@ export function HomeworkDialogs({
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="question" className="text-white">Question</Label>
+                <Label htmlFor="question" className="text-white text-sm sm:text-base">Question</Label>
                 <Textarea
                   id="question"
                   value={questionFormData.question}
@@ -637,7 +641,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="markScheme" className="text-white">Mark Scheme</Label>
+                <Label htmlFor="markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
                 <Textarea
                   id="markScheme"
                   value={questionFormData.markScheme}
@@ -649,22 +653,23 @@ export function HomeworkDialogs({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/20">
               <Button
                 variant="outline"
                 onClick={() => setIsAddQuestionDialogOpen(false)}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600 w-full sm:w-auto order-2 sm:order-1"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleCreateQuestion}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto order-1 sm:order-2"
                 disabled={!questionFormData.question || !questionFormData.markScheme}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Add Question
+                <span className="hidden sm:inline">Add Question</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>
@@ -673,18 +678,18 @@ export function HomeworkDialogs({
 
       {/* Edit Question Dialog */}
       <Dialog open={isEditQuestionDialogOpen} onOpenChange={setIsEditQuestionDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Plus className="w-6 h-6 text-yellow-400" />
-              Edit Question
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+              <span className="truncate">Edit Question</span>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-questionId" className="text-white">Question ID</Label>
+                <Label htmlFor="edit-questionId" className="text-white text-sm sm:text-base">Question ID</Label>
                 <Input
                   id="edit-questionId"
                   value={questionFormData.questionId}
@@ -695,7 +700,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-q-level" className="text-white">Level</Label>
+                <Label htmlFor="edit-q-level" className="text-white text-sm sm:text-base">Level</Label>
                 <Select
                   value={questionFormData.level}
                   onValueChange={(value: '1' | '2' | '3') => setQuestionFormData({ ...questionFormData, level: value })}
@@ -712,7 +717,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-q-topic" className="text-white">Topic</Label>
+                <Label htmlFor="edit-q-topic" className="text-white text-sm sm:text-base">Topic</Label>
                 <Input
                   id="edit-q-topic"
                   value={questionFormData.topic}
@@ -723,7 +728,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-q-subtopic" className="text-white">Subtopic</Label>
+                <Label htmlFor="edit-q-subtopic" className="text-white text-sm sm:text-base">Subtopic</Label>
                 <Input
                   id="edit-q-subtopic"
                   value={questionFormData.subtopic}
@@ -734,7 +739,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="edit-q-image" className="text-white">Image URL (optional)</Label>
+                <Label htmlFor="edit-q-image" className="text-white text-sm sm:text-base">Image URL (optional)</Label>
                 <Input
                   id="edit-q-image"
                   value={questionFormData.image}
@@ -747,7 +752,7 @@ export function HomeworkDialogs({
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-question" className="text-white">Question</Label>
+                <Label htmlFor="edit-question" className="text-white text-sm sm:text-base">Question</Label>
                 <Textarea
                   id="edit-question"
                   value={questionFormData.question}
@@ -759,7 +764,7 @@ export function HomeworkDialogs({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-markScheme" className="text-white">Mark Scheme</Label>
+                <Label htmlFor="edit-markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
                 <Textarea
                   id="edit-markScheme"
                   value={questionFormData.markScheme}
@@ -771,22 +776,23 @@ export function HomeworkDialogs({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/20">
               <Button
                 variant="outline"
                 onClick={() => setIsEditQuestionDialogOpen(false)}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600 w-full sm:w-auto order-2 sm:order-1"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdateQuestion}
-                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
+                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white w-full sm:w-auto order-1 sm:order-2"
                 disabled={!questionFormData.question || !questionFormData.markScheme}
               >
                 <Save className="w-4 h-4 mr-2" />
-                Update Question
+                <span className="hidden sm:inline">Update Question</span>
+                <span className="sm:hidden">Update</span>
               </Button>
             </div>
           </div>
@@ -795,18 +801,18 @@ export function HomeworkDialogs({
 
       {/* Import Homework Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Upload className="w-6 h-6 text-green-400" />
-              Import Homework from CSV
+        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+              <span className="truncate">Import Homework from CSV</span>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="csv-file" className="text-white">CSV File</Label>
+                <Label htmlFor="csv-file" className="text-white text-sm sm:text-base">CSV File</Label>
                 <Input
                   id="csv-file"
                   type="file"
@@ -827,32 +833,34 @@ export function HomeworkDialogs({
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/20">
               <Button
                 variant="outline"
                 onClick={() => {
                   setIsImportDialogOpen(false)
                   setImportFile(null)
                 }}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600 w-full sm:w-auto order-2 sm:order-1"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleImport}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white w-full sm:w-auto order-1 sm:order-2"
                 disabled={!importFile}
               >
                 {importLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Importing...
+                    <span className="hidden sm:inline">Importing...</span>
+                    <span className="sm:hidden">Importing</span>
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Import Homework
+                    <span className="hidden sm:inline">Import Homework</span>
+                    <span className="sm:hidden">Import</span>
                   </>
                 )}
               </Button>

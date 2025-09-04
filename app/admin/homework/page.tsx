@@ -682,7 +682,7 @@ export default function HomeworkPage() {
 
   return (
           <TooltipProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
           {/* Global styles for select components and dialogs */}
           <style jsx global>{`
             [data-radix-select-content] {
@@ -706,18 +706,37 @@ export default function HomeworkPage() {
               box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
             }
           `}</style>
-        {/* Background */}
-        <div className="fixed pointer-events-none z-0" style={{ 
-          top: '-100vh', 
-          left: '-50vw', 
-          right: '-50vw', 
-          bottom: '-100vh',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #312e81 100%)'
-        }} />
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+            <div className="absolute -top-4 -left-4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute top-1/3 -right-8 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute -bottom-8 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+            
+            {/* Additional background elements for nav area */}
+            <div className="absolute top-10 left-10 w-64 h-64 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-3000"></div>
+            <div className="absolute top-1/2 left-5 w-48 h-48 bg-purple-500/8 rounded-full blur-3xl animate-pulse delay-4000"></div>
+            
+            {/* Extended background elements behind nav */}
+            <div className="absolute top-1/4 left-20 w-56 h-56 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-5000"></div>
+            <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-indigo-500/8 rounded-full blur-3xl animate-pulse delay-6000"></div>
+            
+            {/* Floating particles */}
+            <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400/60 rounded-full animate-bounce delay-500"></div>
+            <div className="absolute top-40 right-20 w-1 h-1 bg-purple-400/60 rounded-full animate-bounce delay-1000"></div>
+            <div className="absolute bottom-40 left-20 w-1.5 h-1.5 bg-indigo-400/60 rounded-full animate-bounce delay-1500"></div>
+            <div className="absolute top-60 left-32 w-1 h-1 bg-blue-400/60 rounded-full animate-bounce delay-2500"></div>
+            <div className="absolute top-80 left-16 w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce delay-3500"></div>
+            <div className="absolute top-32 left-24 w-1 h-1 bg-indigo-400/60 rounded-full animate-bounce delay-7000"></div>
+            <div className="absolute bottom-60 left-12 w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-bounce delay-8000"></div>
+            
+            {/* Grid pattern overlay */}
+            <div className="absolute inset-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDEyNywgNjMsIDI1NSwgMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+          </div>
+          
+          {/* Scrollable Content Container */}
+          <div className="absolute inset-0 z-10 overflow-y-auto">
         
-        <div className="lg:ml-80 relative z-10">
-          <div className="container mx-auto px-4 py-8 relative z-10">
-            <div className="max-w-7xl mx-auto">
+        <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
               {/* Enhanced Header */}
               <div className="mb-6 lg:mb-12 text-center">
                 <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
@@ -736,35 +755,38 @@ export default function HomeworkPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
                 {adminSubjects.length === 0 ? (
-                  <div className="flex items-center gap-3">
-                    <div className="text-amber-300 text-sm flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      No subjects found. Please create subjects and programs first.
+                  <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+                    <div className="text-amber-300 text-xs sm:text-sm flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">No subjects found. Please create subjects and programs first.</span>
+                      <span className="sm:hidden">No subjects found. Create subjects first.</span>
                     </div>
                     <Link href="/admin/subjects">
-                      <Button variant="outline" className="bg-amber-600 hover:bg-amber-700 text-white border-amber-500 hover:border-amber-600">
+                      <Button variant="outline" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white border-amber-500 hover:border-amber-600 w-full sm:w-auto">
                         Go to Subjects
                       </Button>
                     </Link>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg">
+                        <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg w-full sm:w-auto">
                           <Upload className="w-4 h-4 mr-2" />
-                          Import CSV
+                          <span className="hidden sm:inline">Import CSV</span>
+                          <span className="sm:hidden">Import</span>
                         </Button>
                       </DialogTrigger>
                     </Dialog>
                     
                     <Dialog open={isCreateHomeworkDialogOpen} onOpenChange={setIsCreateHomeworkDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg w-full sm:w-auto">
                           <Plus className="w-4 h-4 mr-2" />
-                          Create Homework
+                          <span className="hidden sm:inline">Create Homework</span>
+                          <span className="sm:hidden">Create</span>
                         </Button>
                       </DialogTrigger>
                     </Dialog>
@@ -773,22 +795,24 @@ export default function HomeworkPage() {
               </div>
 
               {/* Filters and Search */}
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-                <div className="flex flex-wrap items-center gap-4">
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 mx-2 sm:mx-0">
+                <div className="space-y-4">
                   {/* Search */}
-                  <div className="relative flex-1 min-w-[300px]">
+                  <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
                       placeholder="Search homework by name, topic, subtopic, teacher..."
                       value={searchTerm}
                       onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                      className="pl-10 pr-4 py-2 sm:py-3 bg-white/5 border-white/20 text-white placeholder:text-slate-400 w-full"
                     />
                   </div>
 
+                  {/* Filters Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                   {/* Subject Filter */}
                   <Select value={selectedSubject} onValueChange={handleSubjectFilter}>
-                    <SelectTrigger className="w-[180px] bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="w-full bg-white/5 border-white/20 text-white">
                       <SelectValue placeholder="All Subjects" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/20">
@@ -803,7 +827,7 @@ export default function HomeworkPage() {
 
                   {/* Program Filter */}
                   <Select value={selectedProgram} onValueChange={handleProgramFilter}>
-                    <SelectTrigger className="w-[180px] bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="w-full bg-white/5 border-white/20 text-white">
                       <SelectValue placeholder="All Programs" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/20">
@@ -818,7 +842,7 @@ export default function HomeworkPage() {
 
                   {/* Level Filter */}
                   <Select value={selectedLevel} onValueChange={handleLevelFilter}>
-                    <SelectTrigger className="w-[150px] bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="w-full bg-white/5 border-white/20 text-white">
                       <SelectValue placeholder="All Levels" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/20">
@@ -831,7 +855,7 @@ export default function HomeworkPage() {
 
                   {/* Status Filter */}
                   <Select value={selectedStatus} onValueChange={handleStatusFilter}>
-                    <SelectTrigger className="w-[150px] bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="w-full bg-white/5 border-white/20 text-white">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/20">
@@ -843,7 +867,7 @@ export default function HomeworkPage() {
 
                   {/* Teacher Filter */}
                   <Select value={selectedTeacher} onValueChange={handleTeacherFilter}>
-                    <SelectTrigger className="w-[180px] bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="w-full bg-white/5 border-white/20 text-white">
                       <SelectValue placeholder="All Teachers" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/20">
@@ -855,6 +879,7 @@ export default function HomeworkPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  </div>
                 </div>
               </div>
 
@@ -864,15 +889,15 @@ export default function HomeworkPage() {
                   <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
                 </div>
               ) : (
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden mx-2 sm:mx-0">
                   {homework.length === 0 ? (
-                    <div className="p-12 text-center">
-                      <BookOpen className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">No homework found</h3>
-                      <p className="text-slate-400 mb-6">Create your first homework assignment to get started</p>
+                    <div className="p-6 sm:p-12 text-center">
+                      <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-slate-500 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No homework found</h3>
+                      <p className="text-slate-400 mb-6 text-sm sm:text-base">Create your first homework assignment to get started</p>
                       <Button
                         onClick={() => setIsCreateHomeworkDialogOpen(true)}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Create First Homework
@@ -889,31 +914,31 @@ export default function HomeworkPage() {
                             <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm border-b border-white/20">
                               <button
                                 onClick={() => toggleSubjectExpanded(subject)}
-                                className="w-full px-6 py-4 hover:bg-white/5 transition-all duration-200 text-left group"
+                                className="w-full px-3 sm:px-6 py-3 sm:py-4 hover:bg-white/5 transition-all duration-200 text-left group"
                               >
-                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-200">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-lg sm:rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-200 flex-shrink-0">
                                     {expandedSubjects.has(subject) ? (
-                                      <FolderOpen className="w-5 h-5 text-blue-400" />
+                                      <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                                     ) : (
-                                      <div className="text-lg">📚</div>
+                                      <div className="text-sm sm:text-lg">📚</div>
                                     )}
                                   </div>
-                                  <div className="flex-1">
+                                  <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                      <div>
-                                        <h3 className="text-white font-semibold text-xl group-hover:text-blue-200 transition-colors duration-200">
+                                      <div className="min-w-0 flex-1">
+                                        <h3 className="text-white font-semibold text-lg sm:text-xl group-hover:text-blue-200 transition-colors duration-200 truncate">
                                           {subject}
                                         </h3>
-                                        <p className="text-slate-400 text-sm mt-1">
+                                        <p className="text-slate-400 text-xs sm:text-sm mt-1">
                                           {Object.values(programs).flat().length} homework assignments
                                         </p>
                                       </div>
-                                      <div className="text-slate-400 group-hover:text-white transition-colors duration-200">
+                                      <div className="text-slate-400 group-hover:text-white transition-colors duration-200 flex-shrink-0 ml-2">
                                         {expandedSubjects.has(subject) ? (
-                                          <ChevronDown className="w-5 h-5" />
+                                          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                                         ) : (
-                                          <ChevronRight className="w-5 h-5" />
+                                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                                         )}
                                       </div>
                                     </div>
@@ -928,23 +953,23 @@ export default function HomeworkPage() {
                               const isProgramExpanded = expandedPrograms.has(programKey)
                               
                               return (
-                                <div key={programKey} className="ml-8 border-l-2 border-white/10">
+                                <div key={programKey} className="ml-4 sm:ml-8 border-l-2 border-white/10">
                                   {/* Program Header */}
                                   <div className="bg-slate-800/20">
                                     <button
                                       onClick={() => toggleProgramExpanded(subject, program)}
-                                      className="w-full px-6 py-3 hover:bg-white/5 transition-all duration-200 text-left group"
+                                      className="w-full px-3 sm:px-6 py-2 sm:py-3 hover:bg-white/5 transition-all duration-200 text-left group"
                                     >
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-green-500/30 to-blue-500/30 rounded-lg flex items-center justify-center">
+                                      <div className="flex items-center gap-2 sm:gap-3">
+                                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500/30 to-blue-500/30 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
                                           {isProgramExpanded ? (
-                                            <ChevronDown className="w-4 h-4 text-green-400" />
+                                            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
                                           ) : (
-                                            <ChevronRight className="w-4 h-4 text-green-400" />
+                                            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
                                           )}
                                         </div>
-                                        <div className="flex-1">
-                                          <h4 className="text-white font-medium group-hover:text-green-200 transition-colors">
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="text-white font-medium text-sm sm:text-base group-hover:text-green-200 transition-colors truncate">
                                             {program}
                                           </h4>
                                           <p className="text-slate-400 text-xs">
@@ -963,14 +988,14 @@ export default function HomeworkPage() {
                                         return (
                                           <div key={item.assignmentId} className="border-b border-white/5 last:border-b-0">
                                             {/* Homework Item */}
-                                            <div className="p-4 hover:bg-white/5 transition-colors ml-12">
-                                              <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-4 flex-1">
+                                            <div className="p-3 sm:p-4 hover:bg-white/5 transition-colors ml-6 sm:ml-12">
+                                              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                                                <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                                                   <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleSelectHomework(item.assignmentId)}
-                                                    className="p-1 h-auto"
+                                                    className="p-1 h-auto flex-shrink-0"
                                                   >
                                                     {selectedHomeworkList.includes(item.assignmentId) ? (
                                                       <CheckSquare className="w-4 h-4 text-blue-400" />
@@ -983,7 +1008,7 @@ export default function HomeworkPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => toggleExpanded(item.assignmentId)}
-                                                    className="p-1 h-auto"
+                                                    className="p-1 h-auto flex-shrink-0"
                                                   >
                                                     {isExpanded ? (
                                                       <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -992,13 +1017,13 @@ export default function HomeworkPage() {
                                                     )}
                                                   </Button>
                                                   
-                                                  <Target className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                                                  <Target className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
                                                   
-                                                  <div className="flex-1">
-                                                    <h3 className="text-white font-medium">{item.homeworkName}</h3>
-                                                    <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
-                                                      <span>{item.topic} • {item.subtopic}</span>
-                                                      <span>{item.teacher}</span>
+                                                  <div className="flex-1 min-w-0">
+                                                    <h3 className="text-white font-medium text-sm sm:text-base truncate">{item.homeworkName}</h3>
+                                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-400 mt-1">
+                                                      <span className="truncate">{item.topic} • {item.subtopic}</span>
+                                                      <span className="hidden sm:inline">{item.teacher}</span>
                                                       <Badge className={`px-2 py-1 text-xs ${getLevelColor(item.level)}`}>
                                                         {item.level}
                                                       </Badge>
@@ -1006,44 +1031,48 @@ export default function HomeworkPage() {
                                                         {item.status}
                                                       </Badge>
                                                       <span className="text-xs">
-                                                        {item.questionSet?.length || 0} questions
+                                                        {item.questionSet?.length || 0} q
                                                       </span>
                                                       <span className="text-xs flex items-center gap-1">
                                                         <Clock className="w-3 h-3" />
-                                                        {item.estimatedTime}min
+                                                        {item.estimatedTime}m
                                                       </span>
                                                       <span className="text-xs flex items-center gap-1">
                                                         <Award className="w-3 h-3" />
                                                         {item.xpAwarded} XP
                                                       </span>
                                                     </div>
+                                                    <div className="sm:hidden text-xs text-slate-500 mt-1">
+                                                      {item.teacher}
+                                                    </div>
                                                   </div>
                                                 </div>
                                             
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
                                                   <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleAddQuestion(item)}
-                                                    className="text-blue-400 border-blue-400/30 hover:bg-blue-500/10"
+                                                    className="text-blue-400 border-blue-400/30 hover:bg-blue-500/10 text-xs sm:text-sm px-2 sm:px-3"
                                                   >
-                                                    <Plus className="w-4 h-4 mr-1" />
-                                                    Add Question
+                                                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                                                    <span className="hidden sm:inline">Add Question</span>
+                                                    <span className="sm:hidden">Add</span>
                                                   </Button>
                                                   
                                                   <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleEditHomework(item)}
-                                                    className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10"
+                                                    className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10 p-1 sm:p-2"
                                                   >
-                                                    <Edit className="w-4 h-4" />
+                                                    <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                                                   </Button>
                                                   
                                                   <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                      <Button variant="outline" size="sm" className="text-red-400 border-red-400/30 hover:bg-red-500/10">
-                                                        <Trash2 className="w-4 h-4" />
+                                                      <Button variant="outline" size="sm" className="text-red-400 border-red-400/30 hover:bg-red-500/10 p-1 sm:p-2">
+                                                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                                       </Button>
                                                     </AlertDialogTrigger>
                                                     <AlertDialogContent className="bg-slate-900 border-white/20">
@@ -1072,45 +1101,46 @@ export default function HomeworkPage() {
 
                                             {/* Expanded Questions List */}
                                             {isExpanded && (
-                                              <div className="bg-slate-800/30 border-t border-white/10 ml-12">
+                                              <div className="bg-slate-800/30 border-t border-white/10 ml-6 sm:ml-12">
                                                 {item.questionSet && item.questionSet.length > 0 ? (
                                                   <div className="space-y-0">
                                                     {item.questionSet.map((question, index) => (
                                                       <div
                                                         key={question.questionId || index}
-                                                        className="group p-4 border-b border-white/5 last:border-b-0 ml-12"
+                                                        className="group p-3 sm:p-4 border-b border-white/5 last:border-b-0 ml-6 sm:ml-12"
                                                       >
-                                                        <div className="flex items-start justify-between">
-                                                          <div className="flex items-start gap-3 flex-1">
-                                                            <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center text-xs font-medium text-purple-400 mt-1">
+                                                        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                                                          <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                                                            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-purple-500/20 rounded-md sm:rounded-lg flex items-center justify-center text-xs font-medium text-purple-400 mt-1 flex-shrink-0">
                                                               {index + 1}
                                                             </div>
-                                                            <div className="flex-1">
-                                                              <div className="flex items-center gap-2 mb-2">
-                                                                <span className="text-white font-medium text-sm">Q{index + 1}: {question.questionId}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                                <span className="text-white font-medium text-xs sm:text-sm truncate">Q{index + 1}: {question.questionId}</span>
                                                                 <Badge className={`${getLevelColor(question.level)} text-xs`}>
                                                                   {question.level}
                                                                 </Badge>
                                                               </div>
-                                                              <p className="text-slate-300 text-sm mb-2 line-clamp-2">{question.question}</p>
-                                                              <div className="flex items-center gap-4 text-xs text-slate-400">
-                                                                <span>{question.topic} • {question.subtopic}</span>
+                                                              <p className="text-slate-300 text-xs sm:text-sm mb-2 line-clamp-2">{question.question}</p>
+                                                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-400">
+                                                                <span className="truncate">{question.topic} • {question.subtopic}</span>
                                                                 {question.image && question.image !== 'n' && (
                                                                   <span className="flex items-center gap-1">
                                                                     <Eye className="w-3 h-3" />
-                                                                    Has Image
+                                                                    <span className="hidden sm:inline">Has Image</span>
+                                                                    <span className="sm:hidden">Image</span>
                                                                   </span>
                                                                 )}
                                                               </div>
                                                             </div>
                                                           </div>
                                                           
-                                                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                          <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                                                             <Button
                                                               size="sm"
                                                               variant="outline"
                                                               onClick={() => handleEditQuestion(item, question, index)}
-                                                              className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 text-blue-400"
+                                                              className="h-7 w-7 sm:h-8 sm:w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 text-blue-400"
                                                             >
                                                               <Edit className="w-3 h-3" />
                                                             </Button>
@@ -1120,7 +1150,7 @@ export default function HomeworkPage() {
                                                                 <Button
                                                                   size="sm"
                                                                   variant="outline"
-                                                                  className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400"
+                                                                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400"
                                                                 >
                                                                   <Trash2 className="w-3 h-3" />
                                                                 </Button>
@@ -1151,17 +1181,18 @@ export default function HomeworkPage() {
                                                     ))}
                                                   </div>
                                                 ) : (
-                                                  <div className="p-8 text-center ml-12">
-                                                    <FileText className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                                                    <p className="text-slate-400 text-sm">No questions added yet</p>
+                                                  <div className="p-4 sm:p-8 text-center ml-6 sm:ml-12">
+                                                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-slate-500 mx-auto mb-2" />
+                                                    <p className="text-slate-400 text-xs sm:text-sm">No questions added yet</p>
                                                     <Button
                                                       variant="outline"
                                                       size="sm"
                                                       onClick={() => handleAddQuestion(item)}
-                                                      className="mt-3 text-blue-400 border-blue-400/30"
+                                                      className="mt-3 text-blue-400 border-blue-400/30 w-full sm:w-auto"
                                                     >
                                                       <Plus className="w-4 h-4 mr-1" />
-                                                      Add First Question
+                                                      <span className="hidden sm:inline">Add First Question</span>
+                                                      <span className="sm:hidden">Add Question</span>
                                                     </Button>
                                                   </div>
                                                 )}
@@ -1185,9 +1216,10 @@ export default function HomeworkPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-8">
-                  <div className="text-sm text-slate-400">
-                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalHomework)} of {totalHomework} homework assignments
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 px-2 sm:px-0">
+                  <div className="text-xs sm:text-sm text-slate-400 text-center sm:text-left">
+                    <span className="hidden sm:inline">Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalHomework)} of {totalHomework} homework assignments</span>
+                    <span className="sm:hidden">Page {currentPage} of {totalPages} ({totalHomework} total)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -1195,11 +1227,11 @@ export default function HomeworkPage() {
                       size="sm"
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+                      className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-8 w-8 p-0"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <span className="text-white px-4 py-2">
+                    <span className="text-white px-3 sm:px-4 py-2 text-sm">
                       {currentPage} of {totalPages}
                     </span>
                     <Button
@@ -1207,16 +1239,13 @@ export default function HomeworkPage() {
                       size="sm"
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+                      className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-8 w-8 p-0"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
 
         {/* Dialogs */}
                         <HomeworkDialogs
@@ -1248,6 +1277,8 @@ export default function HomeworkPage() {
                   importLoading={importLoading}
                   handleImport={handleImport}
                 />
+          </div>
+        </div>
       </div>
     </TooltipProvider>
   )
