@@ -135,7 +135,7 @@ export default function MyGrowthPage() {
       
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen">
+      <main className="lg:ml-[262px] min-h-screen">
         <ResponsiveContainer padding="lg" animated>
           <PageHeader
             title="My Growth Journey"

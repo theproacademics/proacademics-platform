@@ -429,7 +429,7 @@ export default function LessonPage() {
         <div className="fixed inset-0 bg-gradient-to-tr from-purple-800/30 via-transparent to-blue-800/30 pointer-events-none" />
         
         <Navigation />
-        <main className="lg:ml-72 min-h-screen relative z-10">
+        <main className="lg:ml-[262px] min-h-screen relative z-10">
           <ResponsiveContainer padding="lg">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-white mb-4">Lesson Not Found</h1>
@@ -517,7 +517,7 @@ export default function LessonPage() {
 
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <ResponsiveContainer padding="md" animated>
           <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20 px-2 sm:px-0">
 

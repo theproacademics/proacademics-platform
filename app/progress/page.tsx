@@ -2,6 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
+import { useState, useEffect } from "react"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
@@ -131,7 +132,7 @@ export default function ProgressPage() {
       
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen">
+      <main className="lg:ml-[262px] min-h-screen">
         <ResponsiveContainer padding="lg" animated>
           <PageHeader
             title="Your Progress"

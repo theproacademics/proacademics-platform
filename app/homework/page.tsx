@@ -291,11 +291,11 @@ export default function HomeworkPage() {
       <AnimatedBackground />
       <Navigation />
       
-      <div className="lg:ml-80 relative z-10">
-        <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="max-w-6xl mx-auto">
+      <div className="lg:ml-[270px] relative z-10">
+        <div className="p-4 sm:p-6 lg:p-8 relative z-10">
+        <div className="max-w-7xl mx-auto">
           {/* Compact Header */}
-          <div className="mb-6 flex items-center gap-3">
+          <div className="mb-4 flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
@@ -306,7 +306,7 @@ export default function HomeworkPage() {
           </div>
 
           {/* Compact Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-300/20 rounded-xl p-3 hover:shadow-lg transition-all duration-300 group">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-105 transition-transform duration-300">
@@ -371,11 +371,11 @@ export default function HomeworkPage() {
 
           {/* Premium Homework List */}
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
-            <div className="p-8 border-b border-white/10">
+            <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                    <BookOpen className="h-8 w-8 text-blue-400" />
+                  <h2 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-400" />
                     Your Assignments
                   </h2>
                   <p className="text-blue-100/70">Manage and track your homework progress</p>
@@ -387,7 +387,7 @@ export default function HomeworkPage() {
               </div>
             </div>
             
-            <div className="p-8">
+            <div className="p-6">
               <Tabs value={selectedTab} onValueChange={setSelectedTab}>
                 <TabsList className="grid w-full grid-cols-5 bg-white/5 backdrop-blur-sm border border-white/10">
                   <TabsTrigger value="all" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">

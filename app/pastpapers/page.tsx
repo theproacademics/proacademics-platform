@@ -366,7 +366,7 @@ export default function PastPapersPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       <Navigation />
       
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             
             {/* Hero Section */}

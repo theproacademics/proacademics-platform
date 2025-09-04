@@ -157,7 +157,7 @@ export default function ParentDashboardPage() {
       
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen">
+      <main className="lg:ml-[262px] min-h-screen">
         <ResponsiveContainer padding="lg" animated>
           <PageHeader
             title={`${studentData.name}'s Progress`}

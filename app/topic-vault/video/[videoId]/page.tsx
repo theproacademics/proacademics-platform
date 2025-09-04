@@ -493,7 +493,7 @@ export default function TopicVideoPage() {
         <div className="fixed inset-0 bg-gradient-to-tr from-purple-800/30 via-transparent to-blue-800/30 pointer-events-none" />
         
         <Navigation />
-        <main className="lg:ml-72 min-h-screen relative z-10">
+        <main className="lg:ml-[262px] min-h-screen relative z-10">
           <ResponsiveContainer padding="lg">
             <div className="text-center py-12">
               <Video className="w-16 h-16 text-slate-400 mx-auto mb-4" />
@@ -580,7 +580,7 @@ export default function TopicVideoPage() {
 
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <div className="space-y-6 pb-16 pt-8">
             {/* Back to Topic Vault Button - Outside Card */}

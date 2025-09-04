@@ -227,7 +227,7 @@ export default function LexAIPage() {
         <AnimatedBackground />
         <Navigation />
         
-        <div className="lg:ml-80 relative z-10">
+        <div className="lg:ml-[279px] relative z-10">
           <div className="container mx-auto px-4 py-8 relative z-10">
             <div className="max-w-6xl mx-auto">
               {/* Hero Section */}
@@ -420,7 +420,7 @@ export default function LexAIPage() {
         <AnimatedBackground />
         <Navigation />
         
-        <div className="lg:ml-80 relative z-10">
+        <div className="lg:ml-[262px] relative z-10">
           <div className="container mx-auto px-4 py-8 relative z-10">
             <div className="max-w-2xl mx-auto text-center">
               <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8">
@@ -489,7 +489,7 @@ export default function LexAIPage() {
       <AnimatedBackground />
       <Navigation />
       
-      <div className="lg:ml-80 relative z-10">
+      <div className="lg:ml-[262px] relative z-10">
         <div className="container mx-auto px-4 py-8 relative z-10">
           <div className="max-w-4xl mx-auto">
             {/* Header */}

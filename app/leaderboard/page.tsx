@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Navigation } from "@/components/layout/navigation"
@@ -276,7 +276,7 @@ export default function LeaderboardPage() {
       <AnimatedBackground />
       <Navigation />
       
-      <div className="lg:ml-80 relative z-10">
+      <div className="lg:ml-[278px] relative z-10">
         <div className="container mx-auto px-4 py-8 relative z-10">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section */}

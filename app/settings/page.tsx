@@ -101,7 +101,7 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
         <Navigation />
-        <main className="lg:ml-72 min-h-screen flex items-center justify-center">
+        <main className="lg:ml-[262px] min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
         </main>
       </div>
@@ -148,7 +148,7 @@ export default function SettingsPage() {
 
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
           <PageHeader
             title="Settings"

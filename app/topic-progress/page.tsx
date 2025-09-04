@@ -190,7 +190,7 @@ export default function TopicProgressPage() {
       
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen">
+      <main className="lg:ml-[262px] min-h-screen">
         <ResponsiveContainer padding="lg" animated>
           <PageHeader
             title="Topic Progress Tracker"

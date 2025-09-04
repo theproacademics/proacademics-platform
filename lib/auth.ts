@@ -1,10 +1,35 @@
-import type { NextAuthOptions } from "next-auth"
+import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { userService } from "@/lib/db/users"
+import type { JWT } from "next-auth/jwt"
+import type { Session } from "next-auth"
+
+// Define NextAuthOptions type locally since it's not exported in this version
+interface NextAuthOptions {
+  providers: any[]
+  session: {
+    strategy: string
+    maxAge: number
+  }
+  callbacks: {
+    jwt: (params: { token: JWT; user?: any }) => Promise<JWT>
+    session: (params: { session: Session; token: JWT }) => Promise<Session>
+    redirect: (params: { url: string; baseUrl: string }) => Promise<string>
+  }
+  pages: {
+    signIn: string
+    error: string
+  }
+  secret: string
+  debug: boolean
+}
 
 // Seed demo users in development
 if (process.env.NODE_ENV === "development") {
-  userService.seedDemoUsers().catch(console.error)
+  // Delay seeding to avoid blocking NextAuth initialization
+  setTimeout(() => {
+    userService.seedDemoUsers().catch(console.error)
+  }, 1000)
 }
 
 export const authOptions: NextAuthOptions = {
@@ -18,17 +43,27 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            throw new Error("Email and password are required")
+            console.log("Missing credentials")
+            return null
           }
 
+          console.log("Attempting to verify user:", credentials.email)
           const user = await userService.verifyPassword(credentials.email, credentials.password)
 
           if (!user) {
-            throw new Error("Invalid credentials")
+            console.log("Invalid credentials for:", credentials.email)
+            return null
           }
 
+          console.log("User verified successfully:", user.email)
+          
           // Update last login
-          await userService.updateLastLogin(user.id)
+          try {
+            await userService.updateLastLogin(user.id)
+          } catch (error) {
+            console.error("Error updating last login:", error)
+            // Don't fail auth if last login update fails
+          }
 
           return {
             id: user.id,
@@ -49,7 +84,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: any }) {
       if (user) {
         token.role = user.role
         token.id = user.id
@@ -57,7 +92,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (token && session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
@@ -65,7 +100,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`
       // Allows callback URLs on the same origin
@@ -110,8 +145,6 @@ export async function createUser(userData: {
     deviceFingerprint: userData.deviceFingerprint || "",
     userAgent: userData.userAgent || "",
     timezone: userData.timezone || "",
-    createdAt: new Date(),
-    updatedAt: new Date(),
   })
 
   return {

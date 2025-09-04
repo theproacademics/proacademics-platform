@@ -358,7 +358,7 @@ export default function TimetablePage() {
 
       <Navigation />
 
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <ResponsiveContainer padding="lg" animated>
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

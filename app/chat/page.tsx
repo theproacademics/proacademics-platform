@@ -246,7 +246,7 @@ export default function ChatPage() {
       <Navigation />
 
       {/* Main Layout */}
-      <div className="lg:ml-80">
+      <div className="lg:ml-[262px]">
         <div className="min-h-screen flex">
           {/* Chat Area */}
           <div className="flex-1 flex flex-col">

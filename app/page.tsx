@@ -279,7 +279,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-slate-950 relative">
         <GlassBackground />
         <Navigation />
-        <main className="lg:ml-72 min-h-screen relative z-10">
+        <main className="lg:ml-[262px] min-h-screen relative z-10">
           <LoadingSkeleton />
         </main>
       </div>
@@ -380,8 +380,8 @@ export default function HomePage() {
       <GlassBackground />
       <Navigation />
       
-      <main className="lg:ml-72 min-h-screen relative z-10">
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+      <main className="lg:ml-[268px] min-h-screen relative z-10">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-8">
           
           {/* Header Section */}
           <GlassCard className="p-6 lg:p-8">

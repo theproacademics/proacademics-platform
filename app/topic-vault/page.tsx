@@ -323,7 +323,7 @@ export default function StudentTopicVaultPage() {
       <Navigation />
 
       {/* Main Content */}
-      <main className="lg:ml-72 min-h-screen relative z-10">
+      <main className="lg:ml-[262px] min-h-screen relative z-10">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
