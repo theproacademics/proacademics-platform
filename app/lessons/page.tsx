@@ -121,10 +121,10 @@ interface Lesson {
   description?: string; // Lesson description
 }
 
-// Lesson status function (matching timetable)
-const getLessonStatus = (lesson: Lesson) => {
+// Lesson status function - simplified to only show future/past
+const getLessonStatus = (lesson: Lesson, currentTime?: Date) => {
   if (!lesson.scheduledDate) {
-    // No scheduled date - default to join lesson
+    // No scheduled date - default to watch lesson
     return {
       status: 'future',
       buttonText: 'Watch Now',
@@ -132,11 +132,11 @@ const getLessonStatus = (lesson: Lesson) => {
     }
   }
 
-  const now = new Date()
+  const now = currentTime || new Date()
   const lessonDate = new Date(lesson.scheduledDate)
   
   if (isNaN(lessonDate.getTime())) {
-    // Invalid date - default to join lesson
+    // Invalid date - default to watch lesson
     return {
       status: 'future',
       buttonText: 'Watch Now',
@@ -154,22 +154,15 @@ const getLessonStatus = (lesson: Lesson) => {
   
   const lessonEndTime = new Date(lessonDate.getTime() + durationMinutes * 60000)
   
-  if (now < lessonDate) {
-    // Future lesson
+  if (now < lessonEndTime) {
+    // Future lesson (before end time)
     return {
       status: 'future',
       buttonText: 'Watch Now',
       buttonClass: 'bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 hover:border-white/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-white/10 hover:shadow-white/20'
     }
-  } else if (now >= lessonDate && now <= lessonEndTime) {
-    // Currently live (happening right now)
-    return {
-      status: 'live',
-      buttonText: 'Join Lesson',
-      buttonClass: 'bg-red-500/30 backdrop-blur-xl border border-red-400/50 hover:bg-red-500/40 hover:border-red-400/70 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl shadow-red-500/20 hover:shadow-red-500/30 animate-pulse'
-    }
   } else {
-    // Past lesson
+    // Past lesson (after end time)
     return {
       status: 'past',
       buttonText: 'Watch Lesson',
@@ -197,6 +190,9 @@ export default function LessonsPage() {
 
   const [dataReady, setDataReady] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
+  
+  // Add state for current time to prevent flickering
+  const [currentTime, setCurrentTime] = useState(new Date())
   
   const { showPreloader } = usePreloader({ 
     delay: 800,
@@ -332,6 +328,15 @@ export default function LessonsPage() {
 
     fetchLessons()
     fetchSubjectsAndPrograms()
+  }, [])
+
+  // Add timer to update current time every 30 seconds to prevent flickering
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 30000) // Update every 30 seconds instead of on every render
+
+    return () => clearInterval(timer)
   }, [])
 
   // Update programs when subject changes
@@ -1061,18 +1066,6 @@ export default function LessonsPage() {
                           </div>
                         </div>
                         
-                        {(() => {
-                          const lessonStatus = getLessonStatus(lesson)
-                          if (lessonStatus.status === 'live') {
-                            return (
-                              <Badge className="bg-gradient-to-r from-red-500/40 to-red-600/40 border-red-400/60 text-red-100 flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold animate-pulse border shadow-lg rounded-lg backdrop-blur-sm self-start">
-                                <div className="w-2 h-2 bg-red-300 rounded-full animate-ping"></div>
-                                LIVE
-                              </Badge>
-                            )
-                          }
-                          return null
-                        })()}
                       </div>
 
                       {/* Program Badge */}
@@ -1129,28 +1122,17 @@ export default function LessonsPage() {
                     {/* Action Button - Hidden on mobile (shown in top row) */}
                     <div className="hidden sm:flex flex-shrink-0">
                       {(() => {
-                        const lessonStatus = getLessonStatus(lesson)
+                        const lessonStatus = getLessonStatus(lesson, currentTime)
                         
                         return (
                           <Button 
                             className={`w-full lg:w-auto ${lessonStatus.buttonClass} transition-all duration-200 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap`}
                             onClick={(e) => {
                               e.stopPropagation()
-                              // Simple logic: Past = watch lesson (video), Live/Future = join lesson (prefer zoom)
-                              if (lessonStatus.status === 'past') {
-                                // Past lesson - watch lesson (video)
-                                window.location.href = `/lesson/${lesson.id}?from=lessons`
-                              } else {
-                                // Live/Future lesson - join lesson (prefer zoom if available)
-                                if (lesson.zoomLink) {
-                                  window.open(lesson.zoomLink, '_blank')
-                                } else {
-                                  window.location.href = `/lesson/${lesson.id}?from=lessons`
-                                }
-                              }
+                              // Simple logic: All lessons go to lesson page
+                              window.location.href = `/lesson/${lesson.id}?from=lessons`
                             }}
                           >
-                            {lessonStatus.status === 'live' && <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
                             {lessonStatus.buttonText}
                           </Button>
                         )
