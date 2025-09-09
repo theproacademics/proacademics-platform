@@ -80,8 +80,8 @@ export async function POST(req: Request) {
 
     const lesson: Lesson = {
       id: lessonId,
-      lessonName: title, // Use title as the main lesson name
-      topic: title, // Map "title" from frontend to "topic" in database for compatibility
+      lessonName: lessonName, // Use lessonName from form
+      topic: title, // Map "title" from frontend to "topic" in database
       description: description || "", // Include description field
       subject,
       type: type || 'Lesson',
