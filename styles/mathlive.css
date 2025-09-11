@@ -1,0 +1,203 @@
+/* MathLive Virtual Keyboard Z-Index Fixes */
+
+/* Ensure MathLive virtual keyboard appears above all dialogs and modals */
+.ML__virtual-keyboard {
+  z-index: 999999 !important;
+  position: fixed !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.ML__virtual-keyboard-container {
+  z-index: 999999 !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.ML__virtual-keyboard-backdrop {
+  z-index: 999998 !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.ML__keyboard {
+  z-index: 1000000 !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Override any conflicting z-index from Radix UI dialogs */
+[data-radix-dialog-content] {
+  z-index: 10 !important;
+}
+
+/* Ensure dialog backdrop is below keyboard */
+[data-radix-dialog-overlay] {
+  z-index: 5 !important;
+}
+
+/* Ensure MathLive elements are above dialog content */
+.ML__mathfield {
+  z-index: 1 !important;
+}
+
+/* Virtual keyboard panel specific styling */
+.ML__keyboard-panel {
+  z-index: 100001 !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* MathLive popup elements */
+.ML__popover {
+  z-index: 100002 !important;
+}
+
+/* Ensure proper layering for all MathLive components */
+.ML__virtual-keyboard * {
+  z-index: inherit !important;
+}
+
+/* Force keyboard to stay visible */
+.ML__virtual-keyboard[style*="display: none"] {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.ML__virtual-keyboard[style*="visibility: hidden"] {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Prevent keyboard from closing when clicked */
+.ML__virtual-keyboard,
+.ML__keyboard,
+.ML__keyboard-panel {
+  pointer-events: auto !important;
+  user-select: none !important;
+}
+
+/* Ensure keyboard buttons work properly */
+.ML__keyboard button,
+.ML__keyboard .ML__keyboard-key {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Prevent dialog from interfering with keyboard */
+[data-radix-dialog-content] {
+  z-index: 50 !important;
+}
+
+/* Ensure keyboard is always on top */
+.ML__virtual-keyboard,
+.ML__keyboard,
+.ML__keyboard-panel,
+.ML__virtual-keyboard-container {
+  z-index: 999999 !important;
+  position: fixed !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force keyboard to appear above everything */
+.ML__virtual-keyboard * {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Override any dialog z-index */
+[role="dialog"] {
+  z-index: 10 !important;
+}
+
+/* Ensure keyboard backdrop is above dialog */
+.ML__virtual-keyboard-backdrop {
+  z-index: 999998 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force all MathLive elements to appear above everything */
+.ML__virtual-keyboard,
+.ML__keyboard,
+.ML__keyboard-panel,
+.ML__virtual-keyboard-container,
+.ML__virtual-keyboard-backdrop {
+  z-index: 999999 !important;
+  position: fixed !important;
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Override any potential conflicts */
+body .ML__virtual-keyboard,
+body .ML__keyboard,
+body .ML__keyboard-panel {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure cursor is visible in MathField */
+math-field {
+  caret-color: #3b82f6 !important;
+  cursor: text !important;
+}
+
+/* MathLive cursor styling */
+.ML__caret {
+  background-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Selection highlighting */
+.ML__selection {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+  color: inherit !important;
+}
+
+/* Ensure text input is properly styled */
+math-field[contenteditable="true"] {
+  caret-color: #3b82f6 !important;
+  cursor: text !important;
+  user-select: text !important;
+}
+
+/* Ensure virtual keyboard keys work properly */
+.ML__keyboard-key {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+/* Specifically style the backspace key */
+.ML__keyboard-key[data-key="Backspace"],
+.ML__keyboard-key[title*="backspace"],
+.ML__keyboard-key[title*="delete"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+/* Ensure all keyboard interactions work */
+.ML__virtual-keyboard * {
+  pointer-events: auto !important;
+}

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import MathField from "@/components/ui/math-field"
 import { Upload, Loader2, Save, X, Plus, Calendar, Clock, Award, Target, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 
@@ -555,7 +556,16 @@ export function HomeworkDialogs({
 
       {/* Add Question Dialog */}
       <Dialog open={isAddQuestionDialogOpen} onOpenChange={setIsAddQuestionDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+        <DialogContent 
+          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0"
+          onPointerDownOutside={(e) => {
+            // Prevent dialog from closing when clicking on virtual keyboard
+            const target = e.target as HTMLElement
+            if (target.closest('.ML__virtual-keyboard') || target.closest('.ML__keyboard')) {
+              e.preventDefault()
+            }
+          }}
+        >
           <DialogHeader className="pb-4">
             <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
@@ -630,25 +640,29 @@ export function HomeworkDialogs({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="question" className="text-white text-sm sm:text-base">Question</Label>
-                <Textarea
+                <MathField
                   id="question"
                   value={questionFormData.question}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, question: e.target.value })}
-                  placeholder="Enter the question text"
+                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, question: value })}
+                  placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                  virtualKeyboardMode="onfocus"
+                  virtualKeyboards="all"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
-                <Textarea
+                <MathField
                   id="markScheme"
                   value={questionFormData.markScheme}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, markScheme: e.target.value })}
-                  placeholder="Enter the marking scheme"
+                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, markScheme: value })}
+                  placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                  virtualKeyboardMode="onfocus"
+                  virtualKeyboards="all"
                 />
               </div>
             </div>
@@ -678,7 +692,16 @@ export function HomeworkDialogs({
 
       {/* Edit Question Dialog */}
       <Dialog open={isEditQuestionDialogOpen} onOpenChange={setIsEditQuestionDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0">
+        <DialogContent 
+          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0"
+          onPointerDownOutside={(e) => {
+            // Prevent dialog from closing when clicking on virtual keyboard
+            const target = e.target as HTMLElement
+            if (target.closest('.ML__virtual-keyboard') || target.closest('.ML__keyboard')) {
+              e.preventDefault()
+            }
+          }}
+        >
           <DialogHeader className="pb-4">
             <DialogTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
@@ -753,25 +776,29 @@ export function HomeworkDialogs({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-question" className="text-white text-sm sm:text-base">Question</Label>
-                <Textarea
+                <MathField
                   id="edit-question"
                   value={questionFormData.question}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, question: e.target.value })}
-                  placeholder="Enter the question text"
+                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, question: value })}
+                  placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                  virtualKeyboardMode="onfocus"
+                  virtualKeyboards="all"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
-                <Textarea
+                <MathField
                   id="edit-markScheme"
                   value={questionFormData.markScheme}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, markScheme: e.target.value })}
-                  placeholder="Enter the marking scheme"
+                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, markScheme: value })}
+                  placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                  virtualKeyboardMode="onfocus"
+                  virtualKeyboards="all"
                 />
               </div>
             </div>
