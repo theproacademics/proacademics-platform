@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -177,6 +178,7 @@ const getDifficultyColor = (difficulty: string) => {
 }
 
 export default function HomeworkPage() {
+  const router = useRouter()
   const [selectedTab, setSelectedTab] = useState("all")
   const [dataReady, setDataReady] = useState(false)
   const [homework, setHomework] = useState<HomeworkAssignment[]>([])
@@ -474,6 +476,15 @@ export default function HomeworkPage() {
 
                           <div className="ml-6">
                             <Button
+                              onClick={() => {
+                                if (homework.completionStatus === "completed") {
+                                  // Navigate to review page (future implementation)
+                                  router.push(`/homework/${homework._id}/review`)
+                                } else {
+                                  // Navigate to question page
+                                  router.push(`/homework/${homework._id}`)
+                                }
+                              }}
                               className={
                                 homework.completionStatus === "completed"
                                   ? "bg-white/10 text-white hover:bg-white/20 border border-white/20"
