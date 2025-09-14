@@ -820,16 +820,16 @@ export default function SignInPage() {
                               outline: 'none',
                               boxShadow: 'none',
                               border: '1px solid rgba(75, 85, 99, 0.5)',
-                              webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
-                              webkitTextFillColor: 'white'
+                              WebkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                              WebkitTextFillColor: 'white'
                             } as React.CSSProperties}
                             onFocus={(e) => {
                               e.target.style.outline = 'none'
                               e.target.style.boxShadow = 'none'
                               e.target.style.border = '1px solid rgba(59, 130, 246, 0.8)';
                               e.target.style.animation = 'input-focus 0.3s ease-out forwards';
-                              (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
-                              (e.target.style as any).webkitTextFillColor = 'white'
+                              (e.target.style as any).WebkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                              (e.target.style as any).WebkitTextFillColor = 'white'
                             }}
                             onBlur={(e) => {
                               e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'
@@ -875,16 +875,16 @@ export default function SignInPage() {
                               outline: 'none',
                               boxShadow: 'none',
                               border: '1px solid rgba(75, 85, 99, 0.5)',
-                              webkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
-                              webkitTextFillColor: 'white'
+                              WebkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
+                              WebkitTextFillColor: 'white'
                             } as React.CSSProperties}
                             onFocus={(e) => {
                               e.target.style.outline = 'none'
                               e.target.style.boxShadow = 'none'
                               e.target.style.border = '1px solid rgba(59, 130, 246, 0.8)';
                               e.target.style.animation = 'input-focus 0.3s ease-out forwards';
-                              (e.target.style as any).webkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
-                              (e.target.style as any).webkitTextFillColor = 'white'
+                              (e.target.style as any).WebkitBoxShadow = '0 0 0 1000px rgba(31, 41, 55, 0.7) inset';
+                              (e.target.style as any).WebkitTextFillColor = 'white'
                             }}
                             onBlur={(e) => {
                               e.target.style.border = '1px solid rgba(75, 85, 99, 0.5)'

@@ -20,7 +20,6 @@ import {
   BookOpen, 
   Brain,
   Send,
-  Lightbulb,
   CheckCircle,
   XCircle,
   Play
@@ -173,7 +172,6 @@ export default function HomeworkQuestionPage() {
   const [homework, setHomework] = useState<HomeworkAssignment | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswer, setUserAnswer] = useState('')
-  const [showHint, setShowHint] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null)
   const [dataReady, setDataReady] = useState(false)
@@ -263,7 +261,6 @@ export default function HomeworkQuestionPage() {
         if (currentQuestionIndex < homework.questionSet.length - 1) {
           setCurrentQuestionIndex(currentQuestionIndex + 1)
           setUserAnswer('')
-          setShowHint(false)
         } else {
           // Homework completed
           toast.success('Congratulations! You have completed the homework!')
@@ -411,29 +408,44 @@ export default function HomeworkQuestionPage() {
       
       <div className="lg:ml-[270px] relative z-10">
         <div className="p-4 sm:p-6 lg:p-8 relative z-10">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[90rem] mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/homework')}
-                  className="text-white hover:bg-white/10 border border-white/20"
+                  className="text-white hover:bg-white/10 border border-white/20 text-base"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-5 h-5 mr-2" />
                   Back to Homework
                 </Button>
               </div>
               
-              <div className="text-right">
-                <h1 className="text-2xl font-bold text-white">{homework.homeworkName}</h1>
-                <p className="text-gray-300">{homework.subject} • {homework.program}</p>
+              <div className="flex items-center space-x-6">
+                <div className="text-right">
+                  <h1 className="text-2xl font-bold text-white">{homework.homeworkName}</h1>
+                  <p className="text-gray-300 text-base">{homework.subject} • {homework.program}</p>
+                </div>
+                {/* XP Reward moved to header */}
+                <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      <span className="text-white font-semibold text-sm">XP Reward</span>
+                    </div>
+                    <div className="text-xl font-bold text-yellow-300">
+                      +{homework.xpAwarded}
+                    </div>
+                    <p className="text-gray-300 text-sm">For completing</p>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Question Section */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 flex flex-col">
             {/* Progress Card */}
             <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
               <CardContent className="p-6">
@@ -442,12 +454,12 @@ export default function HomeworkQuestionPage() {
                     <Badge className={getDifficultyColor(currentQuestion.level)}>
                       {currentQuestion.level.toUpperCase()}
                     </Badge>
-                    <span className="text-white font-medium">
+                    <span className="text-white font-medium text-base">
                       Question {currentQuestionIndex + 1} of {homework.totalQuestions}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2 text-gray-300">
-                    <Clock className="w-4 h-4" />
+                  <div className="flex items-center space-x-2 text-gray-300 text-base">
+                    <Clock className="w-5 h-5" />
                     <span>{homework.estimatedTime}min</span>
                   </div>
                 </div>
@@ -456,31 +468,31 @@ export default function HomeworkQuestionPage() {
             </Card>
 
             {/* Question Card */}
-            <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
-              <CardHeader>
+            <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl flex-1 flex flex-col">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white flex items-center">
+                  <CardTitle className="text-white flex items-center text-xl">
                     <BookOpen className="w-5 h-5 mr-2" />
                     Question Details
                   </CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="border-purple-400 text-purple-200 bg-purple-500/20">
+                  <div className="flex items-center space-x-3">
+                    <Badge variant="outline" className="border-purple-400 text-purple-200 bg-purple-500/20 text-sm">
                       {currentQuestion.topic}
                     </Badge>
-                    <Badge variant="outline" className="border-blue-400 text-blue-200 bg-blue-500/20">
+                    <Badge variant="outline" className="border-blue-400 text-blue-200 bg-blue-500/20 text-sm">
                       {currentQuestion.subtopic}
                     </Badge>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 flex-1 flex flex-col">
                 {/* Question Image */}
                 {currentQuestion.image && currentQuestion.image !== 'n' && (
                   <div className="rounded-lg overflow-hidden">
                     <img 
                       src={currentQuestion.image} 
                       alt="Question illustration"
-                      className="w-full h-auto max-h-64 object-contain bg-white rounded-lg"
+                      className="w-full h-auto max-h-48 object-contain bg-white rounded-lg"
                     />
                   </div>
                 )}
@@ -494,97 +506,74 @@ export default function HomeworkQuestionPage() {
                 </div>
 
                 {/* Answer Input */}
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1 flex flex-col">
                   <h3 className="text-lg font-semibold text-white">Your Answer:</h3>
-                  <div className="bg-black/30 rounded-lg p-4 border border-white/10">
+                  <div className="bg-black/30 rounded-lg p-4 border border-white/10 flex-1">
                     <MathField
                       value={userAnswer}
                       onChange={setUserAnswer}
                       placeholder="Enter your mathematical answer here..."
-                      className="w-full text-white"
+                      className="w-full h-full text-white text-lg"
                       virtualKeyboardMode="onfocus"
                       virtualKeyboards="all"
                     />
                   </div>
                 </div>
 
-                {/* Hint Section */}
-                <div className="space-y-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowHint(!showHint)}
-                    className="border-purple-500 text-purple-300 hover:bg-purple-500/20"
-                  >
-                    <Lightbulb className="w-4 h-4 mr-2" />
-                    {showHint ? 'Hide Hint' : 'Show Hint'}
-                  </Button>
-                  
-                  {showHint && (
-                    <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-4">
-                      <h4 className="text-yellow-200 font-semibold mb-2">Hint:</h4>
-                      <p className="text-yellow-100 text-sm">
-                        Check the mark scheme for guidance on how to approach this question.
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                {/* Mark Scheme (for reference) */}
-                <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                  <h4 className="text-blue-200 font-semibold mb-2">Mark Scheme:</h4>
-                  <div className="text-blue-100 whitespace-pre-wrap text-sm">
-                    {currentQuestion.markScheme}
-                  </div>
-                </div>
 
                 {/* Submit Button */}
-                <Button
-                  onClick={handleSubmitAnswer}
-                  disabled={!userAnswer.trim() || isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Submitting...
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Submit Answer
-                    </div>
-                  )}
-                </Button>
+                <div className="mt-auto">
+                  <Button
+                    onClick={handleSubmitAnswer}
+                    disabled={!userAnswer.trim() || isSubmitting}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-base py-3"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Submitting...
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <CheckCircle className="w-5 h-5 mr-2" />
+                        Submit Answer
+                      </div>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* ChatGPT Integration Section */}
-          <div className="space-y-6">
+          {/* Right Panel */}
+          <div className="space-y-6 flex flex-col h-full">
             {/* Header Info */}
             <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-4 shadow-xl">
-              <h2 className="text-white text-lg font-semibold mb-1">{homework.homeworkName}</h2>
+              <h2 className="text-white text-lg font-semibold mb-2">Homework Details</h2>
               <p className="text-gray-300 text-sm">{homework.subject} • {homework.program}</p>
+              <p className="text-gray-300 text-sm mt-1">Teacher: {homework.teacher}</p>
             </div>
 
-            {/* XP and Stats Card */}
+            {/* Mark Scheme Card */}
             <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <Trophy className="w-5 h-5 text-yellow-400" />
-                  <span className="text-white font-semibold">XP Reward</span>
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <span className="text-white font-semibold text-base">Mark Scheme</span>
                 </div>
-                <div className="text-2xl font-bold text-yellow-300">
-                  +{homework.xpAwarded}
+                <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
+                  <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed">
+                    {currentQuestion.markScheme}
+                  </div>
                 </div>
-                <p className="text-gray-300 text-sm">For completing this homework</p>
               </CardContent>
             </Card>
 
             {/* AI Assistant Chat */}
-            <Card className="bg-black/40 backdrop-blur-md border-white/20 h-[600px] flex flex-col shadow-xl">
+            <Card className="bg-black/40 backdrop-blur-md border-white/20 flex-1 flex flex-col shadow-xl">
               <CardHeader className="pb-4">
-                <CardTitle className="text-white flex items-center">
+                <CardTitle className="text-white flex items-center text-lg">
                   <Brain className="w-5 h-5 mr-2 text-purple-300" />
                   AI Assistant
                 </CardTitle>
@@ -595,21 +584,21 @@ export default function HomeworkQuestionPage() {
               
               <CardContent className="flex-1 flex flex-col p-4 pt-0">
                 {/* Chat Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
+                <div className="flex-1 overflow-y-auto space-y-4">
                   {chatMessages.map((message) => (
                     <div
                       key={message.id}
                       className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        className={`max-w-sm px-3 py-3 rounded-lg ${
                           message.type === 'user'
                             ? 'bg-purple-600 text-white'
                             : 'bg-white/10 text-gray-200'
                         }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
+                        <p className="text-xs opacity-70 mt-2">
                           {message.timestamp.toLocaleTimeString()}
                         </p>
                       </div>
@@ -618,9 +607,9 @@ export default function HomeworkQuestionPage() {
                   
                   {isChatLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-white/10 text-gray-200 px-3 py-2 rounded-lg">
+                      <div className="bg-white/10 text-gray-200 px-3 py-3 rounded-lg">
                         <div className="flex items-center space-x-2">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-400"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
                           <span className="text-sm">AI is thinking...</span>
                         </div>
                       </div>
@@ -628,31 +617,6 @@ export default function HomeworkQuestionPage() {
                   )}
                   
                   <div ref={chatEndRef} />
-                </div>
-
-                {/* Chat Input */}
-                <div className="space-y-2">
-                  <Textarea
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Ask me anything about this question..."
-                    className="bg-black/30 border-white/20 text-white placeholder-gray-300 resize-none focus:border-purple-400"
-                    rows={3}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleChatSubmit()
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleChatSubmit}
-                    disabled={!chatInput.trim() || isChatLoading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send
-                  </Button>
                 </div>
               </CardContent>
             </Card>
