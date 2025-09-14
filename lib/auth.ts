@@ -24,12 +24,16 @@ interface NextAuthOptions {
   debug: boolean
 }
 
-// Seed demo users in development
+// Seed admin user from environment variables
+setTimeout(() => {
+  userService.seedAdminUser().catch(console.error)
+}, 1000)
+
+// Seed demo users in development only
 if (process.env.NODE_ENV === "development") {
-  // Delay seeding to avoid blocking NextAuth initialization
   setTimeout(() => {
     userService.seedDemoUsers().catch(console.error)
-  }, 1000)
+  }, 2000)
 }
 
 export const authOptions: NextAuthOptions = {

@@ -504,6 +504,30 @@ export default function HomeworkPage() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Empty State */}
+                    {filterHomework(selectedTab === "all" ? undefined : selectedTab).length === 0 && (
+                      <div className="text-center py-16">
+                        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FileText className="w-12 h-12 text-slate-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">No homework assignments found</h3>
+                        <p className="text-slate-400 mb-6">
+                          {selectedTab === "all" 
+                            ? "No homework assignments are currently available" 
+                            : `No ${selectedTab.replace("_", " ")} homework assignments found`}
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setSelectedTab("all")
+                          }}
+                          className="border-white/20 text-white hover:bg-white/10"
+                        >
+                          View All Assignments
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>

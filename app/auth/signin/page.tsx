@@ -10,37 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Brain, ArrowRight, Shield, Users, BookOpen, Sparkles, Star, Cpu, Rocket, Globe, X, Zap, Lock, TrendingUp } from "lucide-react"
+import { Eye, EyeOff, Brain, ArrowRight, Sparkles, Cpu, X, Zap, Lock, TrendingUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Preloader } from "@/components/ui/preloader"
 import { usePreloader } from "@/hooks/use-preloader"
 
-const DEMO_ACCOUNTS = [
-  { 
-    role: "Student", 
-    email: "alex@example.com", 
-    password: "password123", 
-    icon: BookOpen, 
-    gradient: "from-cyan-500 via-blue-500 to-indigo-500",
-    description: "Explore learning features"
-  },
-  { 
-    role: "Admin", 
-    email: "admin@proacademics.com", 
-    password: "password123", 
-    icon: Shield, 
-    gradient: "from-rose-500 via-pink-500 to-violet-500",
-    description: "Access admin dashboard"
-  },
-  { 
-    role: "Teacher", 
-    email: "emily@proacademics.com", 
-    password: "password123", 
-    icon: Users, 
-    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
-    description: "Manage student progress"
-  },
-]
+// Demo accounts removed - using environment-based admin credentials
 
 const FEATURES = [
   { 
@@ -454,11 +429,7 @@ export default function SignInPage() {
     }
   }
 
-  const handleDemoLogin = (account: typeof DEMO_ACCOUNTS[0]) => {
-    setEmail(account.email)
-    setPassword(account.password)
-    setError("")
-  }
+  // Demo login function removed
 
   if (!mounted) {
     return <div className="min-h-screen bg-slate-950" />
@@ -1033,38 +1004,7 @@ export default function SignInPage() {
                 )}
               </div>
 
-              {/* Demo Accounts */}
-              <div className="relative">
-                <Card className="relative bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 shadow-lg shadow-gray-900/20 hover:bg-gray-900/60 transition-all duration-300 hover:scale-[1.02]">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center space-x-2">
-                      <Star className="w-3 h-3 text-yellow-400 animate-pulse" />
-                      <CardTitle className="text-sm text-white font-medium">Quick Demo</CardTitle>
-                    </div>
-                    <p className="text-gray-400 text-xs">Try different roles</p>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5">
-                    {DEMO_ACCOUNTS.map((account, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleDemoLogin(account)}
-                        className="w-full p-2 bg-gray-800/30 hover:bg-gray-900/60 rounded-lg transition-all duration-300 group/demo flex items-center space-x-2.5 border border-gray-700/30 hover:border-gray-700/50 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 relative overflow-hidden"
-                        disabled={isLoading}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/demo:translate-x-full transition-transform duration-700"></div>
-                        <div className={`w-6 h-6 bg-gradient-to-r ${account.gradient} rounded-md flex items-center justify-center shadow-sm group-hover/demo:scale-110 transition-transform duration-300 relative z-10`}>
-                          <account.icon className="w-3 h-3 text-white transition-transform duration-300 group-hover/demo:rotate-12" />
-                        </div>
-                        <div className="text-left flex-1 min-w-0 relative z-10">
-                          <div className="text-white font-medium text-xs truncate">{account.role}</div>
-                          <div className="text-gray-400 text-xs truncate">{account.description}</div>
-                    </div>
-                        <ArrowRight className="w-2.5 h-2.5 text-gray-400 group-hover/demo:text-white transition-all duration-300 flex-shrink-0 group-hover/demo:translate-x-1 relative z-10" />
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-              </div>
+              {/* Quick Demo section removed */}
             </div>
           </div>
         </div>

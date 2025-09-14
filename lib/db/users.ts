@@ -138,7 +138,7 @@ class UserService {
       },
       { returnDocument: "after" }
     )
-    return result.value
+    return result || null
   }
 
   async updateLastLogin(id: string): Promise<void> {
@@ -272,14 +272,48 @@ class UserService {
     return false
   }
 
-  // For development/testing - seed demo users
+  // Create admin user from environment variables
+  async seedAdminUser(): Promise<void> {
+    const collection = await this.getCollection()
+    
+    // Check if admin user already exists
+    const existingAdmin = await collection.findOne({ role: "admin" })
+    if (existingAdmin) {
+      console.log("Admin user already exists")
+      return
+    }
+
+    // Get admin credentials from environment variables
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@proacademics.com"
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123"
+    const adminName = process.env.ADMIN_NAME || "System Administrator"
+
+    try {
+      await this.createUser({
+        id: "admin-1",
+        name: adminName,
+        email: adminEmail,
+        password: adminPassword,
+        role: "admin" as const,
+        permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
+        dateOfBirth: "1990-01-01", // Required field
+        schoolName: "ProAcademics",
+        uniqueToken: "admin-token-" + Date.now()
+      })
+      console.log(`Admin user created: ${adminEmail}`)
+    } catch (error) {
+      console.error("Error creating admin user:", error)
+    }
+  }
+
+  // For development/testing - seed demo users (non-admin)
   async seedDemoUsers(): Promise<void> {
     if (process.env.NODE_ENV !== "development") return
 
     const collection = await this.getCollection()
     const existingUsers = await collection.countDocuments()
     
-    if (existingUsers > 0) return // Already seeded
+    if (existingUsers > 1) return // Already seeded (1 = admin user)
 
     const demoUsers = [
       {
@@ -293,14 +327,9 @@ class UserService {
         predictedGrade: "A*",
         currentWorkingAverage: 87.5,
         studyStreak: 7,
-      },
-      {
-        id: "demo-admin-1",
-        name: "Sarah Admin",
-        email: "admin@proacademics.com",
-        password: "password123",
-        role: "admin" as const,
-        permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
+        dateOfBirth: "2005-06-15",
+        schoolName: "Demo School",
+        uniqueToken: "student-token-1"
       },
       {
         id: "demo-teacher-1",
@@ -309,6 +338,9 @@ class UserService {
         password: "password123",
         role: "teacher" as const,
         subjects: ["Physics", "Mathematics"],
+        dateOfBirth: "1985-03-20",
+        schoolName: "ProAcademics",
+        uniqueToken: "teacher-token-1"
       },
     ]
 
