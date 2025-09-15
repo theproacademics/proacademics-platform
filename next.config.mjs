@@ -12,6 +12,8 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
+  output: 'standalone',
+  trailingSlash: false,
   async headers() {
     return [
       {
