@@ -54,68 +54,7 @@ interface Student {
   deviceFingerprint?: string
 }
 
-const mockStudents: Student[] = [
-  {
-    id: "1",
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    level: 12,
-    xp: 2450,
-    joinDate: "2024-01-15",
-    lastActive: "2024-01-20",
-    status: "active",
-    grade: "A*",
-    subjects: ["Mathematics", "Physics"],
-    totalLessons: 45,
-    completionRate: 87,
-  },
-  {
-    id: "2",
-    name: "Sarah Chen",
-    email: "sarah@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    level: 18,
-    xp: 4250,
-    joinDate: "2023-12-10",
-    lastActive: "2024-01-20",
-    status: "active",
-    grade: "A*",
-    subjects: ["Mathematics", "Chemistry", "Biology"],
-    totalLessons: 78,
-    completionRate: 95,
-  },
-  {
-    id: "3",
-    name: "Emma Rodriguez",
-    email: "emma@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    level: 16,
-    xp: 3890,
-    joinDate: "2024-01-05",
-    lastActive: "2024-01-19",
-    status: "active",
-    grade: "A",
-    subjects: ["Chemistry", "Biology"],
-    totalLessons: 62,
-    completionRate: 92,
-  },
-  {
-    id: "4",
-    name: "Michael Kim",
-    email: "michael@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    level: 14,
-    xp: 3200,
-    joinDate: "2023-11-20",
-    lastActive: "2024-01-18",
-    status: "inactive",
-    grade: "B+",
-    subjects: ["Mathematics", "Physics"],
-    totalLessons: 38,
-    completionRate: 78,
-  },
-]
+// Static mock data removed - now using only API data
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([])
@@ -123,7 +62,7 @@ export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
-  // Fetch dynamic data from API
+  // Fetch students data from API
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -132,22 +71,15 @@ export default function StudentsPage() {
         const data = await response.json()
         
         if (data.students) {
-          // Combine static mock data with dynamic data
-          const combinedStudents = [
-            ...mockStudents, // Keep existing static data
-            ...data.students.filter((dynamicStudent: Student) => 
-              !mockStudents.some(mockStudent => mockStudent.email === dynamicStudent.email)
-            ) // Add new dynamic students that don't exist in mock data
-          ]
-          setStudents(combinedStudents)
+          setStudents(data.students)
         } else {
-          // Fallback to mock data if API fails
-          setStudents(mockStudents)
+          // No students found
+          setStudents([])
         }
       } catch (error) {
         console.error('Error fetching students:', error)
-        // Fallback to mock data on error
-        setStudents(mockStudents)
+        // Set empty array on error instead of fallback data
+        setStudents([])
       } finally {
         setLoading(false)
       }
@@ -348,7 +280,24 @@ export default function StudentsPage() {
               {/* Mobile Card Layout for Small Screens */}
               <div className="block sm:hidden">
                 <div className="space-y-2 p-3">
-                  {filteredStudents.map((student) => (
+                  {filteredStudents.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <Users className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Students Found</h3>
+                      <p className="text-slate-400 mb-4">
+                        {searchTerm ? "No students match your search criteria." : "No students have been registered yet."}
+                      </p>
+                      {!searchTerm && (
+                        <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add First Student
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    filteredStudents.map((student) => (
                     <div key={student.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-3 hover:bg-white/[0.05] transition-all duration-200">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
@@ -431,7 +380,8 @@ export default function StudentsPage() {
                         </DropdownMenu>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -448,7 +398,28 @@ export default function StudentsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredStudents.map((student) => (
+                    {filteredStudents.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12">
+                          <div className="flex flex-col items-center">
+                            <div className="w-16 h-16 bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-full mb-4 flex items-center justify-center">
+                              <Users className="w-8 h-8 text-slate-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">No Students Found</h3>
+                            <p className="text-slate-400 mb-4">
+                              {searchTerm ? "No students match your search criteria." : "No students have been registered yet."}
+                            </p>
+                            {!searchTerm && (
+                              <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add First Student
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredStudents.map((student) => (
                       <TableRow key={student.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors duration-200">
                         <TableCell className="min-w-0 py-4">
                           <div className="flex items-center space-x-3">
@@ -465,11 +436,7 @@ export default function StudentsPage() {
                                     {student.nickname}
                                   </span>
                                 )}
-                                {!mockStudents.some(mock => mock.email === student.email) && (
-                                  <Badge variant="outline" className="text-xs border-teal-400 text-teal-400 bg-teal-500/10 flex-shrink-0">
-                                    New
-                                  </Badge>
-                                )}
+                                {/* New badge removed - no longer needed without mock data */}
                               </div>
                               <div className="space-y-0.5">
                                 <p className="text-xs text-gray-400 truncate">{student.email}</p>
@@ -576,7 +543,8 @@ export default function StudentsPage() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>

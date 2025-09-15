@@ -51,35 +51,8 @@ const reportStats = [
   },
 ]
 
-const studentReports = [
-  {
-    id: "1",
-    studentName: "Alex Johnson",
-    grade: "A*",
-    cwa: 87.5,
-    engagement: 92,
-    lastGenerated: "2024-01-10",
-    status: "ready",
-  },
-  {
-    id: "2",
-    studentName: "Sarah Chen",
-    grade: "A*",
-    cwa: 94.2,
-    engagement: 88,
-    lastGenerated: "2024-01-09",
-    status: "ready",
-  },
-  {
-    id: "3",
-    studentName: "Michael Kim",
-    grade: "A",
-    cwa: 82.1,
-    engagement: 85,
-    lastGenerated: "2024-01-08",
-    status: "generating",
-  },
-]
+// Static student reports data removed - should be fetched from API
+const studentReports: any[] = []
 
 const systemReports = [
   {
