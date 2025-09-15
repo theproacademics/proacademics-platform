@@ -25,6 +25,15 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
 NEXTAUTH_SECRET=your-super-secret-key-here-at-least-32-characters
 NEXTAUTH_URL=https://your-production-domain.com
 
+# Admin credentials (used for admin panel authentication)
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=your-secure-admin-password
+ADMIN_NAME=System Administrator
+
+# Optional - for client-side access
+NEXT_PUBLIC_ADMIN_NAME=System Administrator
+NEXT_PUBLIC_ADMIN_EMAIL=admin@yourdomain.com
+
 # Optional
 DB_NAME=proacademics
 NODE_ENV=production
@@ -54,20 +63,11 @@ Expected healthy response:
 }
 ```
 
-### Step 3: Create Production Admin User
+### Step 3: Admin Authentication
 
-Use the admin setup endpoint to create an admin user:
+Admin authentication now works directly from environment variables. No need to create admin users in the database.
 
-```bash
-curl -X POST https://your-domain.com/api/admin/setup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "setupKey": "setup-admin-2024",
-    "adminEmail": "admin@yourdomain.com",
-    "adminPassword": "your-secure-password",
-    "adminName": "Production Admin"
-  }'
-```
+Simply set the `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` environment variables as shown in Step 1, and the admin panel will authenticate using these credentials.
 
 ### Step 4: Test Admin Access
 
@@ -107,29 +107,23 @@ curl -X POST https://your-domain.com/api/admin/setup \
 - [ ] `MONGODB_URI` environment variable set
 - [ ] `NEXTAUTH_SECRET` environment variable set (32+ characters)
 - [ ] `NEXTAUTH_URL` matches production domain
+- [ ] `ADMIN_EMAIL` environment variable set
+- [ ] `ADMIN_PASSWORD` environment variable set
+- [ ] `ADMIN_NAME` environment variable set
 - [ ] Database is accessible from production server
-- [ ] Admin user exists in database
 - [ ] Can sign in with admin credentials
 - [ ] `/api/health` returns healthy status
 
 ## 🆘 Emergency Access
 
-If you're completely locked out, you can create an admin user directly in MongoDB:
+If you're completely locked out, simply update your environment variables:
 
-```javascript
-// Connect to your MongoDB and run:
-db.users.insertOne({
-  id: "emergency-admin-" + Date.now(),
-  name: "Emergency Admin",
-  email: "emergency@yourdomain.com",
-  password: "$2b$12$HASHED_PASSWORD_HERE", // Use bcrypt to hash
-  role: "admin",
-  permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  isEmailVerified: true
-})
-```
+1. Set `ADMIN_EMAIL` to your desired admin email
+2. Set `ADMIN_PASSWORD` to your desired admin password  
+3. Set `ADMIN_NAME` to your desired admin name
+4. Restart your application
+
+No database changes needed - admin authentication is now handled purely through environment variables.
 
 ## 📞 Support
 

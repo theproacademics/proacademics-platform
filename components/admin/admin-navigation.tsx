@@ -80,7 +80,7 @@ export function AdminNavigation() {
           <div className="p-4 lg:p-6 border-b border-white/10 backdrop-blur-sm relative z-10">
             <div className="flex flex-col space-y-2 lg:space-y-3">
               <div>
-                <p className="text-sm font-medium text-white truncate">Administrator</p>
+                <p className="text-sm font-medium text-white truncate">{process.env.NEXT_PUBLIC_ADMIN_NAME || process.env.ADMIN_NAME || "System Administrator"}</p>
                 <p className="text-xs text-muted-foreground truncate lg:block hidden">System Management</p>
               </div>
               <div className="flex items-center space-x-2">

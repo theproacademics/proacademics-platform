@@ -24,10 +24,8 @@ interface NextAuthOptions {
   debug: boolean
 }
 
-// Seed admin user from environment variables
-setTimeout(() => {
-  userService.seedAdminUser().catch(console.error)
-}, 1000)
+// Admin user is now handled via environment variables in the authorize function
+// No need to seed admin user to database
 
 // Seed demo users in development only
 if (process.env.NODE_ENV === "development") {
@@ -52,6 +50,30 @@ export const authOptions: NextAuthOptions = {
           }
 
           console.log("Attempting to verify user:", credentials.email)
+          
+          // Check admin credentials from environment variables first
+          const adminEmail = process.env.ADMIN_EMAIL || "admin@proacademics.com"
+          const adminPassword = process.env.ADMIN_PASSWORD || "admin123"
+          const adminName = process.env.ADMIN_NAME || "System Administrator"
+          
+          if (credentials.email === adminEmail && credentials.password === adminPassword) {
+            console.log("Admin user verified successfully:", credentials.email)
+            return {
+              id: "admin-1",
+              email: adminEmail,
+              name: adminName,
+              role: "admin",
+              userData: {
+                id: "admin-1",
+                email: adminEmail,
+                name: adminName,
+                role: "admin",
+                permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
+              },
+            }
+          }
+
+          // For non-admin users, check database
           const user = await userService.verifyPassword(credentials.email, credentials.password)
 
           if (!user) {

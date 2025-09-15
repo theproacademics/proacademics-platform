@@ -19,11 +19,11 @@ interface AdminAuthContextType {
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined)
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  // Mock admin user data instead of using useSession
+  // Get admin credentials from environment variables
   const user = {
     id: "admin-1",
-    name: "Admin User",
-    email: "admin@proacademics.com",
+    name: process.env.NEXT_PUBLIC_ADMIN_NAME || process.env.ADMIN_NAME || "System Administrator",
+    email: process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@proacademics.com",
     role: "super_admin" as const,
     permissions: ["manage_users", "manage_content", "view_analytics", "manage_system"],
   }
