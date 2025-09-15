@@ -3,10 +3,10 @@
 import type React from "react"
 
 import { forwardRef } from "react"
-import { Card, type CardProps } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
-interface AnimatedCardProps extends CardProps {
+interface AnimatedCardProps extends React.HTMLAttributes<HTMLDivElement> {
   hover?: boolean
   glow?: boolean
   gradient?: boolean

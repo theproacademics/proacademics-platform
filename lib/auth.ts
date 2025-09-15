@@ -27,12 +27,7 @@ interface NextAuthOptions {
 // Admin user is now handled via environment variables in the authorize function
 // No need to seed admin user to database
 
-// Seed demo users in development only
-if (process.env.NODE_ENV === "development") {
-  setTimeout(() => {
-    userService.seedDemoUsers().catch(console.error)
-  }, 2000)
-}
+// Demo users seeding removed - no longer needed
 
 export const authOptions: NextAuthOptions = {
   providers: [

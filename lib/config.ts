@@ -7,7 +7,7 @@ export const config = {
 
   // Authentication
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
 
   // Database
   MONGODB_URI: process.env.MONGODB_URI,
@@ -17,7 +17,7 @@ export const config = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 
   // App URLs
-  APP_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+  APP_URL: process.env.NEXTAUTH_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
   
   // Security
   BCRYPT_ROUNDS: 12,

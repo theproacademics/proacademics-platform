@@ -306,52 +306,7 @@ class UserService {
     }
   }
 
-  // For development/testing - seed demo users (non-admin)
-  async seedDemoUsers(): Promise<void> {
-    if (process.env.NODE_ENV !== "development") return
-
-    const collection = await this.getCollection()
-    const existingUsers = await collection.countDocuments()
-    
-    if (existingUsers > 1) return // Already seeded (1 = admin user)
-
-    const demoUsers = [
-      {
-        id: "demo-student-1",
-        name: "Alex Johnson",
-        email: "alex@example.com",
-        password: "password123",
-        role: "student" as const,
-        xp: 2450,
-        level: 12,
-        predictedGrade: "A*",
-        currentWorkingAverage: 87.5,
-        studyStreak: 7,
-        dateOfBirth: "2005-06-15",
-        schoolName: "Demo School",
-        uniqueToken: "student-token-1"
-      },
-      {
-        id: "demo-teacher-1",
-        name: "Dr. Emily Watson",
-        email: "emily@proacademics.com",
-        password: "password123",
-        role: "teacher" as const,
-        subjects: ["Physics", "Mathematics"],
-        dateOfBirth: "1985-03-20",
-        schoolName: "ProAcademics",
-        uniqueToken: "teacher-token-1"
-      },
-    ]
-
-    for (const userData of demoUsers) {
-      try {
-        await this.createUser(userData)
-      } catch (error) {
-        console.log(`Demo user ${userData.email} already exists`)
-      }
-    }
-  }
+  // Demo users seeding removed - no longer needed
 
   // Create production admin user - works in any environment
   async createProductionAdmin(adminData: {

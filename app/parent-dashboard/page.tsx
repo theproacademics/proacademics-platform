@@ -24,14 +24,14 @@ import {
   CheckCircle,
 } from "lucide-react"
 
-// Mock data for parent dashboard
+// Mock data for parent dashboard - should be replaced with real data
 const studentData = {
-  name: "Alex Johnson",
-  currentLevel: 12,
-  totalXP: 2450,
-  predictedGrade: "A*",
-  currentWorkingAverage: 87.5,
-  weeklyEngagement: 85,
+  name: "Student Name",
+  currentLevel: 1,
+  totalXP: 0,
+  predictedGrade: "B",
+  currentWorkingAverage: 0,
+  weeklyEngagement: 0,
   studyStreak: 7,
 }
 
@@ -260,7 +260,8 @@ export default function ParentDashboardPage() {
           </div>
 
           {/* Recent Achievements */}
-          <AnimatedCard delay={400} className="mb-8">
+          <div className="mb-8">
+            <AnimatedCard delay={400}>
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Award className="w-5 h-5 mr-2 text-yellow-400" />
@@ -288,6 +289,7 @@ export default function ParentDashboardPage() {
               </div>
             </CardContent>
           </AnimatedCard>
+          </div>
 
           {/* Detailed Reports */}
           <AnimatedCard delay={500}>

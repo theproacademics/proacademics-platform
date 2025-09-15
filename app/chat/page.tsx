@@ -60,7 +60,7 @@ interface Message {
 }
 
 const mockUser = {
-  name: "Alex Johnson",
+  name: "Student",
   avatar: "/placeholder.svg?height=40&width=40",
 }
 

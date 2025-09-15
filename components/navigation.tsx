@@ -34,14 +34,14 @@ const navigation = [
   { name: "Timetable", href: "/timetable", icon: Calendar },
 ]
 
-// Mock user data for demo
+// Mock user data for demo - should be replaced with real session data
 const mockUser = {
   id: "1",
-  name: "Alex Johnson",
-  email: "alex@example.com",
+  name: "Student",
+  email: "student@example.com",
   role: "student",
-  xp: 2450,
-  level: 12,
+  xp: 0,
+  level: 1,
   predictedGrade: "A*",
   currentWorkingAverage: 87.5,
 }

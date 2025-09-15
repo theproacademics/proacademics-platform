@@ -1,22 +1,6 @@
 import type { Student, Admin, Question, Lesson, Assignment, SystemStats } from "@/types"
 
-// Centralized mock data
-export const MOCK_STUDENT: Student = {
-  id: "1",
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  role: "student",
-  avatar: "/placeholder.svg?height=40&width=40",
-  xp: 2450,
-  level: 12,
-  predictedGrade: "A*",
-  currentWorkingAverage: 87.5,
-  streak: 7,
-  totalStudyTime: 252, // minutes
-  subjects: ["Mathematics", "Physics", "Chemistry"],
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date(),
-}
+// Mock student data removed - using real data from database
 
 export const MOCK_ADMIN: Admin = {
   id: "admin-1",
@@ -94,27 +78,25 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
 export const MOCK_LESSONS: Lesson[] = [
   {
     id: "1",
-    title: "Introduction to Quadratic Equations",
-    description: "Learn the fundamentals of quadratic equations and how to solve them.",
+    lessonName: "Introduction to Quadratic Equations",
+    topic: "Quadratic Equations",
     subject: "Mathematics",
-    difficulty: "medium",
-    duration: 45,
-    xpReward: 50,
-    completed: true,
-    progress: 100,
-    materials: ["Video", "Practice Problems", "Quiz"],
+    type: "Lesson",
+    duration: "45 min",
+    status: "active",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
   },
   {
     id: "2",
-    title: "Wave Properties and Motion",
-    description: "Understanding wave characteristics, frequency, and amplitude.",
+    lessonName: "Wave Properties and Motion",
+    topic: "Wave Motion",
     subject: "Physics",
-    difficulty: "hard",
-    duration: 60,
-    xpReward: 75,
-    completed: false,
-    progress: 30,
-    materials: ["Video", "Simulation", "Lab Exercise"],
+    type: "Lesson",
+    duration: "60 min",
+    status: "active",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
   },
 ]
 

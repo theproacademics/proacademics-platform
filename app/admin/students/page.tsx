@@ -109,7 +109,9 @@ export default function StudentsPage() {
 
   const totalStudents = students.length
   const activeStudents = students.filter((s) => s.status === "active").length
-  const avgCompletion = Math.round(students.reduce((acc, s) => acc + s.completionRate, 0) / students.length)
+  const avgCompletion = students.length > 0 
+    ? Math.round(students.reduce((acc, s) => acc + s.completionRate, 0) / students.length)
+    : 0
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
