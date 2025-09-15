@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllTopics } from '@/lib/db/topic-vault'
+import { topicVaultService } from '@/lib/db/topic-vault'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Debug: Fetching all topics...')
     
     // Get all topics regardless of authentication for debugging
-    const allTopics = await getAllTopics()
+    const result = await topicVaultService.getAllTopics()
+    const allTopics = result.topics
     console.log('Debug: Found topics:', allTopics.length)
     
     // Create a summary of what we have
