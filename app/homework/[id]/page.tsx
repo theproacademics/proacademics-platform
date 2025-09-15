@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Preloader } from '@/components/ui/preloader'
 import { usePreloader } from '@/hooks/use-preloader'
 import { Navigation } from '@/components/layout/navigation'
+import { aiService, type QuestionData, type ChatMessage as AIChatMessage } from '@/lib/ai/ai-service'
 import { 
   ArrowLeft, 
   Clock, 
@@ -22,7 +23,8 @@ import {
   Send,
   CheckCircle,
   XCircle,
-  Play
+  Play,
+  ChevronRight
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -175,9 +177,11 @@ export default function HomeworkQuestionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null)
   const [dataReady, setDataReady] = useState(false)
+  const [answerSubmitted, setAnswerSubmitted] = useState(false)
+  const [isEvaluating, setIsEvaluating] = useState(false)
   
   // ChatGPT integration
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -225,12 +229,8 @@ export default function HomeworkQuestionPage() {
   }
 
   const initializeChat = (homeworkData: HomeworkAssignment) => {
-    const welcomeMessage: ChatMessage = {
-      id: 'welcome',
-      type: 'assistant',
-      content: `Hello! I'm here to help you with your "${homeworkData.homeworkName}" homework. I can provide hints, explanations, and guidance for the questions. What would you like to know?`,
-      timestamp: new Date()
-    }
+    const homeworkName = homeworkData.homeworkName || homeworkData.assignmentId || 'homework'
+    const welcomeMessage = aiService.createWelcomeMessage(homeworkName)
     setChatMessages([welcomeMessage])
   }
 
@@ -257,15 +257,54 @@ export default function HomeworkQuestionPage() {
       if (data.success) {
         toast.success('Answer submitted successfully!')
         
-        // Move to next question or complete homework
-        if (currentQuestionIndex < homework.questionSet.length - 1) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1)
-          setUserAnswer('')
-        } else {
-          // Homework completed
-          toast.success('Congratulations! You have completed the homework!')
-          router.push('/homework')
+        // Set answer as submitted and evaluate with AI
+        setAnswerSubmitted(true)
+        const currentQuestion = homework.questionSet[currentQuestionIndex]
+        
+        // Prepare question data for AI evaluation
+        const questionData: QuestionData = {
+          questionId: currentQuestion.questionId || currentQuestion._id || `q-${currentQuestionIndex}`,
+          question: currentQuestion.question || 'No question provided',
+          userAnswer: userAnswer,
+          markScheme: currentQuestion.markScheme || 'No mark scheme provided',
+          topic: currentQuestion.topic || homework.topic || 'General',
+          subtopic: currentQuestion.subtopic || homework.subtopic || 'Basic',
+          level: (currentQuestion.level || homework.level || 'medium') as 'easy' | 'medium' | 'hard',
+          maxMarks: 10
         }
+        
+        // Add loading message to chat
+        const loadingMessage = aiService.createLoadingMessage()
+        setChatMessages(prev => [...prev, loadingMessage])
+        setIsEvaluating(true)
+        
+        try {
+          // Get AI evaluation
+          const evaluationResult = await aiService.evaluateAnswer(questionData)
+          
+          // Remove loading message and add evaluation result
+          setChatMessages(prev => 
+            prev.filter(msg => msg.id !== loadingMessage.id)
+          )
+          
+          if (evaluationResult.success && evaluationResult.evaluation) {
+            const evaluationMessage = aiService.createEvaluationMessage(evaluationResult.evaluation)
+            setChatMessages(prev => [...prev, evaluationMessage])
+          } else {
+            const errorMessage = aiService.createErrorMessage(evaluationResult.error || 'Failed to evaluate answer')
+            setChatMessages(prev => [...prev, errorMessage])
+          }
+        } catch (error) {
+          console.error('Error in AI evaluation:', error)
+          setChatMessages(prev => 
+            prev.filter(msg => msg.id !== loadingMessage.id)
+          )
+          const errorMessage = aiService.createErrorMessage('Failed to evaluate answer')
+          setChatMessages(prev => [...prev, errorMessage])
+        } finally {
+          setIsEvaluating(false)
+        }
+        
       } else {
         toast.error(data.message || 'Failed to submit answer')
       }
@@ -522,25 +561,54 @@ export default function HomeworkQuestionPage() {
 
 
 
-                {/* Submit Button */}
-                <div className="mt-auto">
-                  <Button
-                    onClick={handleSubmitAnswer}
-                    disabled={!userAnswer.trim() || isSubmitting}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-base py-3"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        Submitting...
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        Submit Answer
-                      </div>
-                    )}
-                  </Button>
+                {/* Submit/Next/Complete Buttons */}
+                <div className="mt-auto space-y-3">
+                  {!answerSubmitted ? (
+                    <Button
+                      onClick={handleSubmitAnswer}
+                      disabled={!userAnswer.trim() || isSubmitting}
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-base py-3"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Submitting...
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2" />
+                          Submit Answer
+                        </div>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      {currentQuestionIndex < homework.questionSet.length - 1 ? (
+                        <Button
+                          onClick={() => {
+                            setCurrentQuestionIndex(currentQuestionIndex + 1)
+                            setUserAnswer('')
+                            setAnswerSubmitted(false)
+                          }}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-base py-3"
+                        >
+                          <ChevronRight className="w-5 h-5 mr-2" />
+                          Next Question
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            toast.success('Congratulations! You have completed the homework!')
+                            router.push('/homework')
+                          }}
+                          className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white text-base py-3"
+                        >
+                          <Trophy className="w-5 h-5 mr-2" />
+                          Complete Homework
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -555,20 +623,22 @@ export default function HomeworkQuestionPage() {
               <p className="text-gray-300 text-sm mt-1">Teacher: {homework.teacher}</p>
             </div>
 
-            {/* Mark Scheme Card */}
-            <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white font-semibold text-base">Mark Scheme</span>
-                </div>
-                <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                  <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed">
-                    {currentQuestion.markScheme}
+            {/* Mark Scheme Card - Only show after answer submission */}
+            {answerSubmitted && (
+              <Card className="bg-black/40 backdrop-blur-md border-white/20 shadow-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <span className="text-white font-semibold text-base">Mark Scheme</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
+                    <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed">
+                      {currentQuestion.markScheme}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* AI Assistant Chat */}
             <Card className="bg-black/40 backdrop-blur-md border-white/20 flex-1 flex flex-col shadow-xl">

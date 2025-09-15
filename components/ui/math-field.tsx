@@ -68,6 +68,16 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
       const mathField = mathFieldRef.current
       if (!mathField) return
 
+      // Configure MathLive fonts to use CDN
+      if (typeof window !== 'undefined') {
+        try {
+          MathfieldElement.fontsDirectory = 'https://unpkg.com/mathlive@0.107.0/dist/fonts/'
+          console.log('MathLive fonts configured to use CDN')
+        } catch (error) {
+          console.error('Error configuring MathLive fonts:', error)
+        }
+      }
+
       // Configure the mathfield properly
       mathField.disabled = false
       mathField.readOnly = false
