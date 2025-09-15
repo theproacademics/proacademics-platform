@@ -448,6 +448,7 @@ export default function SignInPage() {
         minHeight: '100vh'
       }}
     >
+      
       {/* Extended Background Coverage to prevent white background on over-scroll */}
       <div 
         className="fixed pointer-events-none z-0"
