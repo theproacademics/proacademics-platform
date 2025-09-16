@@ -180,7 +180,7 @@ export default function HomeworkQuestionPage() {
   const [answerSubmitted, setAnswerSubmitted] = useState(false)
   const [isEvaluating, setIsEvaluating] = useState(false)
   
-  // ChatGPT integration
+  // AI Chat integration
   const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
@@ -279,7 +279,7 @@ export default function HomeworkQuestionPage() {
         setIsEvaluating(true)
         
         try {
-          // Get AI evaluation
+          // Get AI evaluation using the chat API
           const evaluationResult = await aiService.evaluateAnswer(questionData)
           
           // Remove loading message and add evaluation result
@@ -319,7 +319,7 @@ export default function HomeworkQuestionPage() {
   const handleChatSubmit = async () => {
     if (!chatInput.trim()) return
 
-    const userMessage: ChatMessage = {
+    const userMessage: AIChatMessage = {
       id: Date.now().toString(),
       type: 'user',
       content: chatInput,
@@ -331,29 +331,23 @@ export default function HomeworkQuestionPage() {
     setIsChatLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: chatInput,
-          context: {
-            type: 'homework',
-            homeworkId: homeworkId,
-            currentQuestion: homework?.questionSet[currentQuestionIndex],
-            subject: homework?.subject
-          }
+          messages: [...chatMessages, userMessage]
         }),
       })
 
       const data = await response.json()
       
-      if (data.success) {
-        const assistantMessage: ChatMessage = {
+      if (response.ok) {
+        const assistantMessage: AIChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
-          content: data.response,
+          content: data.content,
           timestamp: new Date()
         }
         setChatMessages(prev => [...prev, assistantMessage])
@@ -688,6 +682,24 @@ export default function HomeworkQuestionPage() {
                   
                   <div ref={chatEndRef} />
                 </div>
+                
+                {/* Chat Input Form */}
+                <form onSubmit={(e) => { e.preventDefault(); handleChatSubmit(); }} className="mt-4 flex space-x-2">
+                  <input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask questions, get hints, or request explanations..."
+                    className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={isChatLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isChatLoading || !chatInput.trim()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>
