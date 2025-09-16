@@ -15,6 +15,21 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get("level") || "all"
     const teacher = searchParams.get("teacher") || "all"
 
+    // Check if MongoDB URI is available
+    if (!process.env.MONGODB_URI) {
+      console.warn("MONGODB_URI not found in environment variables")
+      return NextResponse.json({
+        success: true,
+        data: {
+          homework: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0
+        }
+      })
+    }
+
     const db = await getDatabase()
     const collection = db.collection<HomeworkAssignment>("homework")
 
@@ -60,6 +75,26 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error fetching homework:", error)
+    
+    // If it's a database connection error, return empty data instead of 500
+    if (error instanceof Error && (
+      error.message.includes('MongoClient') || 
+      error.message.includes('connection') ||
+      error.message.includes('MONGODB_URI')
+    )) {
+      console.warn("Database connection failed, returning empty homework data")
+      return NextResponse.json({
+        success: true,
+        data: {
+          homework: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        }
+      })
+    }
+    
     return NextResponse.json(
       { success: false, error: "Failed to fetch homework" },
       { status: 500 }

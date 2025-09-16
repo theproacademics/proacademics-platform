@@ -8,6 +8,15 @@ export const revalidate = 0
 
 export async function GET() {
   try {
+    // Check if MongoDB URI is available
+    if (!process.env.MONGODB_URI) {
+      console.warn("MONGODB_URI not found in environment variables")
+      return NextResponse.json({
+        success: true,
+        subjects: []
+      })
+    }
+
     const subjectsWithPrograms = await subjectService.getAllSubjectsWithPrograms()
     
     const response = NextResponse.json({
@@ -24,6 +33,20 @@ export async function GET() {
     return response
   } catch (error) {
     console.error("Error fetching subjects:", error)
+    
+    // If it's a database connection error, return empty data instead of 500
+    if (error instanceof Error && (
+      error.message.includes('MongoClient') || 
+      error.message.includes('connection') ||
+      error.message.includes('MONGODB_URI')
+    )) {
+      console.warn("Database connection failed, returning empty subjects data")
+      return NextResponse.json({
+        success: true,
+        subjects: []
+      })
+    }
+    
     return NextResponse.json(
       { success: false, error: "Failed to fetch subjects" },
       { status: 500 }
