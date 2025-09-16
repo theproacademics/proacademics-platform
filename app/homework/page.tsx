@@ -201,6 +201,29 @@ export default function HomeworkPage() {
         
         // Fetch only active homework assignments
         const response = await fetch('/api/admin/homework?status=active&limit=50')
+        
+        // Check if response is a redirect to signin (authentication required)
+        if (response.redirected && response.url.includes('/auth/signin')) {
+          setError('Authentication required. Please sign in to view homework assignments.')
+          setHomework([])
+          return
+        }
+        
+        // Check if response is not ok
+        if (!response.ok) {
+          if (response.status === 401) {
+            setError('Authentication required. Please sign in to view homework assignments.')
+          } else if (response.status === 403) {
+            setError('Access denied. You do not have permission to view homework assignments.')
+          } else if (response.status === 500) {
+            setError('Server error. Please try again later.')
+          } else {
+            setError('Failed to fetch homework assignments. Please try again.')
+          }
+          setHomework([])
+          return
+        }
+        
         const data = await response.json()
         
         if (data.success) {
@@ -216,11 +239,13 @@ export default function HomeworkPage() {
           
           setHomework(transformedHomework)
         } else {
-          setError('Failed to fetch homework assignments')
+          setError(data.error || 'Failed to fetch homework assignments')
+          setHomework([])
         }
       } catch (err) {
         console.error('Error fetching homework:', err)
-        setError('Error loading homework assignments')
+        setError('Error loading homework assignments. Please check your connection and try again.')
+        setHomework([])
       } finally {
         setLoading(false)
         setDataReady(true)
@@ -256,15 +281,29 @@ export default function HomeworkPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative flex items-center justify-center">
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="text-red-400 text-xl mb-4">Error loading homework</div>
-          <p className="text-slate-400 mb-6">{error}</p>
-          <Button 
-            onClick={() => window.location.reload()} 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-          >
-            Try Again
-          </Button>
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center max-w-md mx-4">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+          </div>
+          <div className="text-red-400 text-xl font-semibold mb-2">Error loading homework</div>
+          <p className="text-slate-400 mb-6 text-sm leading-relaxed">{error}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Try Again
+            </Button>
+            {error.includes('Authentication') && (
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = '/auth/signin'}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -506,26 +545,38 @@ export default function HomeworkPage() {
                     ))}
                     
                     {/* Empty State */}
-                    {filterHomework(selectedTab === "all" ? undefined : selectedTab).length === 0 && (
+                    {filterHomework(selectedTab === "all" ? undefined : selectedTab).length === 0 && !loading && (
                       <div className="text-center py-16">
                         <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                           <FileText className="w-12 h-12 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">No homework assignments found</h3>
-                        <p className="text-slate-400 mb-6">
+                        <h3 className="text-xl font-semibold text-white mb-2">
                           {selectedTab === "all" 
-                            ? "No homework assignments are currently available" 
-                            : `No ${selectedTab.replace("_", " ")} homework assignments found`}
+                            ? "No homework assignments available" 
+                            : `No ${selectedTab.replace("_", " ")} assignments found`}
+                        </h3>
+                        <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                          {selectedTab === "all" 
+                            ? "There are currently no homework assignments available. Check back later or contact your teacher for more information." 
+                            : `No ${selectedTab.replace("_", " ")} homework assignments found. Try selecting a different category or check back later.`}
                         </p>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setSelectedTab("all")
-                          }}
-                          className="border-white/20 text-white hover:bg-white/10"
-                        >
-                          View All Assignments
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => {
+                              setSelectedTab("all")
+                            }}
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            View All Assignments
+                          </Button>
+                          <Button 
+                            onClick={() => window.location.reload()}
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                          >
+                            Refresh Page
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
