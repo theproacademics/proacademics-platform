@@ -478,7 +478,7 @@ export default function SignInPage() {
 
       {/* Enhanced Particle System */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {particles.map((particle) => {
+        {particles.map((particle: any) => {
           const colorClasses = {
             blue: particle.size === 3 ? 'bg-blue-400/60 shadow-lg shadow-blue-400/30' : particle.size === 2 ? 'bg-blue-400/45' : 'bg-blue-400/30',
             purple: particle.size === 3 ? 'bg-purple-400/60 shadow-lg shadow-purple-400/30' : particle.size === 2 ? 'bg-purple-400/45' : 'bg-purple-400/30',
@@ -504,7 +504,7 @@ export default function SignInPage() {
 
       {/* Enhanced Shooting Stars */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {shootingStars.map((star) => (
+        {shootingStars.map((star: any) => (
           <div
             key={star.id}
             className="absolute w-1 h-1 bg-white rounded-full"
@@ -520,7 +520,7 @@ export default function SignInPage() {
 
       {/* Dynamic Floating Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {floatingOrbs.map((orb) => {
+        {floatingOrbs.map((orb: any) => {
           const orbColors = {
             blue: 'from-blue-500/10 to-blue-400/20',
             purple: 'from-purple-500/10 to-purple-400/20',
@@ -579,7 +579,7 @@ export default function SignInPage() {
       </div>
 
       {/* Enhanced CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes floatEnhanced {
           0%, 100% { 
             transform: translateY(0px) translateX(0px) rotate(0deg) scale(1); 
@@ -814,7 +814,7 @@ export default function SignInPage() {
                       id="email"
                       type="email"
                       value={email}
-                            onChange={(e) => setEmail(sanitizeInput(e.target.value))}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(sanitizeInput(e.target.value))}
                       placeholder="Enter your email"
                             className="bg-gray-800/40 border-gray-600/50 text-white placeholder-gray-500 h-9 rounded-lg text-xs transition-all duration-300 hover:border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 hover:bg-gray-800/60 focus:bg-gray-800/70 group-focus-within:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                             style={{
@@ -824,7 +824,7 @@ export default function SignInPage() {
                               WebkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
                               WebkitTextFillColor: 'white'
                             } as React.CSSProperties}
-                            onFocus={(e) => {
+                            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                               e.target.style.outline = 'none'
                               e.target.style.boxShadow = 'none'
                               e.target.style.border = '1px solid rgba(59, 130, 246, 0.8)';
@@ -879,7 +879,7 @@ export default function SignInPage() {
                               WebkitBoxShadow: '0 0 0 1000px rgba(31, 41, 55, 0.4) inset',
                               WebkitTextFillColor: 'white'
                             } as React.CSSProperties}
-                            onFocus={(e) => {
+                            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                               e.target.style.outline = 'none'
                               e.target.style.boxShadow = 'none'
                               e.target.style.border = '1px solid rgba(59, 130, 246, 0.8)';
@@ -909,7 +909,7 @@ export default function SignInPage() {
                               outline: 'none',
                               boxShadow: 'none'
                             } as React.CSSProperties}
-                            onFocus={(e) => {
+                            onFocus={(e: React.FocusEvent<HTMLButtonElement>) => {
                               e.target.style.outline = 'none'
                               e.target.style.boxShadow = 'none'
                             }}
