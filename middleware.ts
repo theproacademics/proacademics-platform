@@ -42,6 +42,7 @@ export default withAuth(
             pathname.startsWith('/api/debug/') ||
             pathname.startsWith('/api/admin/homework') ||
             pathname.startsWith('/api/admin/subjects') ||
+            pathname.startsWith('/api/admin/lessons') ||
             pathname === '/unauthorized') {
           return true
         }
@@ -65,6 +66,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api/auth|api/admin/homework|api/admin/subjects|_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api/auth|api/admin/homework|api/admin/subjects|api/admin/lessons|_next/static|_next/image|favicon.ico|public/).*)',
   ],
 }

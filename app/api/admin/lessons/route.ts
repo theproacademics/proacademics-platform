@@ -4,6 +4,18 @@ import { lessonService, type Lesson } from "@/lib/db/lessons"
 // GET /api/admin/lessons - Get all lessons with pagination and filtering
 export async function GET(req: Request) {
   try {
+    // Check if MongoDB URI is available
+    if (!process.env.MONGODB_URI) {
+      console.warn("MONGODB_URI not found in environment variables")
+      return NextResponse.json({
+        lessons: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      })
+    }
+
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '10')
@@ -32,6 +44,23 @@ export async function GET(req: Request) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("Error fetching lessons:", error)
+    
+    // If it's a database connection error, return empty data instead of 500
+    if (error instanceof Error && (
+      error.message.includes('MongoClient') || 
+      error.message.includes('connection') ||
+      error.message.includes('MONGODB_URI')
+    )) {
+      console.warn("Database connection failed, returning empty lessons data")
+      return NextResponse.json({
+        lessons: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      })
+    }
+    
     return NextResponse.json({ error: "Failed to fetch lessons" }, { status: 500 })
   }
 }
