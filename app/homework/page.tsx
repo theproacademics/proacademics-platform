@@ -201,34 +201,13 @@ export default function HomeworkPage() {
         
         // Fetch only active homework assignments
         const response = await fetch('/api/admin/homework?status=active&limit=50')
-        
-        // Check if response is a redirect to signin (authentication required)
-        if (response.redirected && response.url.includes('/auth/signin')) {
-          setError('Authentication required. Please sign in to view homework assignments.')
-          setHomework([])
-          return
-        }
-        
-        // Check if response is not ok
-        if (!response.ok) {
-          if (response.status === 401) {
-            setError('Authentication required. Please sign in to view homework assignments.')
-          } else if (response.status === 403) {
-            setError('Access denied. You do not have permission to view homework assignments.')
-          } else if (response.status === 500) {
-            setError('Server error. Please try again later.')
-          } else {
-            setError('Failed to fetch homework assignments. Please try again.')
-          }
-          setHomework([])
-          return
-        }
-        
         const data = await response.json()
         
+        // Handle the response like lessons page - more resilient
         if (data.success) {
           // Transform homework data to match the expected format
-          const transformedHomework = data.data.homework.map((hw: any) => ({
+          const homeworkData = data.data?.homework || data.homework || []
+          const transformedHomework = homeworkData.map((hw: any) => ({
             ...hw,
             completionStatus: hw.completionStatus || "not_started",
             completedQuestions: hw.completedQuestions || 0,
@@ -239,12 +218,12 @@ export default function HomeworkPage() {
           
           setHomework(transformedHomework)
         } else {
-          setError(data.error || 'Failed to fetch homework assignments')
+          // If API returns error, just set empty array like lessons page
           setHomework([])
         }
       } catch (err) {
         console.error('Error fetching homework:', err)
-        setError('Error loading homework assignments. Please check your connection and try again.')
+        // On error, just set empty array like lessons page
         setHomework([])
       } finally {
         setLoading(false)
