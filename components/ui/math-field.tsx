@@ -43,7 +43,7 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
     placeholder = 'Enter mathematical expression...', 
     className = '',
     disabled = false,
-    virtualKeyboardMode = 'onfocus',
+    virtualKeyboardMode = 'manual',
     virtualKeyboards = 'all',
     readOnly = false,
     rows = 4,
@@ -106,10 +106,19 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
       mathField.style.color = '#ffffff'
       mathField.style.caretColor = '#3b82f6'
 
-      // Force focus to make cursor visible
-      setTimeout(() => {
-        mathField.focus()
-      }, 100)
+      // Add click handler to show keyboard only on click
+      const handleClick = () => {
+        if (virtualKeyboardMode === 'manual' && mathField.executeCommand) {
+          mathField.executeCommand('toggleVirtualKeyboard')
+        }
+      }
+      
+      mathField.addEventListener('click', handleClick)
+      
+      // Cleanup
+      return () => {
+        mathField.removeEventListener('click', handleClick)
+      }
       
     }, [virtualKeyboardMode, virtualKeyboards])
 
@@ -290,7 +299,9 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
             minHeight: `${rows * 1.5}rem`,
             width: '100%',
             fontSize: '16px',
-            fontFamily: 'inherit',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: 'normal',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '0.375rem',
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
