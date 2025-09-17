@@ -212,6 +212,12 @@ export default function HomeworkQuestionPage() {
       const data = await response.json()
       
       if (data.success) {
+        console.log('Homework data loaded:', data.data)
+        console.log('Question set:', data.data.questionSet)
+        if (data.data.questionSet && data.data.questionSet.length > 0) {
+          console.log('First question:', data.data.questionSet[0])
+          console.log('First question image:', data.data.questionSet[0].image)
+        }
         setHomework(data.data)
         setSessionStartTime(new Date())
         // Initialize chat with homework context
@@ -520,13 +526,97 @@ export default function HomeworkQuestionPage() {
               </CardHeader>
               <CardContent className="space-y-6 flex-1 flex flex-col">
                 {/* Question Image */}
-                {currentQuestion.image && currentQuestion.image !== 'n' && (
-                  <div className="rounded-lg overflow-hidden">
+                {(() => {
+                  console.log('Current question:', currentQuestion)
+                  console.log('Current question image:', currentQuestion?.image)
+                  console.log('Image condition check:', currentQuestion?.image && currentQuestion?.image !== 'n')
+                  
+                  // Show converted URL
+                  if (currentQuestion?.image && currentQuestion.image !== 'n') {
+                    const imageUrl = currentQuestion.image;
+                    if (imageUrl.includes('drive.google.com/file/d/')) {
+                      const fileId = imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+                      if (fileId) {
+                        const convertedUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                        console.log('Converted Google Drive URL:', convertedUrl);
+                      }
+                    }
+                  }
+                  
+                  return null
+                })()}
+                {currentQuestion?.image && currentQuestion.image !== 'n' ? (
+                  <div className="w-full rounded-lg overflow-hidden bg-white/5 border border-white/10 relative">
                     <img 
-                      src={currentQuestion.image} 
+                      src={(() => {
+                        // Convert Google Drive sharing link to direct image URL
+                        const imageUrl = currentQuestion.image;
+                        if (imageUrl.includes('drive.google.com/file/d/')) {
+                          const fileId = imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+                          if (fileId) {
+                            return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                          }
+                        }
+                        return imageUrl;
+                      })()} 
                       alt="Question illustration"
-                      className="w-full h-auto max-h-48 object-contain bg-white rounded-lg"
+                      className="w-full h-auto max-h-96 sm:max-h-80 md:max-h-96 lg:max-h-[28rem] xl:max-h-[32rem] object-contain rounded-lg transition-opacity duration-300"
+                      style={{
+                        minHeight: '200px',
+                        maxHeight: 'min(50vh, 32rem)',
+                        width: '100%',
+                        height: 'auto',
+                        objectFit: 'contain',
+                        opacity: '0',
+                        transition: 'opacity 0.3s ease-in-out'
+                      }}
+                      onLoad={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.opacity = '1';
+                        // Hide loading skeleton
+                        const skeleton = target.parentElement?.querySelector('.animate-pulse');
+                        if (skeleton) {
+                          skeleton.style.display = 'none';
+                        }
+                      }}
+                      onError={(e) => {
+                        console.log('Image failed to load:', e);
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = `
+                            <div class="flex items-center justify-center p-8 text-gray-400">
+                              <div class="text-center">
+                                <svg class="w-12 h-12 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <p class="text-sm">Image not available</p>
+                                <p class="text-xs text-gray-500 mt-1">Google Drive image may be private or inaccessible</p>
+                              </div>
+                            </div>
+                          `;
+                        }
+                      }}
                     />
+                    {/* Loading skeleton */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-lg">
+                      <div className="animate-pulse">
+                        <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full rounded-lg overflow-hidden bg-white/5 border border-white/10 p-8">
+                    <div className="flex items-center justify-center text-gray-400">
+                      <div className="text-center">
+                        <svg className="w-12 h-12 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p className="text-sm">No image for this question</p>
+                        <p className="text-xs text-gray-500 mt-1">Image value: {currentQuestion?.image || 'undefined'}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
 

@@ -557,7 +557,11 @@ export function HomeworkDialogs({
       {/* Add Question Dialog */}
       <Dialog open={isAddQuestionDialogOpen} onOpenChange={setIsAddQuestionDialogOpen}>
         <DialogContent 
-          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0"
+          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto mx-4 sm:mx-0"
+          style={{
+            maxHeight: 'calc(100vh - 200px)',
+            overflowY: 'auto'
+          }}
           onPointerDownOutside={(e) => {
             // Prevent dialog from closing when clicking on virtual keyboard
             const target = e.target as HTMLElement
@@ -647,7 +651,7 @@ export function HomeworkDialogs({
                   placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="onfocus"
+                  virtualKeyboardMode="manual"
                   virtualKeyboards="all"
                 />
               </div>
@@ -661,7 +665,7 @@ export function HomeworkDialogs({
                   placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="onfocus"
+                  virtualKeyboardMode="manual"
                   virtualKeyboards="all"
                 />
               </div>
@@ -693,7 +697,11 @@ export function HomeworkDialogs({
       {/* Edit Question Dialog */}
       <Dialog open={isEditQuestionDialogOpen} onOpenChange={setIsEditQuestionDialogOpen}>
         <DialogContent 
-          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-0"
+          className="bg-slate-900/95 backdrop-blur-2xl border border-white/20 w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto mx-4 sm:mx-0"
+          style={{
+            maxHeight: 'calc(100vh - 200px)',
+            overflowY: 'auto'
+          }}
           onPointerDownOutside={(e) => {
             // Prevent dialog from closing when clicking on virtual keyboard
             const target = e.target as HTMLElement
@@ -783,7 +791,7 @@ export function HomeworkDialogs({
                   placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="onfocus"
+                  virtualKeyboardMode="manual"
                   virtualKeyboards="all"
                 />
               </div>
@@ -797,7 +805,7 @@ export function HomeworkDialogs({
                   placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
                   rows={4}
                   className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="onfocus"
+                  virtualKeyboardMode="manual"
                   virtualKeyboards="all"
                 />
               </div>

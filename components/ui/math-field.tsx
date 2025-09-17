@@ -95,6 +95,18 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
         mathField.setAttribute('smart-superscript', 'true')
         mathField.setAttribute('remove-extraneous-parentheses', 'true')
         mathField.setAttribute('selection-style', 'outlined')
+        mathField.setAttribute('math-mode-space', '\\text{ }')
+        
+        // Force text mode
+        if (mathField.mode) {
+          mathField.mode = 'text'
+        }
+        
+        // Set text mode style and force normal font
+        mathField.style.setProperty('--letter-shape-style', 'tex')
+        mathField.style.setProperty('font-style', 'normal')
+        mathField.style.setProperty('font-family', 'system-ui, -apple-system, sans-serif')
+        mathField.style.setProperty('font-weight', 'normal')
         
         console.log('MathField configured with attributes')
       }
@@ -106,19 +118,8 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
       mathField.style.color = '#ffffff'
       mathField.style.caretColor = '#3b82f6'
 
-      // Add click handler to show keyboard only on click
-      const handleClick = () => {
-        if (virtualKeyboardMode === 'manual' && mathField.executeCommand) {
-          mathField.executeCommand('toggleVirtualKeyboard')
-        }
-      }
-      
-      mathField.addEventListener('click', handleClick)
-      
-      // Cleanup
-      return () => {
-        mathField.removeEventListener('click', handleClick)
-      }
+      // Don't add any click handler - keyboard should only open via button
+      // Users can type normally without keyboard
       
     }, [virtualKeyboardMode, virtualKeyboards])
 
@@ -235,6 +236,48 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
       if (value !== mathField.value) {
         mathField.setValue(value, { silenceNotifications: true })
       }
+      
+      // Ensure text mode is always active
+      if (mathField.mode !== 'text') {
+        mathField.mode = 'text'
+      }
+      
+      // Force normal font style
+      mathField.style.setProperty('font-style', 'normal')
+      mathField.style.setProperty('font-family', 'system-ui, -apple-system, sans-serif')
+      mathField.style.setProperty('font-weight', 'normal')
+      
+      // Force all child elements to have normal font
+      const forceNormalFont = () => {
+        const textElements = mathField.querySelectorAll('*')
+        textElements.forEach((element: any) => {
+          if (element.style) {
+            element.style.fontStyle = 'normal'
+            element.style.fontFamily = 'system-ui, -apple-system, sans-serif'
+            element.style.fontWeight = 'normal'
+          }
+        })
+      }
+      
+      // Apply immediately and after a delay
+      forceNormalFont()
+      setTimeout(forceNormalFont, 100)
+      
+      // Watch for DOM changes and force normal font
+      const observer = new MutationObserver(() => {
+        forceNormalFont()
+      })
+      
+      observer.observe(mathField, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      })
+      
+      return () => {
+        observer.disconnect()
+      }
     }, [value])
 
     // Ensure proper styling for virtual keyboard
@@ -295,6 +338,17 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
           smart-fence="true"
           smart-superscript="true"
           remove-extraneous-parentheses="true"
+          letter-shape-style="tex"
+          onClick={(e) => {
+            // Prevent keyboard from opening on click
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          onFocus={(e) => {
+            // Prevent keyboard from opening on focus
+            e.preventDefault()
+            e.stopPropagation()
+          }}
           style={{
             minHeight: `${rows * 1.5}rem`,
             width: '100%',
@@ -316,16 +370,20 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
           {...props}
         />
         
+        
         <style jsx>{`
           math-field {
             --text-color: #ffffff !important;
             --selection-background-color: #3b82f680 !important;
             --caret-color: #3b82f6 !important;
+            font-style: normal !important;
           }
           
           math-field .ML__text {
             color: #ffffff !important;
             opacity: 1 !important;
+            font-style: normal !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
           }
           
           math-field .ML__selection {
@@ -336,6 +394,15 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
             border-color: #3b82f6 !important;
             display: block !important;
             visibility: visible !important;
+          }
+          
+          math-field .ML__base {
+            font-style: normal !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
+          }
+          
+          math-field .ML__mathit {
+            font-style: normal !important;
           }
         `}</style>
       </div>

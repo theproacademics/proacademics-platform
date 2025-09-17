@@ -18,12 +18,36 @@
 body:has(.ML__virtual-keyboard) {
   overflow: auto !important;
   height: auto !important;
+  padding-bottom: 50vh !important;
+  position: relative !important;
+}
+
+/* Ensure the main page content can scroll when keyboard is open */
+body:has(.ML__virtual-keyboard) .main-content,
+body:has(.ML__virtual-keyboard) main,
+body:has(.ML__virtual-keyboard) [data-main-content] {
+  overflow: auto !important;
+  max-height: calc(100vh - 50vh) !important;
+  padding-bottom: 20px !important;
 }
 
 /* Ensure dialog can scroll when keyboard is open */
-[data-radix-dialog-content]:has(.ML__virtual-keyboard) {
+[data-radix-dialog-content] {
   overflow-y: auto !important;
-  max-height: calc(100vh - 300px) !important;
+  max-height: calc(100vh - 100px) !important;
+}
+
+/* When keyboard is visible, adjust dialog position */
+body:has(.ML__keyboard:not([style*="display: none"])) [data-radix-dialog-content] {
+  transform: translateY(-30vh) !important;
+  transition: transform 0.3s ease !important;
+  max-height: calc(100vh - 60vh) !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure input fields are visible when keyboard is open */
+body:has(.ML__keyboard:not([style*="display: none"])) math-field {
+  margin-bottom: 20px !important;
 }
 
 .ML__virtual-keyboard-container {
@@ -191,10 +215,84 @@ math-field {
 math-field *,
 .ML__text,
 .ML__mathfield,
-.ML__mathfield * {
+.ML__mathfield *,
+.ML__base,
+.ML__mathit,
+.ML__mathrm,
+.ML__mathbf {
   font-family: system-ui, -apple-system, sans-serif !important;
   font-style: normal !important;
   font-weight: normal !important;
+}
+
+/* Override math italic styles */
+math-field .ML__mathit {
+  font-style: normal !important;
+}
+
+/* Force normal text rendering */
+math-field [data-mode="text"] {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Override any computed styles */
+math-field span[style*="font-style: italic"] {
+  font-style: normal !important;
+}
+
+/* Force all text to be non-italic */
+math-field span,
+math-field .ML__text-wrapper,
+math-field .ML__text-container,
+math-field .ML__text,
+math-field .ML__base,
+math-field .ML__mathit,
+math-field .ML__mathrm,
+math-field .ML__mathbf,
+math-field .ML__text-mode,
+math-field .ML__text-mode *,
+math-field [data-mode="text"],
+math-field [data-mode="text"] * {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-weight: normal !important;
+}
+
+/* Override MathLive's default text mode */
+math-field[mode="text"] *,
+math-field .ML__text-mode * {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Force all content to be non-italic */
+math-field * {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Override any dynamic styling that might be applied */
+math-field [style*="font-style: italic"],
+math-field [style*="font-style:italic"],
+math-field .ML__text[style*="font-style"],
+math-field .ML__base[style*="font-style"],
+math-field .ML__mathit[style*="font-style"] {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Force normal font on any dynamically created elements */
+math-field *::before,
+math-field *::after {
+  font-style: normal !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Force dialog scroll when keyboard is open */
+.ML__keyboard:not([style*="display: none"]) ~ * [data-radix-dialog-content] {
+  max-height: calc(100vh - 400px) !important;
+  overflow-y: auto !important;
 }
 
 /* MathLive cursor styling */
