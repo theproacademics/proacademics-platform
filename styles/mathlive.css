@@ -25,10 +25,60 @@ body:has(.ML__virtual-keyboard) {
 /* Ensure the main page content can scroll when keyboard is open */
 body:has(.ML__virtual-keyboard) .main-content,
 body:has(.ML__virtual-keyboard) main,
-body:has(.ML__virtual-keyboard) [data-main-content] {
+body:has(.ML__virtual-keyboard) [data-main-content],
+body:has(.ML__virtual-keyboard) .admin-content,
+body:has(.ML__virtual-keyboard) [data-admin-content] {
   overflow: auto !important;
   max-height: calc(100vh - 50vh) !important;
   padding-bottom: 20px !important;
+}
+
+/* Fix admin homework page scrolling when keyboard is open */
+body:has(.ML__virtual-keyboard) .admin-homework-page {
+  overflow: auto !important;
+  max-height: calc(100vh - 50vh) !important;
+  padding-bottom: 20px !important;
+}
+
+/* Ensure the entire page can scroll when keyboard is open */
+body:has(.ML__keyboard:not([style*="display: none"])) {
+  overflow: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  position: relative !important;
+}
+
+/* Force page scrolling when keyboard is visible */
+body:has(.ML__keyboard:not([style*="display: none"])) html {
+  overflow: auto !important;
+  height: auto !important;
+}
+
+/* Alternative selector for keyboard visibility */
+body:has(.ML__virtual-keyboard) {
+  overflow: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  position: relative !important;
+}
+
+body:has(.ML__virtual-keyboard) html {
+  overflow: auto !important;
+  height: auto !important;
+}
+
+/* Make sure the main container can scroll */
+body:has(.ML__keyboard:not([style*="display: none"])) .admin-homework-page {
+  overflow-y: auto !important;
+  max-height: calc(100vh - 50vh) !important;
+  position: relative !important;
+}
+
+/* Ensure admin content container can scroll */
+body:has(.ML__keyboard:not([style*="display: none"])) .admin-content {
+  overflow-y: auto !important;
+  max-height: calc(100vh - 50vh) !important;
+  position: relative !important;
 }
 
 /* Ensure dialog can scroll when keyboard is open */
@@ -39,10 +89,31 @@ body:has(.ML__virtual-keyboard) [data-main-content] {
 
 /* When keyboard is visible, adjust dialog position */
 body:has(.ML__keyboard:not([style*="display: none"])) [data-radix-dialog-content] {
-  transform: translateY(-30vh) !important;
+  transform: translateY(-35vh) !important;
   transition: transform 0.3s ease !important;
-  max-height: calc(100vh - 60vh) !important;
+  max-height: calc(100vh - 65vh) !important;
   overflow-y: auto !important;
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Specific adjustments for admin homework dialogs */
+body:has(.ML__keyboard:not([style*="display: none"])) .admin-homework-page [data-radix-dialog-content] {
+  transform: translateY(-40vh) !important;
+  max-height: calc(100vh - 70vh) !important;
+}
+
+/* Make dialogs more scrollable when keyboard is open */
+body.keyboard-open [data-radix-dialog-content] {
+  max-height: calc(100vh - 40vh) !important;
+  overflow-y: auto !important;
+  transform: translateY(-25vh) !important;
+  margin-top: -50px !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) translateY(-25vh) !important;
+  z-index: 1001 !important;
 }
 
 /* Ensure input fields are visible when keyboard is open */
@@ -293,6 +364,98 @@ math-field *::after {
 .ML__keyboard:not([style*="display: none"]) ~ * [data-radix-dialog-content] {
   max-height: calc(100vh - 400px) !important;
   overflow-y: auto !important;
+}
+
+/* Global override for when keyboard is visible */
+.ML__keyboard:not([style*="display: none"]) {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+}
+
+/* Force scrolling when keyboard is present - more aggressive approach */
+body.keyboard-open {
+  overflow: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  position: static !important;
+}
+
+body.keyboard-open html {
+  overflow: auto !important;
+  height: auto !important;
+}
+
+body.keyboard-open .admin-homework-page,
+body.keyboard-open .admin-content {
+  overflow-y: auto !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+body.keyboard-open [data-radix-dialog-content] {
+  overflow-y: auto !important;
+  max-height: calc(100vh - 60vh) !important;
+  transform: translateY(-30vh) !important;
+  position: relative !important;
+  z-index: 1000 !important;
+  margin-top: -100px !important;
+}
+
+/* Make the page much more scrollable when keyboard is open */
+body.keyboard-open {
+  height: calc(100vh + 50vh) !important;
+  min-height: calc(100vh + 50vh) !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+html.keyboard-open {
+  height: calc(100vh + 50vh) !important;
+  min-height: calc(100vh + 50vh) !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+body.keyboard-open .admin-homework-page {
+  height: calc(100vh + 50vh) !important;
+  min-height: calc(100vh + 50vh) !important;
+  overflow-y: scroll !important;
+  padding-bottom: 50vh !important;
+  position: static !important; /* allow page scroll instead of pinned absolute */
+  -webkit-overflow-scrolling: touch !important;
+}
+
+body.keyboard-open .admin-content {
+  height: calc(100vh + 50vh) !important;
+  min-height: calc(100vh + 50vh) !important;
+  overflow-y: scroll !important;
+  padding-bottom: 50vh !important;
+  position: static !important; /* was absolute inset-0; let page scroll */
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Force page to be scrollable when keyboard is present */
+body:has(.ML__keyboard:not([style*="display: none"])) {
+  overflow: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  position: static !important;
+}
+
+/* Ensure all containers can scroll */
+body:has(.ML__keyboard:not([style*="display: none"])) * {
+  max-height: none !important;
+}
+
+/* Specific fix for admin page */
+body:has(.ML__keyboard:not([style*="display: none"])) .admin-homework-page,
+body:has(.ML__keyboard:not([style*="display: none"])) .admin-content {
+  overflow-y: auto !important;
+  max-height: none !important;
+  height: auto !important;
 }
 
 /* MathLive cursor styling */

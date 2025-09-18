@@ -201,16 +201,12 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
 
       const handleFocus = () => {
         console.log('MathField focused')
-        // Ensure cursor is visible
+        // Ensure there's no full selection and caret is at the end
+        try {
+          (mathField as any).executeCommand('collapseSelection')
+          ;(mathField as any).executeCommand('moveToRight')
+        } catch {}
         mathField.style.caretColor = '#3b82f6'
-        
-        if (virtualKeyboardMode !== 'off') {
-          try {
-            mathField.executeCommand('showVirtualKeyboard')
-          } catch (error) {
-            console.error('Error showing virtual keyboard:', error)
-          }
-        }
       }
 
       const handleBlur = () => {
@@ -232,9 +228,17 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
       const mathField = mathFieldRef.current
       if (!mathField) return
 
-      // Update value when prop changes
+      // Update value when prop changes without altering selection
       if (value !== mathField.value) {
+        const hadSelection = (mathField as any).selectionIsCollapsed === false
         mathField.setValue(value, { silenceNotifications: true })
+        // Preserve caret at end if there was a selection (avoid full selection)
+        try {
+          if (hadSelection) {
+            (mathField as any).executeCommand('collapseSelection')
+          }
+          ;(mathField as any).executeCommand('moveToRight')
+        } catch {}
       }
       
       // Ensure text mode is always active
@@ -339,16 +343,6 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
           smart-superscript="true"
           remove-extraneous-parentheses="true"
           letter-shape-style="tex"
-          onClick={(e) => {
-            // Prevent keyboard from opening on click
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          onFocus={(e) => {
-            // Prevent keyboard from opening on focus
-            e.preventDefault()
-            e.stopPropagation()
-          }}
           style={{
             minHeight: `${rows * 1.5}rem`,
             width: '100%',
@@ -366,7 +360,7 @@ const MathField = forwardRef<MathfieldElement, MathFieldProps>(
             zIndex: 1,
             caretColor: '#3b82f6',
           }}
-          className={`focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 ${className}`}
+          className={`focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 selection:bg-transparent ${className}`}
           {...props}
         />
         

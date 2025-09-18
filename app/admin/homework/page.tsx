@@ -318,6 +318,155 @@ export default function HomeworkPage() {
     fetchHomework()
   }, [fetchHomework])
 
+  // Handle MathLive keyboard scrolling
+  useEffect(() => {
+    const handleKeyboardToggle = () => {
+      const keyboard = document.querySelector('.ML__keyboard:not([style*="display: none"])')
+      const virtualKeyboard = document.querySelector('.ML__virtual-keyboard')
+      const allKeyboards = document.querySelectorAll('.ML__keyboard, .ML__virtual-keyboard')
+      
+      console.log('Keyboard check:', { 
+        keyboard, 
+        virtualKeyboard, 
+        allKeyboards: allKeyboards.length,
+        bodyHeight: document.body.style.height,
+        htmlHeight: document.documentElement.style.height,
+        bodyOverflow: document.body.style.overflow
+      })
+      
+      if (keyboard || virtualKeyboard || allKeyboards.length > 0) {
+        console.log('Keyboard is open - enabling scrolling')
+        // Add keyboard-open class for CSS targeting
+        document.body.classList.add('keyboard-open')
+        document.documentElement.classList.add('keyboard-open')
+        
+        // Force immediate style changes
+        document.body.style.setProperty('overflow', 'auto', 'important')
+        document.documentElement.style.setProperty('overflow', 'auto', 'important')
+        document.body.style.setProperty('height', 'calc(100vh + 50vh)', 'important')
+        document.documentElement.style.setProperty('height', 'calc(100vh + 50vh)', 'important')
+        document.body.style.setProperty('min-height', 'calc(100vh + 50vh)', 'important')
+        document.documentElement.style.setProperty('min-height', 'calc(100vh + 50vh)', 'important')
+        document.body.style.setProperty('max-height', 'none', 'important')
+        document.documentElement.style.setProperty('max-height', 'none', 'important')
+        
+        console.log('Applied styles:', {
+          bodyHeight: document.body.style.height,
+          htmlHeight: document.documentElement.style.height,
+          bodyOverflow: document.body.style.overflow
+        })
+        
+        // Force page to be scrollable by adding content height
+        const extraContent = document.createElement('div')
+        extraContent.id = 'keyboard-spacer'
+        extraContent.style.height = '50vh'
+        extraContent.style.width = '1px'
+        extraContent.style.position = 'absolute'
+        extraContent.style.bottom = '0'
+        extraContent.style.left = '0'
+        extraContent.style.pointerEvents = 'none'
+        extraContent.style.zIndex = '-1'
+        document.body.appendChild(extraContent)
+        
+        // Make all containers scrollable with extra height
+        const containers = document.querySelectorAll('.admin-homework-page, .admin-content, [data-radix-dialog-content]')
+        containers.forEach(container => {
+          const el = container as HTMLElement
+          el.style.setProperty('overflow', 'auto', 'important')
+          el.style.setProperty('max-height', 'none', 'important')
+          el.style.setProperty('height', 'calc(100vh + 50vh)', 'important')
+          el.style.setProperty('min-height', 'calc(100vh + 50vh)', 'important')
+          el.style.setProperty('padding-bottom', '50vh', 'important')
+        })
+        
+        // Make the main page container extra tall
+        const mainContainer = document.querySelector('.admin-homework-page')
+        if (mainContainer) {
+          const el = mainContainer as HTMLElement
+          el.style.setProperty('height', 'calc(100vh + 50vh)', 'important')
+          el.style.setProperty('min-height', 'calc(100vh + 50vh)', 'important')
+          el.style.setProperty('overflow-y', 'scroll', 'important')
+          el.style.setProperty('padding-bottom', '50vh', 'important')
+        }
+        
+        // Scroll to show the dialog
+        const dialog = document.querySelector('[data-radix-dialog-content]')
+        if (dialog) {
+          dialog.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          
+          // Also scroll the page to show the dialog
+          setTimeout(() => {
+            const dialogRect = dialog.getBoundingClientRect()
+            const scrollTop = window.pageYOffset + dialogRect.top - 100
+            window.scrollTo({ top: scrollTop, behavior: 'smooth' })
+          }, 200)
+        }
+        
+        // Force scroll on the main page to ensure content is accessible
+        setTimeout(() => {
+          // Scroll to a position that shows the dialog above the keyboard
+          const scrollPosition = Math.max(0, window.innerHeight * 0.3)
+          window.scrollTo({ top: scrollPosition, behavior: 'smooth' })
+        }, 100)
+      } else {
+        console.log('Keyboard is closed - restoring normal behavior')
+        // Remove keyboard-open class
+        document.body.classList.remove('keyboard-open')
+        document.documentElement.classList.remove('keyboard-open')
+        
+        // Remove the spacer element
+        const spacer = document.getElementById('keyboard-spacer')
+        if (spacer) {
+          spacer.remove()
+        }
+        
+        // Keyboard is closed - restore normal behavior
+        document.body.style.removeProperty('overflow')
+        document.documentElement.style.removeProperty('overflow')
+        document.body.style.removeProperty('height')
+        document.documentElement.style.removeProperty('height')
+        document.body.style.removeProperty('min-height')
+        document.documentElement.style.removeProperty('min-height')
+        document.body.style.removeProperty('max-height')
+        document.documentElement.style.removeProperty('max-height')
+        
+        // Restore container styles
+        const containers = document.querySelectorAll('.admin-homework-page, .admin-content, [data-radix-dialog-content]')
+        containers.forEach(container => {
+          const el = container as HTMLElement
+          el.style.removeProperty('overflow')
+          el.style.removeProperty('max-height')
+          el.style.removeProperty('height')
+          el.style.removeProperty('min-height')
+          el.style.removeProperty('padding-bottom')
+        })
+      }
+    }
+
+    // Check for keyboard changes more frequently
+    const observer = new MutationObserver(() => {
+      setTimeout(handleKeyboardToggle, 50) // Small delay to ensure DOM is updated
+    })
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    })
+
+    // Also check periodically
+    const interval = setInterval(handleKeyboardToggle, 500)
+
+    // Initial check
+    handleKeyboardToggle()
+
+    return () => {
+      observer.disconnect()
+      clearInterval(interval)
+    }
+  }, [])
+
   // Debug state values
   useEffect(() => {
     console.log('Current adminSubjects:', adminSubjects)
@@ -734,9 +883,9 @@ export default function HomeworkPage() {
           </div>
           
           {/* Scrollable Content Container */}
-          <div className="absolute inset-0 z-10 overflow-y-auto">
+          <div className="absolute inset-0 z-10 overflow-y-auto admin-content" data-admin-content>
         
-        <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden">
+        <div className="relative z-10 p-2 sm:p-3 md:p-4 lg:p-8 ml-0 lg:ml-64 min-h-screen pb-8 pt-16 sm:pt-16 lg:pt-20 max-w-full overflow-x-hidden admin-homework-page" data-main-content>
               {/* Enhanced Header */}
               <div className="mb-6 lg:mb-12 text-center">
                 <div className="inline-flex items-center gap-3 mb-4 p-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
