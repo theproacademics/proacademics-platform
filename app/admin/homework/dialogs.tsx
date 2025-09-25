@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import MathField from "@/components/ui/math-field"
-import { Upload, Loader2, Save, X, Plus, Calendar, Clock, Award, Target, AlertTriangle } from "lucide-react"
+import { Upload, Loader2, Save, X, Plus, Calendar, Clock, Award, Target, AlertTriangle, Calculator } from "lucide-react"
 import Link from "next/link"
 
 interface HomeworkFormData {
@@ -33,6 +34,9 @@ interface QuestionFormData {
   question: string
   markScheme: string
   image: string
+  hasEquation: boolean
+  questionEquation?: string
+  markSchemeEquation?: string
 }
 
 interface DialogProps {
@@ -642,32 +646,91 @@ export function HomeworkDialogs({
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="question" className="text-white text-sm sm:text-base">Question</Label>
-                <MathField
-                  id="question"
-                  value={questionFormData.question}
-                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, question: value })}
-                  placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
-                  rows={4}
-                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="manual"
-                  virtualKeyboards="all"
+              {/* Equation Toggle */}
+              <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-lg border border-white/20">
+                <Calculator className="w-5 h-5 text-purple-400" />
+                <div className="flex-1">
+                  <Label htmlFor="hasEquation" className="text-white text-sm font-medium">
+                    Has Equation
+                  </Label>
+                  <p className="text-slate-400 text-xs mt-1">
+                    Enable to add mathematical expressions alongside the question
+                  </p>
+                </div>
+                <Switch
+                  id="hasEquation"
+                  checked={questionFormData.hasEquation}
+                  onCheckedChange={(checked) => setQuestionFormData({ ...questionFormData, hasEquation: checked })}
+                  className="data-[state=checked]:bg-purple-600"
                 />
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="question" className="text-white text-sm sm:text-base">Question</Label>
+                <Textarea
+                  id="question"
+                  value={questionFormData.question}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, question: e.target.value })}
+                  placeholder="Enter the question text"
+                  rows={4}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400 resize-none"
+                  onKeyDown={(e) => {
+                    // Ensure backspace works properly in textarea
+                    if (e.key === 'Backspace') {
+                      e.stopPropagation()
+                    }
+                  }}
+                />
+                
+                {questionFormData.hasEquation && (
+                  <div className="mt-3">
+                    <Label htmlFor="questionEquation" className="text-white text-sm sm:text-base">Question Equation (Optional)</Label>
+                    <MathField
+                      id="questionEquation"
+                      value={questionFormData.questionEquation || ''}
+                      onChange={(value: string) => setQuestionFormData({ ...questionFormData, questionEquation: value })}
+                      placeholder="Enter mathematical expression (LaTeX supported)"
+                      rows={3}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                      virtualKeyboardMode="onfocus"
+                      virtualKeyboards="all"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
-                <MathField
+                <Textarea
                   id="markScheme"
                   value={questionFormData.markScheme}
-                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, markScheme: value })}
-                  placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, markScheme: e.target.value })}
+                  placeholder="Enter the marking scheme"
                   rows={4}
-                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="manual"
-                  virtualKeyboards="all"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400 resize-none"
+                  onKeyDown={(e) => {
+                    // Ensure backspace works properly in textarea
+                    if (e.key === 'Backspace') {
+                      e.stopPropagation()
+                    }
+                  }}
                 />
+                
+                {questionFormData.hasEquation && (
+                  <div className="mt-3">
+                    <Label htmlFor="markSchemeEquation" className="text-white text-sm sm:text-base">Mark Scheme Equation (Optional)</Label>
+                    <MathField
+                      id="markSchemeEquation"
+                      value={questionFormData.markSchemeEquation || ''}
+                      onChange={(value: string) => setQuestionFormData({ ...questionFormData, markSchemeEquation: value })}
+                      placeholder="Enter mathematical expression (LaTeX supported)"
+                      rows={3}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                      virtualKeyboardMode="onfocus"
+                      virtualKeyboards="all"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -782,32 +845,91 @@ export function HomeworkDialogs({
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-question" className="text-white text-sm sm:text-base">Question</Label>
-                <MathField
-                  id="edit-question"
-                  value={questionFormData.question}
-                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, question: value })}
-                  placeholder="Enter the question text (supports LaTeX and mathematical expressions)"
-                  rows={4}
-                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="manual"
-                  virtualKeyboards="all"
+              {/* Equation Toggle */}
+              <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-lg border border-white/20">
+                <Calculator className="w-5 h-5 text-purple-400" />
+                <div className="flex-1">
+                  <Label htmlFor="edit-hasEquation" className="text-white text-sm font-medium">
+                    Has Equation
+                  </Label>
+                  <p className="text-slate-400 text-xs mt-1">
+                    Enable to add mathematical expressions alongside the question
+                  </p>
+                </div>
+                <Switch
+                  id="edit-hasEquation"
+                  checked={questionFormData.hasEquation}
+                  onCheckedChange={(checked) => setQuestionFormData({ ...questionFormData, hasEquation: checked })}
+                  className="data-[state=checked]:bg-purple-600"
                 />
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="edit-question" className="text-white text-sm sm:text-base">Question</Label>
+                <Textarea
+                  id="edit-question"
+                  value={questionFormData.question}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, question: e.target.value })}
+                  placeholder="Enter the question text"
+                  rows={4}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400 resize-none"
+                  onKeyDown={(e) => {
+                    // Ensure backspace works properly in textarea
+                    if (e.key === 'Backspace') {
+                      e.stopPropagation()
+                    }
+                  }}
+                />
+                
+                {questionFormData.hasEquation && (
+                  <div className="mt-3">
+                    <Label htmlFor="edit-questionEquation" className="text-white text-sm sm:text-base">Question Equation (Optional)</Label>
+                    <MathField
+                      id="edit-questionEquation"
+                      value={questionFormData.questionEquation || ''}
+                      onChange={(value: string) => setQuestionFormData({ ...questionFormData, questionEquation: value })}
+                      placeholder="Enter mathematical expression (LaTeX supported)"
+                      rows={3}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                      virtualKeyboardMode="onfocus"
+                      virtualKeyboards="all"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="edit-markScheme" className="text-white text-sm sm:text-base">Mark Scheme</Label>
-                <MathField
+                <Textarea
                   id="edit-markScheme"
                   value={questionFormData.markScheme}
-                  onChange={(value: string) => setQuestionFormData({ ...questionFormData, markScheme: value })}
-                  placeholder="Enter the marking scheme (supports LaTeX and mathematical expressions)"
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuestionFormData({ ...questionFormData, markScheme: e.target.value })}
+                  placeholder="Enter the marking scheme"
                   rows={4}
-                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
-                  virtualKeyboardMode="manual"
-                  virtualKeyboards="all"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400 resize-none"
+                  onKeyDown={(e) => {
+                    // Ensure backspace works properly in textarea
+                    if (e.key === 'Backspace') {
+                      e.stopPropagation()
+                    }
+                  }}
                 />
+                
+                {questionFormData.hasEquation && (
+                  <div className="mt-3">
+                    <Label htmlFor="edit-markSchemeEquation" className="text-white text-sm sm:text-base">Mark Scheme Equation (Optional)</Label>
+                    <MathField
+                      id="edit-markSchemeEquation"
+                      value={questionFormData.markSchemeEquation || ''}
+                      onChange={(value: string) => setQuestionFormData({ ...questionFormData, markSchemeEquation: value })}
+                      placeholder="Enter mathematical expression (LaTeX supported)"
+                      rows={3}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-slate-400"
+                      virtualKeyboardMode="onfocus"
+                      virtualKeyboards="all"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

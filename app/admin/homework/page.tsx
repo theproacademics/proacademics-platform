@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { BookOpen, Plus, Search, Filter, Edit, Trash2, Eye, Users, Clock, Star, Upload, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Loader2, Download, MoreHorizontal, CheckSquare, Square, AlertTriangle, Check, X, FileText, Settings, Calendar, RotateCcw, Archive, FolderOpen, ExternalLink, GripVertical, Target, Award } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import MathField from "@/components/ui/math-field"
 import { HomeworkDialogs } from "./dialogs"
 
 // Constants
@@ -54,6 +55,9 @@ interface HomeworkQuestion {
   question: string
   markScheme: string
   image?: string
+  hasEquation?: boolean
+  questionEquation?: string
+  markSchemeEquation?: string
 }
 
 interface HomeworkFormData {
@@ -79,6 +83,9 @@ interface QuestionFormData {
   question: string
   markScheme: string
   image: string
+  hasEquation: boolean
+  questionEquation?: string
+  markSchemeEquation?: string
 }
 
 interface PaginatedHomework {
@@ -201,7 +208,10 @@ export default function HomeworkPage() {
     level: '2',
     question: '',
     markScheme: '',
-    image: 'n'
+    image: 'n',
+    hasEquation: false,
+    questionEquation: '',
+    markSchemeEquation: ''
   })
 
   // Selection and editing states
@@ -513,7 +523,10 @@ export default function HomeworkPage() {
     level: '2',
     question: '',
     markScheme: '',
-    image: 'n'
+    image: 'n',
+    hasEquation: false,
+    questionEquation: '',
+    markSchemeEquation: ''
   })
 
   // Event handlers
@@ -733,7 +746,10 @@ export default function HomeworkPage() {
       level: question.level,
       question: question.question,
       markScheme: question.markScheme,
-      image: question.image || 'n'
+      image: question.image || 'n',
+      hasEquation: question.hasEquation || false,
+      questionEquation: question.questionEquation || '',
+      markSchemeEquation: question.markSchemeEquation || ''
     })
     setIsEditQuestionDialogOpen(true)
   }
@@ -1270,7 +1286,19 @@ export default function HomeworkPage() {
                                                                   {question.level}
                                                                 </Badge>
                                                               </div>
-                                                              <p className="text-slate-300 text-xs sm:text-sm mb-2 line-clamp-2">{question.question}</p>
+                                                              <div className="text-slate-300 text-xs sm:text-sm mb-2 line-clamp-2">
+                                                                <p>{question.question}</p>
+                                                                {question.hasEquation && question.questionEquation && (
+                                                                  <div className="mt-2">
+                                                                    <MathField
+                                                                      value={question.questionEquation}
+                                                                      readOnly={true}
+                                                                      virtualKeyboardMode="off"
+                                                                      className="bg-transparent border-none text-slate-300 text-xs sm:text-sm [&>math-field]:text-xs [&>math-field]:sm:text-sm [&>math-field]:bg-transparent [&>math-field]:border-none [&>math-field]:p-0 [&>math-field]:min-h-0"
+                                                                    />
+                                                                  </div>
+                                                                )}
+                                                              </div>
                                                               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-400">
                                                                 <span className="truncate">{question.topic} • {question.subtopic}</span>
                                                                 {question.image && question.image !== 'n' && (
