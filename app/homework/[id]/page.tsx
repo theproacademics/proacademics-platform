@@ -574,7 +574,7 @@ export default function HomeworkQuestionPage() {
                         const target = e.target as HTMLImageElement;
                         target.style.opacity = '1';
                         // Hide loading skeleton
-                        const skeleton = target.parentElement?.querySelector('.animate-pulse');
+                        const skeleton = target.parentElement?.querySelector('.animate-pulse') as HTMLElement | null;
                         if (skeleton) {
                           skeleton.style.display = 'none';
                         }

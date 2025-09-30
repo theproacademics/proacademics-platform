@@ -165,6 +165,14 @@ INSTRUCTIONS:
 4. Then provide specific feedback about what they did wrong or what they did right
 5. Show the correct approach using the mark scheme
 6. End with the video link
+7.the output should not show the latex code it should show normal text
+8.return a json object with the following fields:
+{
+  "correctness": "correct" | "partially correct" | "wrong",
+  "feedback": "string",
+  "markscheme": "string",
+  "video": "string"
+}
 
 RESPONSE FORMAT:
 [Correctness assessment]
