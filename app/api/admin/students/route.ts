@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { userService } from "@/lib/db/users"
 
 export async function GET() {
   try {
-    // Add detailed logging for production debugging
+    // Check authentication
+    const session = await getServerSession(authOptions)
     console.log("🔍 Admin Students API called")
+    console.log("Session:", session ? { email: session.user?.email, role: session.user?.role } : "No session")
+    
+    if (!session || session.user?.role !== 'admin') {
+      console.log("❌ Unauthorized access attempt")
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
     console.log("Environment:", process.env.NODE_ENV)
     console.log("MongoDB URI exists:", !!process.env.MONGODB_URI)
     

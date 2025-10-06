@@ -62,30 +62,52 @@ export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [nextRefreshIn, setNextRefreshIn] = useState<number>(3)
 
   // Fetch students data from API
   const fetchStudents = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/students', {
+      const timestamp = Date.now()
+      console.log('🔄 Fetching students at:', new Date().toLocaleTimeString())
+      
+      const response = await fetch(`/api/admin/students?t=${timestamp}`, {
+        method: 'GET',
         cache: 'no-store',
+        credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0',
         },
       })
+      if (!response.ok) {
+        console.error('❌ API response not OK:', response.status, response.statusText)
+        if (response.status === 401) {
+          console.error('🔒 Authentication failed - user may not be logged in as admin')
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+      
+      console.log('📊 Students data received:', {
+        count: data.students?.length || 0,
+        timestamp: new Date().toLocaleTimeString(),
+        students: data.students?.map(s => ({ name: s.name, email: s.email })) || []
+      })
       
       if (data.students) {
         setStudents(data.students)
+        console.log('✅ Students state updated with', data.students.length, 'students')
       } else {
         // No students found
         setStudents([])
+        console.log('⚠️ No students found in response')
       }
       setLastUpdated(new Date())
     } catch (error) {
-      console.error('Error fetching students:', error)
+      console.error('❌ Error fetching students:', error)
       // Set empty array on error instead of fallback data
       setStudents([])
     } finally {
@@ -97,10 +119,38 @@ export default function StudentsPage() {
   useEffect(() => {
     fetchStudents()
     
-    // Auto-refresh every 10 seconds to check for new students
-    const interval = setInterval(fetchStudents, 10000)
+    // Countdown timer for next refresh
+    const countdownInterval = setInterval(() => {
+      setNextRefreshIn(prev => {
+        if (prev <= 1) {
+          return 3 // Reset to 3 seconds
+        }
+        return prev - 1
+      })
+    }, 1000)
     
-    return () => clearInterval(interval)
+    // Auto-refresh every 3 seconds to check for new students (more aggressive)
+    const refreshInterval = setInterval(() => {
+      console.log('⏰ Auto-refresh triggered at:', new Date().toLocaleTimeString())
+      fetchStudents()
+      setNextRefreshIn(3) // Reset countdown
+    }, 3000)
+    
+    return () => {
+      clearInterval(countdownInterval)
+      clearInterval(refreshInterval)
+    }
+  }, [])
+
+  // Also refresh when the window gains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('👁️ Window focused, refreshing students')
+      fetchStudents()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const filteredStudents = students.filter(
@@ -272,14 +322,19 @@ export default function StudentsPage() {
                   Add Student
                 </Button>
                 <Button 
-                  onClick={fetchStudents}
+                  onClick={() => {
+                    console.log('🔄 Manual refresh clicked')
+                    fetchStudents()
+                  }}
                   disabled={loading}
-                  variant="outline" 
-                  className="h-11 bg-white/[0.03] border-2 border-white/20 text-white hover:bg-white/[0.08] hover:border-white/30 
-                           transition-all duration-300 text-sm font-medium rounded-xl disabled:opacity-50"
+                  className={`h-11 border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-sm font-medium rounded-xl disabled:opacity-50 ${
+                    loading 
+                      ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white' 
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white'
+                  }`}
                 >
                   <TrendingUp className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {loading ? 'Refreshing...' : 'Refresh Now'}
                 </Button>
                 <Button 
                   variant="outline" 

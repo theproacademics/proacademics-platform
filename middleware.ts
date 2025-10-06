@@ -43,7 +43,6 @@ export default withAuth(
             pathname.startsWith('/api/admin/homework') ||
             pathname.startsWith('/api/admin/subjects') ||
             pathname.startsWith('/api/admin/lessons') ||
-            pathname.startsWith('/api/admin/students') ||
             pathname === '/unauthorized') {
           return true
         }
@@ -62,12 +61,11 @@ export const config = {
      * - api/auth (NextAuth.js)
      * - api/admin/homework (public homework API)
      * - api/admin/subjects (public subjects API)
-     * - api/admin/students (public students API)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api/auth|api/admin/homework|api/admin/subjects|api/admin/lessons|api/admin/students|_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api/auth|api/admin/homework|api/admin/subjects|api/admin/lessons|_next/static|_next/image|favicon.ico|public/).*)',
   ],
 }
