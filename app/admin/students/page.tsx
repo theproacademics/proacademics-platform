@@ -61,31 +61,46 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   // Fetch students data from API
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/admin/students')
-        const data = await response.json()
-        
-        if (data.students) {
-          setStudents(data.students)
-        } else {
-          // No students found
-          setStudents([])
-        }
-      } catch (error) {
-        console.error('Error fetching students:', error)
-        // Set empty array on error instead of fallback data
+  const fetchStudents = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/students', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      })
+      const data = await response.json()
+      
+      if (data.students) {
+        setStudents(data.students)
+      } else {
+        // No students found
         setStudents([])
-      } finally {
-        setLoading(false)
       }
+      setLastUpdated(new Date())
+    } catch (error) {
+      console.error('Error fetching students:', error)
+      // Set empty array on error instead of fallback data
+      setStudents([])
+    } finally {
+      setLoading(false)
     }
+  }
 
+  // Initial load and auto-refresh
+  useEffect(() => {
     fetchStudents()
+    
+    // Auto-refresh every 10 seconds to check for new students
+    const interval = setInterval(fetchStudents, 10000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   const filteredStudents = students.filter(
@@ -247,7 +262,7 @@ export default function StudentsPage() {
               </div>
 
               {/* Mobile-Optimized Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <Button 
                   className="h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 
                            text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300
@@ -255,6 +270,16 @@ export default function StudentsPage() {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Student
+                </Button>
+                <Button 
+                  onClick={fetchStudents}
+                  disabled={loading}
+                  variant="outline" 
+                  className="h-11 bg-white/[0.03] border-2 border-white/20 text-white hover:bg-white/[0.08] hover:border-white/30 
+                           transition-all duration-300 text-sm font-medium rounded-xl disabled:opacity-50"
+                >
+                  <TrendingUp className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
                 </Button>
                 <Button 
                   variant="outline" 
@@ -272,11 +297,18 @@ export default function StudentsPage() {
           <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl overflow-hidden shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-teal-500/5"></div>
             <CardHeader className="relative border-b border-white/10 pb-3 lg:pb-4">
-              <CardTitle className="text-base lg:text-lg font-bold text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-400" />
-                Students ({filteredStudents.length})
-                {loading && <span className="text-xs text-muted-foreground ml-2">(Loading...)</span>}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base lg:text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                  Students ({filteredStudents.length})
+                  {loading && <span className="text-xs text-muted-foreground ml-2">(Loading...)</span>}
+                </CardTitle>
+                {lastUpdated && (
+                  <div className="text-xs text-slate-400">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="relative p-0">
               {/* Mobile Card Layout for Small Screens */}
